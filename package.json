@@ -1,5 +1,6 @@
 {
-	"name": "nebula-remix-v4",
+	"name": "super-kingdoms",
+	"license": "Apache-2.0",
 	"private": true,
 	"sideEffects": false,
 	"type": "module",
