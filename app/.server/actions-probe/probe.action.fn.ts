@@ -6,7 +6,7 @@ import {
 	type ProbesNews,
 	type Probing,
 } from '~/app.model';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { db } from '~/.server/db';
 import { mapUtil, now, probesUtil, randomNumber } from '~/utils';
 

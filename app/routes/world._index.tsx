@@ -1,11 +1,9 @@
-import { type rootAuthLoader } from '@clerk/remix/ssr.server';
-import { Link, useRouteLoaderData } from '@remix-run/react';
+import { Link } from '@remix-run/react';
 import { useMemo } from 'react';
 import { useTypedLoaderData } from 'remix-typedjson';
 import { WorldList } from '~/components';
 import { GAME } from '~/game.const';
 import { usePlayerKingdoms } from '~/hooks';
-import { type PlayerKingdom } from '~/loaders';
 import { worldLoader } from '~/loaders/world.loader';
 import { routesUtil } from '~/routes.util';
 

@@ -1,13 +1,12 @@
 import { type ActionFunction, type LoaderFunctionArgs, redirect } from '@remix-run/node';
 import { Form } from '@remix-run/react';
 import { typedjson, useTypedLoaderData } from 'remix-typedjson';
+import { appState, printStatus } from '~/.server/app.service';
 import { db } from '~/.server/db';
 import { serverRoutesUtil } from '~/.server/serverRoutes.util';
-import { appState, printStatus } from '~/app.service';
 import { PlanetTypes, RaceTypes } from '~/kingdom';
 import { kdUtil } from '~/kingdom/kd.util';
 import { authRequiredLoader } from '~/loaders';
-import { routesUtil } from '~/routes.util';
 import { mapUtil } from '~/utils/map.util';
 
 export const loader = async (args: LoaderFunctionArgs) => {

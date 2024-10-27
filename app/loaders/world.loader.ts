@@ -1,6 +1,6 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
 import { typedjson } from 'remix-typedjson';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { type PlanetType, type RaceType } from '~/kingdom';
 import { kdUtil } from '~/kingdom/kd.util';
 import { mapUtil } from '~/utils/map.util';

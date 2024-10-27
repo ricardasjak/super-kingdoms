@@ -1,9 +1,9 @@
 import { type ActionFunction, type LoaderFunctionArgs } from '@remix-run/node';
 import { typedjson, useTypedLoaderData } from 'remix-typedjson';
+import { appState } from '~/.server/app.service';
 import { db } from '~/.server/db';
 import { kdidLoaderFn, kingdomLoaderFn, kingdomNextLoaderFn } from '~/.server/kingdom.loader';
 import { type BuildingsPlan } from '~/app.model';
-import { appState } from '~/app.service';
 import { AllocationAbsolute, BuildingPlanComponent, PageTitle } from '~/components';
 import { useKingdom } from '~/hooks/use-kingdom.hook';
 import { kdUtil } from '~/kingdom/kd.util';

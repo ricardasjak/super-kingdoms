@@ -1,6 +1,6 @@
 import { type LoaderFunction } from '@remix-run/node';
 import { useTypedLoaderData } from 'remix-typedjson';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { authRequiredLoader } from '~/loaders';
 import { mapUtil } from '~/utils/map.util';
 

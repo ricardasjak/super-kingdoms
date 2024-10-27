@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
 import { typedjson, useTypedLoaderData } from 'remix-typedjson';
+import { appState } from '~/.server/app.service';
 import { kdidLoaderFn, kingdomLoaderFn, kingdomNextLoaderFn } from '~/.server/kingdom.loader';
-import { appState } from '~/app.service';
 import {
 	BudgetComponent,
 	BuildingPlanComponent,

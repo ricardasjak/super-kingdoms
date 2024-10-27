@@ -1,6 +1,6 @@
 import { redirect, type ActionFunction } from '@remix-run/node';
 import { createKingdomFn } from '~/.server/actions-create-kingdom/create-kingdom.action.fn';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { type CreateKingdom, type PlanetType, type RaceType } from '~/kingdom/kingdom.model';
 import { authRequiredLoader } from '~/loaders';
 import { routesUtil } from '~/routes.util';

@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
 import { Link, Outlet, useParams } from '@remix-run/react';
 import { typedjson, useTypedLoaderData } from 'remix-typedjson';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { PageTitle } from '~/components';
 import { usePlayerKingdoms } from '~/hooks';
 import { PT_LABEL, RACE_LABEL } from '~/kingdom';

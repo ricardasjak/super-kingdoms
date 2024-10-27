@@ -1,9 +1,9 @@
 import { type ActionFunction, type LoaderFunction, redirect } from '@remix-run/node';
 import { Form } from '@remix-run/react';
 import { typedjson, useTypedLoaderData } from 'remix-typedjson';
+import { appState } from '~/.server/app.service';
 import { db } from '~/.server/db';
 import { serverRoutesUtil } from '~/.server/serverRoutes.util';
-import { appState } from '~/app.service';
 import { authRequiredLoader } from '~/loaders';
 import { mapUtil } from '~/utils/map.util';
 

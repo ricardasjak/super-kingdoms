@@ -1,6 +1,6 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
 import { typedjson } from 'remix-typedjson';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { kdUtil } from '~/kingdom/kd.util';
 import { authLoader } from '~/loaders/auth.loader';
 import { mapUtil } from '~/utils';

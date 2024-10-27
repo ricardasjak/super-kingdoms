@@ -1,11 +1,13 @@
 # Welcome to Super Kingdoms!
 
-This is not a real name, rather a placeholder for a game that I'm working on.
+This is not a real name, rather a placeholder for a game that I'm working on. 
+This is open source project, so feel free to contribute.
 The game is built using [Remix](https://remix.run). Remix is a full-stack web framework for React.
 
-# About the game
+## About the game
 
 The game is a multiplayer online strategy game that is text based and runs in the browser.
+Check it out at https://super-kingdoms.fly.dev/
 
 ## Development
 
@@ -30,7 +32,7 @@ Check [Remix Docs](https://remix.run/docs) for more information.
 npm run fix
 ```
 
-## Deployment
+### Deployment
 
 You need to setup Fly.io utility to deploy the app to Fly.io platform.
 
@@ -58,7 +60,7 @@ Make sure to deploy the output of `remix build`
 - `build/`
 - `public/build/`
 
-# Technology stack
+## Technology stack
 
 - Remix - full-stack web framework for React
 - Typescript
@@ -71,8 +73,8 @@ Make sure to deploy the output of `remix build`
 ## Game state handling
 
 The game runs in quite unusual way to traditional web applications.
-The game state is loaded at server start from Redis service (Upstash) and kept in memory (RAM).
-The game state is updated in Redis only after some critical actions, like creation of a new kd or attack action.
+The game state is loaded once from Redis service (Upstash) and kept in memory (RAM).
+The game state is updated to Redis only after some critical actions, like creation of a new kd or attack action.
 All remaining state changes are saved in some intervals. So there is a risk of losing some data in case of server crash.
 
 Such approach doesn't allow to host game in serverless environment, as we need to keep the game state in memory.
@@ -83,5 +85,3 @@ Once the game is stable, we may consider to make state management more reliable,
 
 This is a hobby project and the game is in very early phase of development, the main focus is to ship some working prototype.
 Some code duplication, lack of tests, some chaos in code structure is expected.
-
-wip

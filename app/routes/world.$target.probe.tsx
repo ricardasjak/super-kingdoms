@@ -1,7 +1,6 @@
 import { Link, Outlet, useParams } from '@remix-run/react';
 import { usePlayerKingdoms } from '~/hooks';
 import { routesUtil } from '~/routes.util';
-import { formatNumber } from '~/utils';
 
 const AttackWithPage: React.FC = () => {
 	const params = useParams();

@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
 import { attackActionFn } from '~/.server/actions-attack/attack.action.fn';
 import { type Attack, type AttackNews, KingdomFull, type Military } from '~/app.model';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { GAME } from '~/game.const';
 
 import { kdidLoaderFn, kingdomLoaderFn, targetLoaderFn } from '~/.server/kingdom.loader';

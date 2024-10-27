@@ -1,6 +1,6 @@
 import { type ActionFunction } from '@remix-run/node';
 import { tickKingdom } from '~/.server/actions-tick-kingdom/tick';
-import { appState } from '~/app.service';
+import { appState } from '~/.server/app.service';
 import { kdidLoaderFn, kingdomLoaderFn } from '~/.server/kingdom.loader';
 import { gameUtil } from '~/utils';
 

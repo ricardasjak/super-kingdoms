@@ -6,7 +6,7 @@ import { usePlayerKingdoms } from '~/hooks';
 import { worldLoader } from '~/loaders/world.loader';
 
 export const meta: MetaFunction = () => {
-	return [{ title: 'Nebula map' }, { name: 'description', content: 'Welcome to Super Kingdoms!' }];
+	return [{ title: 'World map' }, { name: 'description', content: 'Welcome to Super Kingdoms!' }];
 };
 
 export const loader = worldLoader;
@@ -23,7 +23,7 @@ export default function Index() {
 			className='flex flex-col mt-4'
 		>
 			{/*<h1 className={'text-xl mb-2 inline-block'}>*/}
-			{/*	Welcome to <span className={'text-primary'}>Nebula.</span> &nbsp;*/}
+			{/*	Welcome to <span className={'text-primary'}>Super kingdoms.</span> &nbsp;*/}
 			{/*</h1>*/}
 			{/*{hasKingdom ? (*/}
 			{/*	<>*/}
@@ -71,7 +71,7 @@ export default function Index() {
 				</label>
 			</div>
 			<div className={''}>
-				{/*<h3 className={'text-primary text-lg text-center'}>Nebula map</h3>*/}
+				{/*<h3 className={'text-primary text-lg text-center'}>World map</h3>*/}
 				{/*<WorldMap kingdoms={world} ownerKingdoms={ownedKingdoms} />*/}
 				{showMap ? (
 					<WorldMap kingdoms={world} ownerKingdoms={ownedKingdoms} />

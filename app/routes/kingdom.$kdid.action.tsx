@@ -1,8 +1,8 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
 import { typedjson, useTypedLoaderData } from 'remix-typedjson';
 import { ActionList } from 'app/kingdom-action-cards';
+import { appState } from '~/.server/app.service';
 import { kdidLoaderFn, kingdomLoaderFn, kingdomNextLoaderFn } from '~/.server/kingdom.loader';
-import { appState } from '~/app.service';
 import { PageTitle } from '~/components';
 import { kdUtil } from '~/kingdom';
 import { gameUtil } from '~/utils';

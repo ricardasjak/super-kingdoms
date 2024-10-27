@@ -1,9 +1,9 @@
 import { type ActionFunction, type LoaderFunctionArgs } from '@remix-run/node';
 import { typedjson, useTypedLoaderData } from 'remix-typedjson';
+import { appState } from '~/.server/app.service';
 import { db } from '~/.server/db';
 import { kdidLoaderFn, kingdomLoaderFn, kingdomNextLoaderFn } from '~/.server/kingdom.loader';
 import { type MilitaryPlan } from '~/app.model';
-import { appState } from '~/app.service';
 import {
 	AllocationAbsolute,
 	MILITARY_LABELS_MINI,
