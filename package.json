@@ -4,12 +4,13 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently -n vite,convex -c blue,green \"vite\" \"convex dev\"",
+		"dev": "concurrently -n docker,tunnel,vite,convex -c magenta,cyan,blue,green \"docker compose up -d\" \"bash tunnel.sh\" \"vite\" \"convex dev\"",
 		"convex": "convex dev",
 		"build": "tsc -b && vite build",
 		"lint": "biome check .",
 		"lint:fix": "biome check --fix --unsafe .",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"ammend": "npm run lint:fix && git commit --amend --no-edit"
 	},
 	"dependencies": {
 		"@auth/core": "^0.37.0",
