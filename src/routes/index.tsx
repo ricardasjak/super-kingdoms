@@ -1,6 +1,6 @@
-import { useAuthActions } from "@convex-dev/auth/react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useConvexAuth } from "convex/react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/")({
 	component: LandingPage,
@@ -8,7 +8,10 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
 	const { isAuthenticated, isLoading } = useConvexAuth();
-	const { signIn, signOut } = useAuthActions();
+	const myKingdom = useQuery(
+		api.kingdoms.getMyKingdom,
+		isAuthenticated ? {} : "skip",
+	);
 
 	return (
 		<>
@@ -20,27 +23,42 @@ function LandingPage() {
 			</header>
 
 			<section>
-				{isLoading ? (
+				{isLoading || (isAuthenticated && myKingdom === undefined) ? (
 					<p aria-busy="true">Loading…</p>
 				) : isAuthenticated ? (
 					<article>
-						<h2>You're in! 🎮</h2>
-						<p>You are signed in and ready to play.</p>
-						<button
-							type="button"
-							className="secondary"
-							onClick={() => void signOut()}
-						>
-							Sign out
-						</button>
+						<hgroup>
+							<h2>You're in! 🎮</h2>
+							<p>Welcome back to Star Kingdoms.</p>
+						</hgroup>
+						<div className="grid">
+							{myKingdom ? (
+								<Link to="/kingdom/status" role="button">
+									Enter Kingdom
+								</Link>
+							) : (
+								<Link to="/kingdom/create" role="button">
+									Create Kingdom
+								</Link>
+							)}
+							<Link
+								to="/auth/signout"
+								role="button"
+								className="secondary outline"
+							>
+								Sign out
+							</Link>
+						</div>
 					</article>
 				) : (
 					<article>
-						<h2>Get Started</h2>
-						<p>Sign in with your Discord account to start playing.</p>
-						<button type="button" onClick={() => void signIn("discord")}>
+						<hgroup>
+							<h2>Get Started</h2>
+							<p>Sign in with your Discord account to start playing.</p>
+						</hgroup>
+						<Link to="/auth/signin" role="button">
 							Sign in with Discord
-						</button>
+						</Link>
 					</article>
 				)}
 			</section>

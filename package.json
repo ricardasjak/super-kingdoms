@@ -10,7 +10,7 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --fix --unsafe .",
 		"preview": "vite preview",
-		"ammend": "npm run lint:fix && git commit --amend --no-edit"
+		"ammend": "npm run lint:fix && git add . && git commit --amend --no-edit"
 	},
 	"dependencies": {
 		"@auth/core": "^0.37.0",
@@ -19,7 +19,8 @@
 		"@tanstack/react-router": "^1.166.2",
 		"convex": "^1.32.0",
 		"react": "^19.2.0",
-		"react-dom": "^19.2.0"
+		"react-dom": "^19.2.0",
+		"react-hook-form": "^7.71.2"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.6",
