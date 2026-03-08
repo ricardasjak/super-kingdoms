@@ -1,33 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { PLANET_TYPES, RACE_TYPES } from "../src/constants/kingdom";
 import { mutation, query } from "./_generated/server";
-
-export const PLANET_TYPES = [
-	"Mountainous",
-	"Forest and Wilderness",
-	"Herbal Jungle",
-	"Terra Form",
-	"Mystical Lands",
-	"Volcanic Inferno",
-	"Jagged Tundra",
-	"Oceanic",
-	"Desert Wasteland",
-	"Ice Giant",
-	"Shadow Lands",
-	"Multiple Terrain",
-	"Helium",
-	"Eternal Plains",
-] as const;
-
-export const RACE_TYPES = [
-	"Ancients",
-	"Terran",
-	"Xivornai",
-	"Gistrami",
-	"Mafielven",
-	"Qanut",
-	"Shadow",
-] as const;
 
 const STARTING_VALUES = {
 	population: 2250,
