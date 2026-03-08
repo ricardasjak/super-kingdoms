@@ -28,6 +28,16 @@ const schema = defineSchema({
 		asb: v.number(),
 		ach: v.number(),
 		rubble: v.number(),
+		queue: v.object({
+			res: v.array(v.number()),
+			plants: v.array(v.number()),
+			rax: v.array(v.number()),
+			sm: v.array(v.number()),
+			pf: v.array(v.number()),
+			tc: v.array(v.number()),
+			asb: v.array(v.number()),
+			ach: v.array(v.number()),
+		}),
 	})
 		.index("by_kdid", ["kdid"])
 		.index("by_userId", ["userId"]),
