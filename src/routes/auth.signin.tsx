@@ -1,6 +1,6 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/auth/signin")({
 	component: SignInPage,
@@ -8,9 +8,13 @@ export const Route = createFileRoute("/auth/signin")({
 
 function SignInPage() {
 	const { signIn } = useAuthActions();
+	const hasRun = useRef(false);
 
 	useEffect(() => {
-		void signIn("discord");
+		if (!hasRun.current) {
+			hasRun.current = true;
+			void signIn("discord");
+		}
 	}, [signIn]);
 
 	return (
