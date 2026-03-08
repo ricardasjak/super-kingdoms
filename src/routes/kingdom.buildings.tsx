@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { GAME_PARAMS } from "../constants/kingdom";
 import { calculateFreeLand } from "../utils/buildingUtils";
 
 export const Route = createFileRoute("/kingdom/buildings")({
@@ -122,6 +123,9 @@ function KingdomBuildingsPage() {
 		0,
 	);
 
+	const buildingCost = GAME_PARAMS.buildingCost(myKingdom.land);
+	const totalCost = requestSum * buildingCost;
+
 	const handleBuild = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (requestSum > freeLand) {
@@ -130,6 +134,10 @@ function KingdomBuildingsPage() {
 		}
 		if (requestSum <= 0) {
 			alert("Please enter a valid amount of buildings to construct.");
+			return;
+		}
+		if (myKingdom.money < totalCost) {
+			alert("Not enough money!");
 			return;
 		}
 
@@ -157,7 +165,9 @@ function KingdomBuildingsPage() {
 			});
 		} catch (error) {
 			console.error(error);
-			alert("Failed to build");
+			const errorMessage =
+				error instanceof Error ? error.message : "Failed to build";
+			alert(errorMessage);
 		} finally {
 			setIsBuilding(false);
 		}
@@ -365,11 +375,26 @@ function KingdomBuildingsPage() {
 									<strong>Requested:</strong> {requestSum}
 								</p>
 							</div>
+							<div>
+								<p>
+									<strong>Available Money:</strong>{" "}
+									{myKingdom.money.toLocaleString()}
+								</p>
+								<p>
+									<strong>Total Cost:</strong> {totalCost.toLocaleString()}{" "}
+									<small className="text-muted">
+										({buildingCost.toLocaleString()} per building)
+									</small>
+								</p>
+							</div>
 							<div style={{ textAlign: "right" }}>
 								<button
 									type="submit"
 									disabled={
-										isBuilding || requestSum > freeLand || requestSum <= 0
+										isBuilding ||
+										requestSum > freeLand ||
+										requestSum <= 0 ||
+										myKingdom.money < totalCost
 									}
 								>
 									{isBuilding ? "Building..." : "Build"}

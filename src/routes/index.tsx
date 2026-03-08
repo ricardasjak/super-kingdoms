@@ -29,7 +29,7 @@ function LandingPage() {
 					<article>
 						<hgroup>
 							<h2>You're in! 🎮</h2>
-							<p>Welcome back to Star Kingdoms.</p>
+							<p>Welcome back to Super Kingdoms.</p>
 						</hgroup>
 						<div className="grid">
 							{myKingdom ? (

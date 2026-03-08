@@ -1,6 +1,10 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { PLANET_TYPES, RACE_TYPES } from "../src/constants/kingdom";
+import {
+	GAME_PARAMS,
+	PLANET_TYPES,
+	RACE_TYPES,
+} from "../src/constants/kingdom";
 import { mutation, query } from "./_generated/server";
 
 const STARTING_VALUES = {
@@ -154,6 +158,19 @@ export const buildBuildings = mutation({
 
 		if (!buildings) throw new Error("Buildings not found");
 
+		if (
+			args.res < 0 ||
+			args.plants < 0 ||
+			args.rax < 0 ||
+			args.sm < 0 ||
+			args.pf < 0 ||
+			args.tc < 0 ||
+			args.asb < 0 ||
+			args.ach < 0
+		) {
+			throw new Error("Invalid request: negative building counts");
+		}
+
 		const requestSum =
 			args.res +
 			args.plants +
@@ -170,14 +187,29 @@ export const buildBuildings = mutation({
 			buildings.queue,
 		);
 
-		if (requestSum < 0) {
+		if (requestSum <= 0) {
 			throw new Error("Invalid request");
 		}
 		if (requestSum > freeLand) {
 			throw new Error("Not enough free land");
 		}
 
-		const newQueue = calculateNewQueue(buildings.queue, args, 16);
+		const buildingCost = GAME_PARAMS.buildingCost(kingdom.land);
+		const totalCost = requestSum * buildingCost;
+
+		if (kingdom.money < totalCost) {
+			throw new Error("Not enough money");
+		}
+
+		const newQueue = calculateNewQueue(
+			buildings.queue,
+			args,
+			GAME_PARAMS.constructionTime,
+		);
+
+		await ctx.db.patch(kingdom._id, {
+			money: kingdom.money - totalCost,
+		});
 
 		await ctx.db.patch(buildings._id, {
 			queue: newQueue,
