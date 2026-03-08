@@ -69,6 +69,12 @@ function KingdomStatusPage() {
 						</tbody>
 					</table>
 				</figure>
+				<div className="grid">
+					<Link to="/kingdom/buildings" role="button">
+						View Buildings
+					</Link>
+				</div>
+				<hr />
 				<footer>
 					<div className="grid">
 						<Link to="/auth/signout" role="button" className="secondary">

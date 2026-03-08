@@ -73,13 +73,27 @@ export const createKingdom = mutation({
 			throw new Error(`Invalid race type: ${args.raceType}`);
 		}
 
-		await ctx.db.insert("kingdoms", {
+		const kdid = await ctx.db.insert("kingdoms", {
 			userId,
 			kdName: args.kdName,
 			rulerName: args.rulerName,
 			planetType: args.planetType,
 			raceType: args.raceType,
 			...STARTING_VALUES,
+		});
+
+		await ctx.db.insert("buildings", {
+			userId,
+			kdid,
+			res: 80,
+			plants: 40,
+			rax: 10,
+			sm: 30,
+			pf: 10,
+			tc: 0,
+			asb: 0,
+			ach: 0,
+			rubble: 0,
 		});
 	},
 });
@@ -96,7 +110,28 @@ export const deleteKingdom = mutation({
 			.unique();
 
 		if (existing) {
+			const buildings = await ctx.db
+				.query("buildings")
+				.withIndex("by_kdid", (q) => q.eq("kdid", existing._id))
+				.unique();
+
+			if (buildings) {
+				await ctx.db.delete(buildings._id);
+			}
+
 			await ctx.db.delete(existing._id);
 		}
+	},
+});
+
+export const getKingdomBuildings = query({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) return null;
+		return await ctx.db
+			.query("buildings")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
 	},
 });
