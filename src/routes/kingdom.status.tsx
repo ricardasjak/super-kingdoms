@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -69,26 +69,6 @@ function KingdomStatusPage() {
 						</tbody>
 					</table>
 				</figure>
-				<div className="grid">
-					<Link to="/kingdom/buildings" role="button">
-						View Buildings
-					</Link>
-				</div>
-				<hr />
-				<footer>
-					<div className="grid">
-						<Link to="/auth/signout" role="button" className="secondary">
-							Sign out
-						</Link>
-						<Link
-							to="/kingdom/delete"
-							role="button"
-							className="contrast outline"
-						>
-							Delete Kingdom
-						</Link>
-					</div>
-				</footer>
 			</article>
 		</main>
 	);

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -26,7 +26,7 @@ function QueueTooltip({
 			style={{ cursor: "help" }}
 		>
 			+{count}
-		</span>	
+		</span>
 	);
 }
 
@@ -366,14 +366,6 @@ function KingdomBuildingsPage() {
 								</p>
 							</div>
 							<div style={{ textAlign: "right" }}>
-								<Link
-									to="/kingdom/status"
-									role="button"
-									className="secondary outline"
-									style={{ marginRight: "1rem" }}
-								>
-									Back to Status
-								</Link>
 								<button
 									type="submit"
 									disabled={
