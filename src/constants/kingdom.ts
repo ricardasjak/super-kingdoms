@@ -27,5 +27,7 @@ export const RACE_TYPES = [
 
 export const GAME_PARAMS = {
 	buildingCost: (land: number) => Math.round(Math.sqrt(land) * 63),
+	explorationCost: (land: number) => Math.round(Math.sqrt(land) * 111),
 	constructionTime: 16,
-};
+	explorationDuration: 24,
+} as const;

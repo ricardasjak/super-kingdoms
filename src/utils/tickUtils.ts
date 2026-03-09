@@ -8,6 +8,7 @@ export function processKingdomTick(
 		power: number;
 		moneyIncome: number;
 		powerIncome: number;
+		landQueue: number[];
 	},
 	buildings: {
 		res: number;
@@ -43,7 +44,17 @@ export function processKingdomTick(
 		power: Math.round(kingdom.power + powerIncome),
 		moneyIncome: Math.round(moneyIncome),
 		powerIncome: Math.round(powerIncome),
+		land: kingdom.land,
+		landQueue: [...kingdom.landQueue],
 	};
+
+	let kingdomChanged = false;
+	if (newKingdom.landQueue.length > 0) {
+		const completedLand = newKingdom.landQueue[0];
+		newKingdom.land += completedLand;
+		newKingdom.landQueue = newKingdom.landQueue.slice(1);
+		kingdomChanged = true;
+	}
 
 	const newBuildings = { ...buildings };
 	const newQueue = { ...buildings.queue };
@@ -73,7 +84,11 @@ export function processKingdomTick(
 	}
 
 	return {
-		updatedKingdom: newKingdom,
+		updatedKingdom:
+			kingdomChanged || moneyIncome !== 0 || powerIncome !== 0
+				? newKingdom
+				: newKingdom,
 		updatedBuildings: queueChanged ? newBuildings : null,
+		kingdomChanged: kingdomChanged,
 	};
 }

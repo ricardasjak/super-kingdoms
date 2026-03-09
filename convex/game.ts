@@ -61,6 +61,8 @@ export const advanceTick = mutation({
 				power: updatedKingdom.power,
 				moneyIncome: updatedKingdom.moneyIncome,
 				powerIncome: updatedKingdom.powerIncome,
+				land: updatedKingdom.land,
+				landQueue: updatedKingdom.landQueue,
 			});
 
 			if (updatedBuildings) {

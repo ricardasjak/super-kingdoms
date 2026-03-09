@@ -18,6 +18,7 @@ const schema = defineSchema({
 		powerIncome: v.number(),
 		scientists: v.number(),
 		soldiers: v.number(),
+		landQueue: v.array(v.number()),
 	}).index("by_userId", ["userId"]),
 	gameStatus: defineTable({
 		currentTick: v.number(),

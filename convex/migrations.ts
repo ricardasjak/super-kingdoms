@@ -28,3 +28,23 @@ export const runQueueMigration = mutation({
 		return `Migrated ${migratedCount} building records!`;
 	},
 });
+
+export const runKingdomMigration = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const kingdoms = await ctx.db.query("kingdoms").collect();
+
+		let migratedCount = 0;
+
+		for (const kingdom of kingdoms) {
+			if (kingdom.landQueue === undefined) {
+				await ctx.db.patch(kingdom._id, {
+					landQueue: [],
+				});
+				migratedCount++;
+			}
+		}
+
+		return `Migrated ${migratedCount} kingdom records!`;
+	},
+});

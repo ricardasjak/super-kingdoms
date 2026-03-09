@@ -12,6 +12,7 @@ describe("processKingdomTick", () => {
 			power: 1000,
 			moneyIncome: 0,
 			powerIncome: 0,
+			landQueue: [],
 		};
 		const buildings = {
 			res: 0,
@@ -65,6 +66,7 @@ describe("processKingdomTick", () => {
 			power: 0,
 			moneyIncome: 0,
 			powerIncome: 0,
+			landQueue: [50],
 		};
 		const buildings = {
 			res: 5,
@@ -87,7 +89,14 @@ describe("processKingdomTick", () => {
 			},
 		};
 
-		const { updatedBuildings } = processKingdomTick(kingdom, buildings);
+		const { updatedKingdom, updatedBuildings } = processKingdomTick(
+			kingdom,
+			buildings,
+		);
+
+		// Check land queue progressing natively
+		expect(updatedKingdom.landQueue).toEqual([]);
+		expect(updatedKingdom.land).toBe(50);
 
 		expect(updatedBuildings).not.toBeNull();
 		// Res queue 1st element completed

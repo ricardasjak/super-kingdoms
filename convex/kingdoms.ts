@@ -16,7 +16,8 @@ const STARTING_VALUES = {
 	powerIncome: 0,
 	scientists: 100,
 	soldiers: 200,
-} as const;
+	landQueue: [] as number[],
+};
 
 export const getMyKingdom = query({
 	args: {},
@@ -216,6 +217,58 @@ export const buildBuildings = mutation({
 
 		await ctx.db.patch(buildings._id, {
 			queue: newQueue,
+		});
+	},
+});
+
+import { calculateExplorationQueue } from "../src/utils/landUtils";
+
+export const exploreLand = mutation({
+	args: {
+		amount: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		if (args.amount <= 0) {
+			throw new Error("Invalid exploration amount");
+		}
+
+		const currentQueueSum = kingdom.landQueue.reduce((a, b) => a + b, 0);
+		const maxPossibleExplore = Math.floor(kingdom.land * 0.1);
+		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
+
+		if (args.amount > maxExplore) {
+			throw new Error(
+				`Cannot explore more than 10% of current land combined with the current queue (${maxExplore} max available to request)`,
+			);
+		}
+
+		const costPerLand = GAME_PARAMS.explorationCost(kingdom.land);
+		const totalCost = costPerLand * args.amount;
+
+		if (kingdom.money < totalCost) {
+			throw new Error("Not enough money for exploration");
+		}
+
+		const currentQueue = kingdom.landQueue;
+		const newQueue = calculateExplorationQueue(
+			currentQueue,
+			args.amount,
+			GAME_PARAMS.explorationDuration,
+		);
+
+		await ctx.db.patch(kingdom._id, {
+			money: kingdom.money - totalCost,
+			landQueue: newQueue,
 		});
 	},
 });
