@@ -18,6 +18,7 @@ export type BuildingCounts = {
 	tc: number;
 	asb: number;
 	ach: number;
+	rubble: number;
 };
 
 const BUILDING_KEYS = [
@@ -63,7 +64,7 @@ export function calculateFreeLand(
 
 export function calculateNewQueue(
 	currentQueue: BuildingsQueue | undefined,
-	requestedBuildings: BuildingCounts,
+	requestedBuildings: Omit<BuildingCounts, "rubble">,
 	ticks = 16,
 ): BuildingsQueue {
 	const safeQueue = currentQueue || {

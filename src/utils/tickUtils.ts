@@ -21,6 +21,7 @@ export function processKingdomTick(
 		tc: number;
 		asb: number;
 		ach: number;
+		rubble: number;
 		queue: {
 			res: number[];
 			plants: number[];

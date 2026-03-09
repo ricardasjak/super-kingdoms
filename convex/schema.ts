@@ -19,37 +19,33 @@ const schema = defineSchema({
 		scientists: v.number(),
 		soldiers: v.number(),
 		landQueue: v.array(v.number()),
+		buildings: v.object({
+			res: v.number(),
+			plants: v.number(),
+			rax: v.number(),
+			sm: v.number(),
+			pf: v.number(),
+			tc: v.number(),
+			asb: v.number(),
+			ach: v.number(),
+			rubble: v.number(),
+			queue: v.object({
+				res: v.array(v.number()),
+				plants: v.array(v.number()),
+				rax: v.array(v.number()),
+				sm: v.array(v.number()),
+				pf: v.array(v.number()),
+				tc: v.array(v.number()),
+				asb: v.array(v.number()),
+				ach: v.array(v.number()),
+			}),
+		}),
 	}).index("by_userId", ["userId"]),
 	gameStatus: defineTable({
 		currentTick: v.number(),
 		endTick: v.number(),
 		roundNumber: v.number(),
 	}),
-	buildings: defineTable({
-		userId: v.string(),
-		kdid: v.id("kingdoms"),
-		res: v.number(),
-		plants: v.number(),
-		rax: v.number(),
-		sm: v.number(),
-		pf: v.number(),
-		tc: v.number(),
-		asb: v.number(),
-		ach: v.number(),
-		rubble: v.number(),
-		queue: v.object({
-			res: v.array(v.number()),
-			plants: v.array(v.number()),
-			rax: v.array(v.number()),
-			sm: v.array(v.number()),
-			pf: v.array(v.number()),
-			tc: v.array(v.number()),
-			asb: v.array(v.number()),
-			ach: v.array(v.number()),
-		}),
-	})
-		.index("by_kdid", ["kdid"])
-		.index("by_userId", ["userId"]),
 });
 
 export default schema;

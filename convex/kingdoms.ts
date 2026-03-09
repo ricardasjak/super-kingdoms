@@ -55,36 +55,33 @@ export const createKingdom = mutation({
 			throw new Error(`Invalid race type: ${args.raceType}`);
 		}
 
-		const kdid = await ctx.db.insert("kingdoms", {
+		await ctx.db.insert("kingdoms", {
 			userId,
 			kdName: args.kdName,
 			rulerName: args.rulerName,
 			planetType: args.planetType,
 			raceType: args.raceType,
 			...STARTING_VALUES,
-		});
-
-		await ctx.db.insert("buildings", {
-			userId,
-			kdid,
-			res: 80,
-			plants: 40,
-			rax: 10,
-			sm: 30,
-			pf: 10,
-			tc: 0,
-			asb: 0,
-			ach: 0,
-			rubble: 0,
-			queue: {
-				res: [],
-				plants: [],
-				rax: [],
-				sm: [],
-				pf: [],
-				tc: [],
-				asb: [],
-				ach: [],
+			buildings: {
+				res: 80,
+				plants: 40,
+				rax: 10,
+				sm: 30,
+				pf: 10,
+				tc: 0,
+				asb: 0,
+				ach: 0,
+				rubble: 0,
+				queue: {
+					res: [],
+					plants: [],
+					rax: [],
+					sm: [],
+					pf: [],
+					tc: [],
+					asb: [],
+					ach: [],
+				},
 			},
 		});
 	},
@@ -102,15 +99,6 @@ export const deleteKingdom = mutation({
 			.unique();
 
 		if (existing) {
-			const buildings = await ctx.db
-				.query("buildings")
-				.withIndex("by_kdid", (q) => q.eq("kdid", existing._id))
-				.unique();
-
-			if (buildings) {
-				await ctx.db.delete(buildings._id);
-			}
-
 			await ctx.db.delete(existing._id);
 		}
 	},
@@ -138,53 +126,21 @@ export const populateKingdoms = mutation({
 		if (!existingKd)
 			throw new Error("You must create a kingdom first to clone it");
 
-		const existingBuildings = await ctx.db
-			.query("buildings")
-			.withIndex("by_kdid", (q) => q.eq("kdid", existingKd._id))
-			.unique();
-
-		if (!existingBuildings)
-			throw new Error("Source kingdom buildings not found");
-
 		// Clone the kingdom 1000 times
 		for (let i = 0; i < 1000; i++) {
 			const randomKdName = Math.floor(Math.random() * 1000000000).toString();
 			const fakeUserId = `fake_user_${Math.random().toString(36).substring(7)}`;
 
 			const { _id, _creationTime, ...kdData } = existingKd;
-			const {
-				_id: bId,
-				_creationTime: bTime,
-				kdid: oldKdId,
-				...buildingData
-			} = existingBuildings;
 
-			const newKdId = await ctx.db.insert("kingdoms", {
+			await ctx.db.insert("kingdoms", {
 				...kdData,
 				userId: fakeUserId,
 				kdName: randomKdName,
 			});
-
-			await ctx.db.insert("buildings", {
-				...buildingData,
-				userId: fakeUserId,
-				kdid: newKdId,
-			});
 		}
 
 		return { success: true };
-	},
-});
-
-export const getKingdomBuildings = query({
-	args: {},
-	handler: async (ctx) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) return null;
-		return await ctx.db
-			.query("buildings")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
 	},
 });
 
@@ -215,12 +171,7 @@ export const buildBuildings = mutation({
 
 		if (!kingdom) throw new Error("Kingdom not found");
 
-		const buildings = await ctx.db
-			.query("buildings")
-			.withIndex("by_kdid", (q) => q.eq("kdid", kingdom._id))
-			.unique();
-
-		if (!buildings) throw new Error("Buildings not found");
+		if (!kingdom.buildings) throw new Error("Buildings not found");
 
 		if (
 			args.res < 0 ||
@@ -247,8 +198,8 @@ export const buildBuildings = mutation({
 
 		const freeLand = calculateFreeLand(
 			kingdom.land,
-			buildings,
-			buildings.queue,
+			kingdom.buildings,
+			kingdom.buildings.queue,
 		);
 
 		if (requestSum <= 0) {
@@ -266,17 +217,14 @@ export const buildBuildings = mutation({
 		}
 
 		const newQueue = calculateNewQueue(
-			buildings.queue,
+			kingdom.buildings.queue,
 			args,
 			GAME_PARAMS.constructionTime,
 		);
 
 		await ctx.db.patch(kingdom._id, {
 			money: kingdom.money - totalCost,
-		});
-
-		await ctx.db.patch(buildings._id, {
-			queue: newQueue,
+			buildings: { ...kingdom.buildings, queue: newQueue },
 		});
 	},
 });

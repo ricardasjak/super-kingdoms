@@ -9,7 +9,7 @@ export const getGameStatus = query({
 	handler: async (ctx) => {
 		const existingStatus = await ctx.db.query("gameStatus").first();
 		if (!existingStatus) {
-			return { currentTick: 0, endTick: 20, roundNumber: 1 };
+			return { currentTick: 0, endTick: 200, roundNumber: 1 };
 		}
 		return existingStatus;
 	},
@@ -25,16 +25,14 @@ export const advanceTick = action({
 
 		await ctx.runMutation(internal.game.startTick);
 
-		let cursor: string | null = null;
 		let isDone = false;
+		let cursor: string | null = null;
 
 		while (!isDone) {
-			const batchResult: { cursor: string | null; isDone: boolean } =
-				await ctx.runMutation(internal.game.processBatch, {
-					cursor,
-				});
-			cursor = batchResult.cursor;
+			const batchResult: { isDone: boolean; continueCursor: string } =
+				await ctx.runMutation(internal.game.processBatch, { cursor });
 			isDone = batchResult.isDone;
+			cursor = batchResult.continueCursor;
 		}
 
 		const endTime = Date.now();
@@ -55,7 +53,7 @@ export const startTick = internalMutation({
 			(await ctx.db.get(
 				await ctx.db.insert("gameStatus", {
 					currentTick: 0,
-					endTick: 20,
+					endTick: 100,
 					roundNumber: 1,
 				}),
 			));
@@ -72,48 +70,39 @@ export const startTick = internalMutation({
 export const processBatch = internalMutation({
 	args: { cursor: v.union(v.string(), v.null()) },
 	handler: async (ctx, args) => {
-		const { page, continueCursor, isDone } = await ctx.db
+		const results = await ctx.db
 			.query("kingdoms")
-			.paginate({ cursor: args.cursor, numItems: 500 });
+			.paginate({ cursor: args.cursor, numItems: 3000 });
 
-		for (const kingdom of page) {
-			const buildings = await ctx.db
-				.query("buildings")
-				.withIndex("by_kdid", (q) => q.eq("kdid", kingdom._id))
-				.unique();
+		await Promise.all(
+			results.page.map(async (kingdom) => {
+				const buildings = kingdom.buildings;
 
-			if (!buildings) continue;
+				if (!buildings) return;
 
-			const { updatedKingdom, updatedBuildings } = processKingdomTick(
-				kingdom,
-				buildings,
-			);
+				const { updatedKingdom, updatedBuildings } = processKingdomTick(
+					kingdom,
+					buildings,
+				);
 
-			await ctx.db.patch(kingdom._id, {
-				money: updatedKingdom.money,
-				power: updatedKingdom.power,
-				moneyIncome: updatedKingdom.moneyIncome,
-				powerIncome: updatedKingdom.powerIncome,
-				land: updatedKingdom.land,
-				landQueue: updatedKingdom.landQueue,
-			});
+				const patchData: Parameters<typeof ctx.db.patch>[1] = {
+					money: updatedKingdom.money,
+					power: updatedKingdom.power,
+					moneyIncome: updatedKingdom.moneyIncome,
+					powerIncome: updatedKingdom.powerIncome,
+					land: updatedKingdom.land,
+					landQueue: updatedKingdom.landQueue,
+				};
 
-			if (updatedBuildings) {
-				await ctx.db.patch(buildings._id, {
-					res: updatedBuildings.res,
-					plants: updatedBuildings.plants,
-					rax: updatedBuildings.rax,
-					sm: updatedBuildings.sm,
-					pf: updatedBuildings.pf,
-					tc: updatedBuildings.tc,
-					asb: updatedBuildings.asb,
-					ach: updatedBuildings.ach,
-					queue: updatedBuildings.queue,
-				});
-			}
-		}
+				if (updatedBuildings) {
+					patchData.buildings = updatedBuildings;
+				}
 
-		return { cursor: continueCursor, isDone };
+				await ctx.db.patch(kingdom._id, patchData);
+			}),
+		);
+
+		return { isDone: results.isDone, continueCursor: results.continueCursor };
 	},
 });
 
@@ -149,7 +138,7 @@ export const resetGameStatus = internalMutation({
 		} else {
 			await ctx.db.insert("gameStatus", {
 				currentTick: 0,
-				endTick: 20,
+				endTick: 200,
 				roundNumber: 1,
 			});
 		}
@@ -159,16 +148,9 @@ export const resetGameStatus = internalMutation({
 export const deleteEntitiesBatch = internalMutation({
 	args: {},
 	handler: async (ctx) => {
-		const buildings = await ctx.db.query("buildings").take(1000);
-		for (const bldg of buildings) {
-			await ctx.db.delete(bldg._id);
-		}
-
 		const kingdoms = await ctx.db.query("kingdoms").take(1000);
-		for (const kd of kingdoms) {
-			await ctx.db.delete(kd._id);
-		}
+		await Promise.all(kingdoms.map((kd) => ctx.db.delete(kd._id)));
 
-		return { isDone: buildings.length === 0 && kingdoms.length === 0 };
+		return { isDone: kingdoms.length === 0 };
 	},
 });

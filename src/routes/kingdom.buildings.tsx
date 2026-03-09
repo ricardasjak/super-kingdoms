@@ -34,7 +34,7 @@ function QueueTooltip({
 function KingdomBuildingsPage() {
 	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
-	const buildings = useQuery(api.kingdoms.getKingdomBuildings);
+	const buildings = myKingdom?.buildings;
 	const buildBuildings = useMutation(api.kingdoms.buildBuildings);
 
 	const [buildQueue, setBuildQueue] = useState({
@@ -49,10 +49,10 @@ function KingdomBuildingsPage() {
 	});
 	const [isBuilding, setIsBuilding] = useState(false);
 
-	if (myKingdom === undefined || buildings === undefined) {
+	if (myKingdom === undefined) {
 		return (
 			<main className="container">
-				<article aria-busy="true">Loading kingdom buildings...</article>
+				<article aria-busy="true">Loading kingdom...</article>
 			</main>
 		);
 	}
@@ -62,7 +62,7 @@ function KingdomBuildingsPage() {
 		return null;
 	}
 
-	if (buildings === null) {
+	if (!buildings) {
 		return (
 			<main className="container">
 				<article>
