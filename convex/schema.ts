@@ -13,9 +13,16 @@ const schema = defineSchema({
 		population: v.number(),
 		land: v.number(),
 		money: v.number(),
+		power: v.number(),
+		moneyIncome: v.number(),
+		powerIncome: v.number(),
 		scientists: v.number(),
 		soldiers: v.number(),
 	}).index("by_userId", ["userId"]),
+	gameStatus: defineTable({
+		currentTick: v.number(),
+		endTick: v.number(),
+	}),
 	buildings: defineTable({
 		userId: v.string(),
 		kdid: v.id("kingdoms"),

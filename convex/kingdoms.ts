@@ -11,6 +11,9 @@ const STARTING_VALUES = {
 	population: 2250,
 	land: 250,
 	money: 300000,
+	power: 0,
+	moneyIncome: 0,
+	powerIncome: 0,
 	scientists: 100,
 	soldiers: 200,
 } as const;
