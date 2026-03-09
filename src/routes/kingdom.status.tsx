@@ -39,25 +39,16 @@ function KingdomStatusPage() {
 				<hr />
 				<figure>
 					<table>
-						<thead>
-							<tr>
-								<th scope="col">Resource</th>
-								<th scope="col">Amount</th>
-							</tr>
-						</thead>
 						<tbody>
 							<tr>
-								<td>Population</td>
-								<td>{myKingdom.population.toLocaleString()}</td>
+								<td>Net Income</td>
+								<td>${myKingdom.moneyIncome.toLocaleString()}</td>
 							</tr>
 							<tr>
-								<td>Land</td>
-								<td>{myKingdom.land.toLocaleString()} acres</td>
+								<td>Net Power</td>
+								<td>{myKingdom.powerIncome.toLocaleString()}</td>
 							</tr>
-							<tr>
-								<td>Money</td>
-								<td>${myKingdom.money.toLocaleString()}</td>
-							</tr>
+
 							<tr>
 								<td>Scientists</td>
 								<td>{myKingdom.scientists.toLocaleString()}</td>

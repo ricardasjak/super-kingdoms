@@ -4,14 +4,14 @@ import {
 	GAME_PARAMS,
 	PLANET_TYPES,
 	RACE_TYPES,
-} from "../src/constants/kingdom";
+} from "../src/constants/game-params";
 import { mutation, query } from "./_generated/server";
 
 const STARTING_VALUES = {
 	population: 2250,
 	land: 250,
 	money: 300000,
-	power: 0,
+	power: 10000,
 	moneyIncome: 0,
 	powerIncome: 0,
 	scientists: 100,

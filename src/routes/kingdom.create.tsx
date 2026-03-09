@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useForm } from "react-hook-form";
 import { api } from "../../convex/_generated/api";
-import { PLANET_TYPES, RACE_TYPES } from "../constants/kingdom";
+import { PLANET_TYPES, RACE_TYPES } from "../constants/game-params";
 
 export const Route = createFileRoute("/kingdom/create")({
 	component: CreateKingdomPage,

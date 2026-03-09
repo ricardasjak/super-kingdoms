@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
-import { GAME_PARAMS } from "../constants/kingdom";
+import { GAME_PARAMS } from "../constants/game-params";
 import { calculateFreeLand } from "../utils/buildingUtils";
 
 export const Route = createFileRoute("/kingdom/buildings")({

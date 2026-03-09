@@ -1,3 +1,5 @@
+import { GAME_PARAMS } from "../constants/game-params";
+
 export function processKingdomTick(
 	kingdom: {
 		population: number;
@@ -31,17 +33,23 @@ export function processKingdomTick(
 		};
 	},
 ) {
-	const moneyIncome = buildings.sm * 120 + kingdom.population * 2;
+	const moneyIncome =
+		buildings.sm * GAME_PARAMS.income.sm +
+		kingdom.population * GAME_PARAMS.income.population;
 	const powerConsumption =
-		kingdom.population * 0.32 +
-		(kingdom.scientists + kingdom.soldiers) * 0.7 +
-		kingdom.land * 50;
-	const powerIncome = buildings.plants * 140 - powerConsumption;
+		kingdom.population * GAME_PARAMS.power.consumption.population +
+		kingdom.scientists * GAME_PARAMS.power.consumption.scientists +
+		kingdom.soldiers * GAME_PARAMS.power.consumption.soldiers;
+	const powerIncome =
+		buildings.plants * GAME_PARAMS.power.production.plants - powerConsumption;
 
 	const newKingdom = {
 		...kingdom,
 		money: kingdom.money + moneyIncome,
-		power: Math.round(kingdom.power + powerIncome),
+		power: Math.min(
+			GAME_PARAMS.power.storage.plants * buildings.plants,
+			Math.max(0, Math.round(kingdom.power + powerIncome)),
+		),
 		moneyIncome: Math.round(moneyIncome),
 		powerIncome: Math.round(powerIncome),
 		land: kingdom.land,
