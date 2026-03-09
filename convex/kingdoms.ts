@@ -116,6 +116,66 @@ export const deleteKingdom = mutation({
 	},
 });
 
+export const getKingdomsCount = query({
+	args: {},
+	handler: async (ctx) => {
+		const kingdoms = await ctx.db.query("kingdoms").collect();
+		return kingdoms.length;
+	},
+});
+
+export const populateKingdoms = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const existingKd = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!existingKd)
+			throw new Error("You must create a kingdom first to clone it");
+
+		const existingBuildings = await ctx.db
+			.query("buildings")
+			.withIndex("by_kdid", (q) => q.eq("kdid", existingKd._id))
+			.unique();
+
+		if (!existingBuildings)
+			throw new Error("Source kingdom buildings not found");
+
+		// Clone the kingdom 1000 times
+		for (let i = 0; i < 1000; i++) {
+			const randomKdName = Math.floor(Math.random() * 1000000000).toString();
+			const fakeUserId = `fake_user_${Math.random().toString(36).substring(7)}`;
+
+			const { _id, _creationTime, ...kdData } = existingKd;
+			const {
+				_id: bId,
+				_creationTime: bTime,
+				kdid: oldKdId,
+				...buildingData
+			} = existingBuildings;
+
+			const newKdId = await ctx.db.insert("kingdoms", {
+				...kdData,
+				userId: fakeUserId,
+				kdName: randomKdName,
+			});
+
+			await ctx.db.insert("buildings", {
+				...buildingData,
+				userId: fakeUserId,
+				kdid: newKdId,
+			});
+		}
+
+		return { success: true };
+	},
+});
+
 export const getKingdomBuildings = query({
 	args: {},
 	handler: async (ctx) => {

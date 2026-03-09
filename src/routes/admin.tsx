@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 
@@ -9,9 +9,12 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
 	const gameStatus = useQuery(api.game.getGameStatus);
-	const advanceTick = useMutation(api.game.advanceTick);
-	const restartGame = useMutation(api.game.restartGame);
+	const kingdomsCount = useQuery(api.kingdoms.getKingdomsCount);
+	const advanceTick = useAction(api.game.advanceTick);
+	const restartGame = useAction(api.game.restartGame);
+	const populateKingdoms = useMutation(api.kingdoms.populateKingdoms);
 	const [executionTime, setExecutionTime] = useState<number | null>(null);
+	const [isPopulating, setIsPopulating] = useState(false);
 
 	const handleAdvanceTick = async () => {
 		try {
@@ -42,6 +45,21 @@ function AdminPage() {
 					error instanceof Error ? error.message : "Failed to restart the game",
 				);
 			}
+		}
+	};
+
+	const handlePopulate = async () => {
+		setIsPopulating(true);
+		try {
+			await populateKingdoms();
+			alert("Successfully populated 1000 dummy kingdoms!");
+		} catch (error) {
+			console.error("Failed to populate kingdoms", error);
+			alert(
+				error instanceof Error ? error.message : "Failed to populate kingdoms",
+			);
+		} finally {
+			setIsPopulating(false);
 		}
 	};
 
@@ -77,6 +95,12 @@ function AdminPage() {
 									</p>
 								)}
 							</div>
+						)}
+						{kingdomsCount !== undefined && (
+							<p style={{ marginTop: "1rem" }}>
+								Total Kingdoms:{" "}
+								<strong>{kingdomsCount.toLocaleString()}</strong>
+							</p>
 						)}
 					</div>
 					<div
@@ -142,6 +166,38 @@ function AdminPage() {
 								<path d="M3 3v5h5"></path>
 							</svg>
 							Restart Game
+						</button>
+
+						<button
+							type="button"
+							className="secondary outline"
+							onClick={handlePopulate}
+							disabled={isPopulating}
+							aria-busy={isPopulating}
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "0.5rem",
+							}}
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<title>Populate Kingdoms</title>
+								<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+								<circle cx="9" cy="7" r="4"></circle>
+								<path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+								<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+							</svg>
+							Populate Kingdoms (x1000)
 						</button>
 					</div>
 				</div>

@@ -62,7 +62,7 @@ function KingdomExplore() {
 								max={maxExplore}
 								value={amount || ""}
 								onChange={(e) =>
-									setAmount(Number.parseInt(e.target.value) || 0)
+									setAmount(Number.parseInt(e.target.value, 10) || 0)
 								}
 							/>
 						</label>
