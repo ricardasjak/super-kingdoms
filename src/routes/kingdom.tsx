@@ -8,6 +8,7 @@ export const Route = createFileRoute("/kingdom")({
 
 function KingdomLayout() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
+	const gameStatus = useQuery(api.game.getGameStatus);
 
 	return (
 		<div>
@@ -20,6 +21,17 @@ function KingdomLayout() {
 							</li>
 						</ul>
 						<ul>
+							{gameStatus && (
+								<li
+									style={{
+										marginRight: "1rem",
+										color: "var(--pico-muted-color)",
+									}}
+								>
+									Rnd: {gameStatus.roundNumber} | Tick: {gameStatus.currentTick}
+									/{gameStatus.endTick}
+								</li>
+							)}
 							<li>Land: {myKingdom.land.toLocaleString()}</li>
 							<li>Pop: {myKingdom.population.toLocaleString()}</li>
 							<li>Money: ${myKingdom.money.toLocaleString()}</li>

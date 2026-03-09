@@ -22,6 +22,7 @@ const schema = defineSchema({
 	gameStatus: defineTable({
 		currentTick: v.number(),
 		endTick: v.number(),
+		roundNumber: v.number(),
 	}),
 	buildings: defineTable({
 		userId: v.string(),

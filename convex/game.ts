@@ -1,14 +1,14 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
 import { processKingdomTick } from "../src/utils/tickUtils";
+import { mutation, query } from "./_generated/server";
 
 export const getGameStatus = query({
 	args: {},
 	handler: async (ctx) => {
 		const existingStatus = await ctx.db.query("gameStatus").first();
 		if (!existingStatus) {
-			return { currentTick: 0, endTick: 20 };
+			return { currentTick: 0, endTick: 20, roundNumber: 1 };
 		}
 		return existingStatus;
 	},
@@ -29,6 +29,7 @@ export const advanceTick = mutation({
 				await ctx.db.insert("gameStatus", {
 					currentTick: 0,
 					endTick: 20,
+					roundNumber: 1,
 				}),
 			));
 
@@ -87,4 +88,41 @@ export const advanceTick = mutation({
 	returns: v.object({
 		executionTimeMs: v.number(),
 	}),
+});
+
+export const restartGame = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		// Reset GameStatus and Increment Round
+		const existingStatus = await ctx.db.query("gameStatus").first();
+		if (existingStatus) {
+			await ctx.db.patch(existingStatus._id, {
+				currentTick: 0,
+				roundNumber: (existingStatus.roundNumber ?? 1) + 1,
+			});
+		} else {
+			await ctx.db.insert("gameStatus", {
+				currentTick: 0,
+				endTick: 20,
+				roundNumber: 1,
+			});
+		}
+
+		// Delete all Buildings
+		const buildings = await ctx.db.query("buildings").collect();
+		for (const bldg of buildings) {
+			await ctx.db.delete(bldg._id);
+		}
+
+		// Delete all Kingdoms
+		const kingdoms = await ctx.db.query("kingdoms").collect();
+		for (const kd of kingdoms) {
+			await ctx.db.delete(kd._id);
+		}
+
+		return { success: true };
+	},
 });
