@@ -1,5 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { GAME_PARAMS } from "../src/constants/game-params";
 import { processKingdomTick } from "../src/utils/tickUtils";
 import { internal } from "./_generated/api";
 import { action, internalMutation, query } from "./_generated/server";
@@ -9,7 +10,11 @@ export const getGameStatus = query({
 	handler: async (ctx) => {
 		const existingStatus = await ctx.db.query("gameStatus").first();
 		if (!existingStatus) {
-			return { currentTick: 0, endTick: 200, roundNumber: 1 };
+			return {
+				currentTick: 0,
+				endTick: GAME_PARAMS.roundLength,
+				roundNumber: 1,
+			};
 		}
 		return existingStatus;
 	},
@@ -53,7 +58,7 @@ export const startTick = internalMutation({
 			(await ctx.db.get(
 				await ctx.db.insert("gameStatus", {
 					currentTick: 0,
-					endTick: 100,
+					endTick: GAME_PARAMS.roundLength,
 					roundNumber: 1,
 				}),
 			));
@@ -138,7 +143,7 @@ export const resetGameStatus = internalMutation({
 		} else {
 			await ctx.db.insert("gameStatus", {
 				currentTick: 0,
-				endTick: 200,
+				endTick: GAME_PARAMS.roundLength,
 				roundNumber: 1,
 			});
 		}
