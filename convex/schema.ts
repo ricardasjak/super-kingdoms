@@ -20,6 +20,7 @@ const schema = defineSchema({
 		scientists: v.number(),
 		soldiers: v.number(),
 		autoExplore: v.optional(v.boolean()),
+		autoBuild: v.optional(v.boolean()),
 		landQueue: v.array(v.number()),
 		buildings: v.object({
 			res: v.number(),
@@ -31,6 +32,18 @@ const schema = defineSchema({
 			asb: v.number(),
 			ach: v.number(),
 			rubble: v.number(),
+			target: v.optional(
+				v.object({
+					res: v.number(),
+					plants: v.number(),
+					rax: v.number(),
+					sm: v.number(),
+					pf: v.number(),
+					tc: v.number(),
+					asb: v.number(),
+					ach: v.number(),
+				}),
+			),
 			queue: v.object({
 				res: v.array(v.number()),
 				plants: v.array(v.number()),

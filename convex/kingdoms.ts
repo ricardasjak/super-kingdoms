@@ -20,6 +20,7 @@ const STARTING_VALUES = {
 	soldiers: 200,
 	landQueue: [] as number[],
 	autoExplore: false,
+	autoBuild: false,
 };
 
 export const getMyKingdom = query({
@@ -302,6 +303,52 @@ export const toggleAutoExplore = mutation({
 
 		await ctx.db.patch(kingdom._id, {
 			autoExplore: args.autoExplore,
+		});
+	},
+});
+
+export const saveAutoBuildSettings = mutation({
+	args: {
+		autoBuild: v.boolean(),
+		target: v.object({
+			res: v.number(),
+			plants: v.number(),
+			rax: v.number(),
+			sm: v.number(),
+			pf: v.number(),
+			tc: v.number(),
+			asb: v.number(),
+			ach: v.number(),
+		}),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		const sum =
+			args.target.res +
+			args.target.plants +
+			args.target.rax +
+			args.target.sm +
+			args.target.pf +
+			args.target.tc +
+			args.target.asb +
+			args.target.ach;
+
+		if (sum > 100) {
+			throw new Error("Target percentages cannot exceed 100%");
+		}
+
+		await ctx.db.patch(kingdom._id, {
+			autoBuild: args.autoBuild,
+			buildings: { ...kingdom.buildings, target: args.target },
 		});
 	},
 });

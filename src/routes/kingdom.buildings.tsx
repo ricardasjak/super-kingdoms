@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { GAME_PARAMS } from "../constants/game-params";
 import { calculateFreeLand } from "../utils/buildingUtils";
@@ -36,6 +36,7 @@ function KingdomBuildingsPage() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const buildings = myKingdom?.buildings;
 	const buildBuildings = useMutation(api.kingdoms.buildBuildings);
+	const saveAutoBuildSettings = useMutation(api.kingdoms.saveAutoBuildSettings);
 
 	const [buildQueue, setBuildQueue] = useState({
 		res: "",
@@ -47,7 +48,70 @@ function KingdomBuildingsPage() {
 		asb: "",
 		ach: "",
 	});
+	const [targetQueue, setTargetQueue] = useState({
+		res: "",
+		plants: "",
+		rax: "",
+		sm: "",
+		pf: "",
+		tc: "",
+		asb: "",
+		ach: "",
+	});
+	const [targetInitialized, setTargetInitialized] = useState(false);
 	const [isBuilding, setIsBuilding] = useState(false);
+
+	useEffect(() => {
+		if (buildings && !targetInitialized) {
+			if (buildings.target) {
+				setTargetQueue({
+					res: buildings.target.res.toString(),
+					plants: buildings.target.plants.toString(),
+					rax: buildings.target.rax.toString(),
+					sm: buildings.target.sm.toString(),
+					pf: buildings.target.pf.toString(),
+					tc: buildings.target.tc.toString(),
+					asb: buildings.target.asb.toString(),
+					ach: buildings.target.ach.toString(),
+				});
+			} else {
+				const total =
+					buildings.res +
+					buildings.plants +
+					buildings.rax +
+					buildings.sm +
+					buildings.pf +
+					buildings.tc +
+					buildings.asb +
+					buildings.ach;
+
+				if (total > 0) {
+					setTargetQueue({
+						res: Math.round((buildings.res / total) * 100).toString(),
+						plants: Math.round((buildings.plants / total) * 100).toString(),
+						rax: Math.round((buildings.rax / total) * 100).toString(),
+						sm: Math.round((buildings.sm / total) * 100).toString(),
+						pf: Math.round((buildings.pf / total) * 100).toString(),
+						tc: Math.round((buildings.tc / total) * 100).toString(),
+						asb: Math.round((buildings.asb / total) * 100).toString(),
+						ach: Math.round((buildings.ach / total) * 100).toString(),
+					});
+				} else {
+					setTargetQueue({
+						res: "0",
+						plants: "0",
+						rax: "0",
+						sm: "0",
+						pf: "0",
+						tc: "0",
+						asb: "0",
+						ach: "0",
+					});
+				}
+			}
+			setTargetInitialized(true);
+		}
+	}, [buildings, targetInitialized]);
 
 	if (myKingdom === undefined) {
 		return (
@@ -118,6 +182,19 @@ function KingdomBuildingsPage() {
 		}));
 	};
 
+	const handleTargetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target;
+		setTargetQueue((prev) => ({
+			...prev,
+			[name]: value,
+		}));
+	};
+
+	const targetSum = Object.values(targetQueue).reduce(
+		(sum, val) => sum + (parseInt(val, 10) || 0),
+		0,
+	);
+
 	const requestSum = Object.values(buildQueue).reduce(
 		(sum, val) => sum + (parseInt(val, 10) || 0),
 		0,
@@ -125,6 +202,11 @@ function KingdomBuildingsPage() {
 
 	const buildingCost = GAME_PARAMS.buildings.cost(myKingdom.land);
 	const totalCost = requestSum * buildingCost;
+
+	const actualPercent = (count: number) => {
+		if (!myKingdom.land) return "0.0%";
+		return `${((count / myKingdom.land) * 100).toFixed(1)}%`;
+	};
 
 	const handleBuild = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -189,14 +271,17 @@ function KingdomBuildingsPage() {
 							<thead>
 								<tr>
 									<th scope="col">Building Type</th>
+									<th scope="col">Actual %</th>
 									<th scope="col">Count</th>
 									<th scope="col">In Queue</th>
+									{myKingdom.autoBuild && <th scope="col">Target %</th>}
 									<th scope="col">Build</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr>
 									<td>Residences</td>
+									<td>{actualPercent(buildings.res)}</td>
 									<td>{buildings.res}</td>
 									<td>
 										<QueueTooltip
@@ -204,6 +289,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.res || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="res"
+												value={targetQueue.res}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -217,6 +314,7 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Star Mines</td>
+									<td>{actualPercent(buildings.sm)}</td>
 									<td>{buildings.sm}</td>
 									<td>
 										<QueueTooltip
@@ -224,6 +322,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.sm || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="sm"
+												value={targetQueue.sm}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -237,6 +347,7 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Power Plants</td>
+									<td>{actualPercent(buildings.plants)}</td>
 									<td>{buildings.plants}</td>
 									<td>
 										<QueueTooltip
@@ -244,6 +355,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.plants || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="plants"
+												value={targetQueue.plants}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -257,6 +380,7 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Barracks</td>
+									<td>{actualPercent(buildings.rax)}</td>
 									<td>{buildings.rax}</td>
 									<td>
 										<QueueTooltip
@@ -264,6 +388,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.rax || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="rax"
+												value={targetQueue.rax}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -277,6 +413,7 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Probe Factories</td>
+									<td>{actualPercent(buildings.pf)}</td>
 									<td>{buildings.pf}</td>
 									<td>
 										<QueueTooltip
@@ -284,6 +421,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.pf || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="pf"
+												value={targetQueue.pf}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -297,6 +446,7 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Training Camps</td>
+									<td>{actualPercent(buildings.tc)}</td>
 									<td>{buildings.tc}</td>
 									<td>
 										<QueueTooltip
@@ -304,6 +454,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.tc || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="tc"
+												value={targetQueue.tc}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -317,6 +479,7 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Air Support Bays</td>
+									<td>{actualPercent(buildings.asb)}</td>
 									<td>{buildings.asb}</td>
 									<td>
 										<QueueTooltip
@@ -324,6 +487,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.asb || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="asb"
+												value={targetQueue.asb}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -337,6 +512,7 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Aegis Control Hubs</td>
+									<td>{actualPercent(buildings.ach)}</td>
 									<td>{buildings.ach}</td>
 									<td>
 										<QueueTooltip
@@ -344,6 +520,18 @@ function KingdomBuildingsPage() {
 											queueArray={buildings.queue?.ach || []}
 										/>
 									</td>
+									{myKingdom.autoBuild && (
+										<td>
+											<input
+												type="number"
+												name="ach"
+												value={targetQueue.ach}
+												onChange={handleTargetChange}
+												min="0"
+												max="100"
+											/>
+										</td>
+									)}
 									<td>
 										<input
 											type="number"
@@ -357,8 +545,10 @@ function KingdomBuildingsPage() {
 								</tr>
 								<tr>
 									<td>Rubble</td>
+									<td>{actualPercent(buildings.rubble)}</td>
 									<td>{buildings.rubble}</td>
 									<td>-</td>
+									{myKingdom.autoBuild && <td>-</td>}
 									<td>-</td>
 								</tr>
 							</tbody>
@@ -403,6 +593,82 @@ function KingdomBuildingsPage() {
 						</div>
 					</footer>
 				</form>
+			</article>
+
+			<article>
+				<header>Auto Build</header>
+				<label htmlFor="autoBuild">
+					<input
+						type="checkbox"
+						role="switch"
+						id="autoBuild"
+						name="autoBuild"
+						aria-checked={myKingdom.autoBuild ?? false}
+						checked={myKingdom.autoBuild ?? false}
+						onChange={async (e) => {
+							try {
+								await saveAutoBuildSettings({
+									autoBuild: e.target.checked,
+									target: {
+										res: parseInt(targetQueue.res, 10) || 0,
+										plants: parseInt(targetQueue.plants, 10) || 0,
+										rax: parseInt(targetQueue.rax, 10) || 0,
+										sm: parseInt(targetQueue.sm, 10) || 0,
+										pf: parseInt(targetQueue.pf, 10) || 0,
+										tc: parseInt(targetQueue.tc, 10) || 0,
+										asb: parseInt(targetQueue.asb, 10) || 0,
+										ach: parseInt(targetQueue.ach, 10) || 0,
+									},
+								});
+							} catch (error) {
+								alert(error instanceof Error ? error.message : "Toggle failed");
+							}
+						}}
+					/>
+					Enable Auto-Build
+				</label>
+
+				{myKingdom.autoBuild && (
+					<div style={{ marginTop: "1rem" }}>
+						<p>
+							Target Sum:{" "}
+							<strong
+								style={{
+									color: targetSum > 100 ? "var(--pico-del-color)" : "inherit",
+								}}
+							>
+								{targetSum}%
+							</strong>{" "}
+							(Target percentages must sum to &le; 100%)
+						</p>
+						<button
+							type="button"
+							onClick={async () => {
+								try {
+									await saveAutoBuildSettings({
+										autoBuild: myKingdom.autoBuild ?? false,
+										target: {
+											res: parseInt(targetQueue.res, 10) || 0,
+											plants: parseInt(targetQueue.plants, 10) || 0,
+											rax: parseInt(targetQueue.rax, 10) || 0,
+											sm: parseInt(targetQueue.sm, 10) || 0,
+											pf: parseInt(targetQueue.pf, 10) || 0,
+											tc: parseInt(targetQueue.tc, 10) || 0,
+											asb: parseInt(targetQueue.asb, 10) || 0,
+											ach: parseInt(targetQueue.ach, 10) || 0,
+										},
+									});
+									alert("Target percentages saved!");
+								} catch (err) {
+									alert(err instanceof Error ? err.message : "Failed to save");
+								}
+							}}
+							disabled={targetSum > 100}
+						>
+							Save Target Percents
+						</button>
+					</div>
+				)}
 			</article>
 		</main>
 	);
