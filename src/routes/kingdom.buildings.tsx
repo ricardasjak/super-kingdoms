@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { GAME_PARAMS } from "../constants/game-params";
+import { useKingdomMessage } from "../contexts/KingdomMessageContext";
 import { calculateFreeLand } from "../utils/buildingUtils";
 
 export const Route = createFileRoute("/kingdom/buildings")({
@@ -60,6 +61,7 @@ function KingdomBuildingsPage() {
 	});
 	const [targetInitialized, setTargetInitialized] = useState(false);
 	const [isBuilding, setIsBuilding] = useState(false);
+	const { showMessage } = useKingdomMessage();
 
 	useEffect(() => {
 		if (buildings && !targetInitialized) {
@@ -210,16 +212,20 @@ function KingdomBuildingsPage() {
 
 	const handleBuild = async (e: React.FormEvent) => {
 		e.preventDefault();
+
 		if (requestSum > freeLand) {
-			alert("Not enough free land!");
+			showMessage("Not enough free land!", "error");
 			return;
 		}
 		if (requestSum <= 0) {
-			alert("Please enter a valid amount of buildings to construct.");
+			showMessage(
+				"Please enter a valid amount of buildings to construct.",
+				"error",
+			);
 			return;
 		}
 		if (myKingdom.money < totalCost) {
-			alert("Not enough money!");
+			showMessage("Not enough money!", "error");
 			return;
 		}
 
@@ -245,11 +251,12 @@ function KingdomBuildingsPage() {
 				asb: "",
 				ach: "",
 			});
+			showMessage("Buildings successfully queued for construction!", "success");
 		} catch (error) {
 			console.error(error);
 			const errorMessage =
 				error instanceof Error ? error.message : "Failed to build";
-			alert(errorMessage);
+			showMessage(errorMessage, "error");
 		} finally {
 			setIsBuilding(false);
 		}
@@ -597,6 +604,7 @@ function KingdomBuildingsPage() {
 
 			<article>
 				<header>Auto Build</header>
+
 				<label htmlFor="autoBuild">
 					<input
 						type="checkbox"
@@ -606,9 +614,10 @@ function KingdomBuildingsPage() {
 						aria-checked={myKingdom.autoBuild ?? false}
 						checked={myKingdom.autoBuild ?? false}
 						onChange={async (e) => {
+							const isChecked = e.target.checked;
 							try {
 								await saveAutoBuildSettings({
-									autoBuild: e.target.checked,
+									autoBuild: isChecked,
 									target: {
 										res: parseInt(targetQueue.res, 10) || 0,
 										plants: parseInt(targetQueue.plants, 10) || 0,
@@ -620,8 +629,17 @@ function KingdomBuildingsPage() {
 										ach: parseInt(targetQueue.ach, 10) || 0,
 									},
 								});
+								showMessage(
+									isChecked
+										? "Auto-Build enabled!"
+										: "Auto-Build disabled!",
+									isChecked ? "success" : "warning",
+								);
 							} catch (error) {
-								alert(error instanceof Error ? error.message : "Toggle failed");
+								showMessage(
+									error instanceof Error ? error.message : "Toggle failed",
+									"error",
+								);
 							}
 						}}
 					/>
@@ -658,9 +676,12 @@ function KingdomBuildingsPage() {
 											ach: parseInt(targetQueue.ach, 10) || 0,
 										},
 									});
-									alert("Target percentages saved!");
+									showMessage("Target percentages saved!", "success");
 								} catch (err) {
-									alert(err instanceof Error ? err.message : "Failed to save");
+									showMessage(
+										err instanceof Error ? err.message : "Failed to save",
+										"error",
+									);
 								}
 							}}
 							disabled={targetSum > 100}

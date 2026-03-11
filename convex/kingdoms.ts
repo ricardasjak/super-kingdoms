@@ -116,6 +116,27 @@ export const getKingdomsCount = query({
 	},
 });
 
+export const updateRulerName = mutation({
+	args: {
+		rulerName: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const existing = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!existing) throw new Error("Kingdom not found");
+
+		await ctx.db.patch(existing._id, {
+			rulerName: args.rulerName,
+		});
+	},
+});
+
 export const populateKingdoms = mutation({
 	args: {},
 	handler: async (ctx) => {

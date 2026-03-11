@@ -2,13 +2,18 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { PlayButton } from "../components/play-button";
+import {
+	KingdomMessageProvider,
+	useKingdomMessage,
+} from "../contexts/KingdomMessageContext";
 export const Route = createFileRoute("/kingdom")({
 	component: KingdomLayout,
 });
 
-function KingdomLayout() {
+function KingdomLayoutContent() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const gameStatus = useQuery(api.game.getGameStatus);
+	const { message, messageType } = useKingdomMessage();
 
 	return (
 		<div>
@@ -49,11 +54,6 @@ function KingdomLayout() {
 							<li>
 								<Link to="/kingdom/buildings">Buildings</Link>
 							</li>
-							<li>
-								<Link to="/kingdom/delete" className="contrast">
-									Delete Kingdom
-								</Link>
-							</li>
 						</ul>
 						<ul>
 							<li>
@@ -68,16 +68,54 @@ function KingdomLayout() {
 								/>
 							</li>
 							<li>
-								<Link to="/auth/signout" className="secondary">
-									Sign out
-								</Link>
+								<Link to="/kingdom/profile">Profile</Link>
 							</li>
 						</ul>
 					</nav>
 					<hr />
+					{message && (
+						<div
+							style={{
+								color:
+									messageType === "error"
+										? "var(--pico-del-color)"
+										: messageType === "warning"
+											? "#d97706"
+											: "var(--pico-ins-color)",
+								padding: "1rem",
+								marginBottom: "1rem",
+								border: `1px solid ${
+									messageType === "error"
+										? "var(--pico-del-color)"
+										: messageType === "warning"
+											? "#d97706"
+											: "var(--pico-ins-color)"
+								}`,
+								borderRadius: "4px",
+							}}
+						>
+							<strong>
+								{messageType === "error"
+									? "Error"
+									: messageType === "warning"
+										? "Warning"
+										: "Success"}
+							</strong>
+							{": "}
+							{message}
+						</div>
+					)}
 				</header>
 			)}
 			<Outlet />
 		</div>
+	);
+}
+
+function KingdomLayout() {
+	return (
+		<KingdomMessageProvider>
+			<KingdomLayoutContent />
+		</KingdomMessageProvider>
 	);
 }
