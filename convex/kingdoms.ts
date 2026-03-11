@@ -19,6 +19,7 @@ const STARTING_VALUES = {
 	scientists: 100,
 	soldiers: 200,
 	landQueue: [] as number[],
+	autoExplore: false,
 };
 
 export const getMyKingdom = query({
@@ -283,6 +284,28 @@ export const exploreLand = mutation({
 		});
 	},
 });
+
+export const toggleAutoExplore = mutation({
+	args: {
+		autoExplore: v.boolean(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		await ctx.db.patch(kingdom._id, {
+			autoExplore: args.autoExplore,
+		});
+	},
+});
+
 export const migrateKingdomsBatch = internalMutation({
 	args: { cursor: v.union(v.string(), v.null()) },
 	handler: async (ctx, args) => {

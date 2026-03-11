@@ -30,7 +30,7 @@ export function PlayButton({
 
 		try {
 			const result = await advanceTick();
-			console.log("Mutation Result:", result);
+			console.log("Mutation Result:", result.executionTimeMs);
 			if (result?.executionTimeMs && onExecutionTime) {
 				onExecutionTime(result.executionTimeMs);
 			}

@@ -11,6 +11,7 @@ export const Route = createFileRoute("/kingdom/explore")({
 function KingdomExplore() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const exploreLand = useMutation(api.kingdoms.exploreLand);
+	const toggleAutoExplore = useMutation(api.kingdoms.toggleAutoExplore);
 	const [amount, setAmount] = useState<number>(0);
 	const [isExploring, setIsExploring] = useState(false);
 
@@ -18,7 +19,9 @@ function KingdomExplore() {
 	if (!myKingdom) return <p>Kingdom not found.</p>;
 
 	const currentlyInQueue = myKingdom.landQueue.reduce((a, b) => a + b, 0);
-	const maxPossibleExplore = Math.floor(myKingdom.land * 0.1);
+	const maxPossibleExplore = Math.floor(
+		myKingdom.land * GAME_PARAMS.explore.limit,
+	);
 	const maxExplore = Math.max(0, maxPossibleExplore - currentlyInQueue);
 
 	const costPerLand = GAME_PARAMS.explore.cost(myKingdom.land);
@@ -71,6 +74,34 @@ function KingdomExplore() {
 								Cost: ${costPerLand.toLocaleString()} per piece of land.
 							</small>
 						</p>
+						<hr />
+						<label htmlFor="autoExplore">
+							<input
+								type="checkbox"
+								role="switch"
+								id="autoExplore"
+								name="autoExplore"
+								aria-checked={myKingdom.autoExplore ?? false}
+								checked={myKingdom.autoExplore ?? false}
+								onChange={async (e) => {
+									try {
+										await toggleAutoExplore({ autoExplore: e.target.checked });
+									} catch (error) {
+										console.error("Failed to toggle auto explore", error);
+										alert(
+											error instanceof Error ? error.message : "Toggle failed",
+										);
+									}
+								}}
+							/>
+							Enable Auto-Explore
+						</label>
+						<small>
+							Automatically queues exploration right after gaining money income.
+							It attempts to explore the maximum multiple of 24 that satisfies
+							your budget and the {GAME_PARAMS.explore.limit * 100}% limit
+							limit.
+						</small>
 					</div>
 					<div>
 						<article

@@ -1,4 +1,5 @@
 import { GAME_PARAMS } from "../constants/game-params";
+import { calculateExplorationQueue } from "./landUtils";
 
 export function processKingdomTick(
 	kingdom: {
@@ -12,6 +13,7 @@ export function processKingdomTick(
 		moneyIncome: number;
 		powerIncome: number;
 		landQueue: number[];
+		autoExplore?: boolean;
 	},
 	buildings: {
 		res: number;
@@ -65,6 +67,31 @@ export function processKingdomTick(
 		newKingdom.land += completedLand;
 		newKingdom.landQueue = newKingdom.landQueue.slice(1);
 		kingdomChanged = true;
+	}
+
+	if (newKingdom.autoExplore) {
+		const currentQueueSum = newKingdom.landQueue.reduce((a, b) => a + b, 0);
+		const maxPossibleExplore = Math.floor(
+			newKingdom.land * GAME_PARAMS.explore.limit,
+		);
+		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
+
+		if (maxExplore > 0) {
+			const costPerLand = GAME_PARAMS.explore.cost(newKingdom.land);
+			const maxAffordable = Math.floor(newKingdom.money / costPerLand);
+			const exploreAmount = Math.floor(Math.min(maxExplore, maxAffordable));
+			const validExploreAmount = Math.floor(exploreAmount / 24) * 24;
+
+			if (validExploreAmount > 0) {
+				newKingdom.money -= validExploreAmount * costPerLand;
+				newKingdom.landQueue = calculateExplorationQueue(
+					newKingdom.landQueue,
+					validExploreAmount,
+					GAME_PARAMS.explore.duration,
+				);
+				kingdomChanged = true;
+			}
+		}
 	}
 
 	const newBuildings = { ...buildings };

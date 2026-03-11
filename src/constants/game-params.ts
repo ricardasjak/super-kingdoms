@@ -46,6 +46,7 @@ export const GAME_PARAMS = {
 	},
 	explore: {
 		duration: 24,
+		limit: 0.1,
 		cost: (land: number) => Math.round(Math.sqrt(land) * 111),
 	},
 	buildings: {

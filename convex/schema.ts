@@ -19,6 +19,7 @@ const schema = defineSchema({
 		powerIncome: v.number(),
 		scientists: v.number(),
 		soldiers: v.number(),
+		autoExplore: v.optional(v.boolean()),
 		landQueue: v.array(v.number()),
 		buildings: v.object({
 			res: v.number(),

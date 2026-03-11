@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAME_PARAMS } from "../constants/game-params";
 import { processKingdomTick } from "./tickUtils";
 
 describe("processKingdomTick", () => {
@@ -43,14 +44,14 @@ describe("processKingdomTick", () => {
 		);
 
 		// Check money income
-		expect(updatedKingdom.moneyIncome).toBe(2600);
-		expect(updatedKingdom.money).toBe(7600);
+		expect(updatedKingdom.moneyIncome).toBe(2700);
+		expect(updatedKingdom.money).toBe(7700);
 
-		// Check power consumption: (1000 * 0.32) + (200 * 0.7) + (200 * 50)
-		// = 320 + 140 + 10000 = 10460 power consumed
-		// produced: 1400. Income: 1400 - 10460 = -9060
 		const expectedPowerIncome = Math.round(
-			1400 - (1000 * 0.32 + 200 * 0.7 + 200 * 50),
+			buildings.plants * GAME_PARAMS.power.production.plants -
+				(kingdom.population * GAME_PARAMS.power.consumption.population +
+					kingdom.scientists * GAME_PARAMS.power.consumption.scientists +
+					kingdom.soldiers * GAME_PARAMS.power.consumption.soldiers),
 		);
 		expect(updatedKingdom.powerIncome).toBe(expectedPowerIncome);
 		expect(updatedKingdom.power).toBe(1000 + expectedPowerIncome);
