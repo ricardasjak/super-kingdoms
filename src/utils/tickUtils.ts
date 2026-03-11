@@ -8,6 +8,7 @@ export function processKingdomTick(
 		land: number;
 		money: number;
 		power: number;
+		probes: number;
 		moneyIncome: number;
 		powerIncome: number;
 		landQueue: number[];
@@ -51,6 +52,7 @@ export function processKingdomTick(
 			GAME_PARAMS.power.storage.plants * buildings.plants,
 			Math.max(0, Math.round(kingdom.power + powerIncome)),
 		),
+		probes: kingdom.probes + buildings.pf,
 		moneyIncome: Math.round(moneyIncome),
 		powerIncome: Math.round(powerIncome),
 		land: kingdom.land,

@@ -13,10 +13,20 @@ function AdminPage() {
 	const advanceTick = useAction(api.game.advanceTick);
 	const restartGame = useAction(api.game.restartGame);
 	const populateKingdoms = useMutation(api.kingdoms.populateKingdoms);
+	const migrateKingdoms = useAction(api.kingdoms.migrateKingdoms);
 	const [executionTime, setExecutionTime] = useState<number | null>(null);
 	const [isPopulating, setIsPopulating] = useState(false);
+	const [isMigrating, setIsMigrating] = useState(false);
+	const [errorMsg, setErrorMsg] = useState<string | null>(null);
+	const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+	const clearMessages = () => {
+		setErrorMsg(null);
+		setSuccessMsg(null);
+	};
 
 	const handleAdvanceTick = async () => {
+		clearMessages();
 		try {
 			const result = await advanceTick();
 			console.log("Mutation Result:", result);
@@ -25,11 +35,14 @@ function AdminPage() {
 			}
 		} catch (error) {
 			console.error("Failed to advance tick", error);
-			alert(error instanceof Error ? error.message : "Failed to advance tick");
+			setErrorMsg(
+				error instanceof Error ? error.message : "Failed to advance tick",
+			);
 		}
 	};
 
 	const handleRestartGame = async () => {
+		clearMessages();
 		if (
 			window.confirm(
 				"Are you sure you want to COMPLETELY WIPE the whole game data? This cannot be undone!",
@@ -38,10 +51,10 @@ function AdminPage() {
 			try {
 				await restartGame();
 				setExecutionTime(null);
-				alert("The game has been successfully restarted.");
+				setSuccessMsg("The game has been successfully restarted.");
 			} catch (error) {
 				console.error("Failed to restart the game", error);
-				alert(
+				setErrorMsg(
 					error instanceof Error ? error.message : "Failed to restart the game",
 				);
 			}
@@ -49,17 +62,34 @@ function AdminPage() {
 	};
 
 	const handlePopulate = async () => {
+		clearMessages();
 		setIsPopulating(true);
 		try {
 			await populateKingdoms();
-			alert("Successfully populated 1000 dummy kingdoms!");
+			setSuccessMsg("Successfully populated 1000 dummy kingdoms!");
 		} catch (error) {
 			console.error("Failed to populate kingdoms", error);
-			alert(
+			setErrorMsg(
 				error instanceof Error ? error.message : "Failed to populate kingdoms",
 			);
 		} finally {
 			setIsPopulating(false);
+		}
+	};
+
+	const handleMigrate = async () => {
+		clearMessages();
+		setIsMigrating(true);
+		try {
+			const result = await migrateKingdoms();
+			setSuccessMsg(`Successfully migrated ${result.count} kingdoms!`);
+		} catch (error) {
+			console.error("Failed to migrate kingdoms", error);
+			setErrorMsg(
+				error instanceof Error ? error.message : "Failed to migrate kingdoms",
+			);
+		} finally {
+			setIsMigrating(false);
 		}
 	};
 
@@ -69,6 +99,35 @@ function AdminPage() {
 				<header>
 					<h2>Admin Dashboard</h2>
 				</header>
+
+				{errorMsg && (
+					<div style={{ marginBottom: "1rem" }}>
+						<article
+							style={{
+								margin: 0,
+								backgroundColor: "var(--pico-del-color)",
+								color: "var(--pico-primary-inverse)",
+							}}
+						>
+							<strong>Error:</strong> {errorMsg}
+						</article>
+					</div>
+				)}
+
+				{successMsg && (
+					<div style={{ marginBottom: "1rem" }}>
+						<article
+							style={{
+								margin: 0,
+								backgroundColor: "var(--pico-ins-color)",
+								color: "var(--pico-primary-inverse)",
+							}}
+						>
+							<strong>Success:</strong> {successMsg}
+						</article>
+					</div>
+				)}
+
 				<div className="grid">
 					<div>
 						<h3>Game Status</h3>
@@ -166,6 +225,38 @@ function AdminPage() {
 								<path d="M3 3v5h5"></path>
 							</svg>
 							Restart Game
+						</button>
+
+						<button
+							type="button"
+							className="secondary outline"
+							onClick={handleMigrate}
+							disabled={isMigrating}
+							aria-busy={isMigrating}
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "0.5rem",
+								borderColor: "var(--pico-ins-color)",
+								color: "var(--pico-ins-color)",
+							}}
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<title>Migrate Data</title>
+								<path d="M12 2v20"></path>
+								<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+							</svg>
+							Migrate Missing Fields
 						</button>
 
 						<button

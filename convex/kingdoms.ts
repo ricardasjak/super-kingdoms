@@ -5,13 +5,15 @@ import {
 	PLANET_TYPES,
 	RACE_TYPES,
 } from "../src/constants/game-params";
-import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 
 const STARTING_VALUES = {
 	population: 2250,
 	land: 250,
 	money: 300000,
 	power: 10000,
+	probes: 0,
 	moneyIncome: 0,
 	powerIncome: 0,
 	scientists: 100,
@@ -278,5 +280,63 @@ export const exploreLand = mutation({
 			money: kingdom.money - totalCost,
 			landQueue: newQueue,
 		});
+	},
+});
+export const migrateKingdomsBatch = internalMutation({
+	args: { cursor: v.union(v.string(), v.null()) },
+	handler: async (ctx, args) => {
+		const results = await ctx.db
+			.query("kingdoms")
+			.paginate({ cursor: args.cursor, numItems: 1000 });
+
+		let patchCount = 0;
+		await Promise.all(
+			results.page.map(async (kingdom) => {
+				const patch: Record<string, number> = {};
+
+				// Handle missing probes field from before it was introduced
+				if (kingdom.probes === undefined) {
+					patch.probes = 0;
+				}
+
+				if (Object.keys(patch).length > 0) {
+					await ctx.db.patch(kingdom._id, patch);
+					patchCount++;
+				}
+			}),
+		);
+
+		return {
+			isDone: results.isDone,
+			continueCursor: results.continueCursor,
+			count: patchCount,
+		};
+	},
+});
+
+export const migrateKingdoms = action({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		let isDone = false;
+		let cursor: string | null = null;
+		let totalMigrated = 0;
+
+		while (!isDone) {
+			const batchResult: {
+				isDone: boolean;
+				continueCursor: string;
+				count: number;
+			} = await ctx.runMutation(internal.kingdoms.migrateKingdomsBatch, {
+				cursor,
+			});
+			isDone = batchResult.isDone;
+			cursor = batchResult.continueCursor;
+			totalMigrated += batchResult.count;
+		}
+
+		return { success: true, count: totalMigrated };
 	},
 });

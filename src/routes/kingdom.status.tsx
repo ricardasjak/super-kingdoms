@@ -57,6 +57,10 @@ function KingdomStatusPage() {
 								<td>Soldiers</td>
 								<td>{myKingdom.soldiers.toLocaleString()}</td>
 							</tr>
+							<tr>
+								<td>Probes</td>
+								<td>{myKingdom.probes.toLocaleString()}</td>
+							</tr>
 						</tbody>
 					</table>
 				</figure>

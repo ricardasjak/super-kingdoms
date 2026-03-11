@@ -14,6 +14,7 @@ const schema = defineSchema({
 		land: v.number(),
 		money: v.number(),
 		power: v.number(),
+		probes: v.number(),
 		moneyIncome: v.number(),
 		powerIncome: v.number(),
 		scientists: v.number(),

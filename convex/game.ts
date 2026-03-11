@@ -93,6 +93,7 @@ export const processBatch = internalMutation({
 				const patchData: Parameters<typeof ctx.db.patch>[1] = {
 					money: updatedKingdom.money,
 					power: updatedKingdom.power,
+					probes: updatedKingdom.probes,
 					moneyIncome: updatedKingdom.moneyIncome,
 					powerIncome: updatedKingdom.powerIncome,
 					land: updatedKingdom.land,
