@@ -41,7 +41,7 @@ export function PlayButton({
 			console.error("Failed to advance tick", error);
 			if (onError) {
 				onError(
-					error instanceof Error ? error.message : "Failed to advance tick"
+					error instanceof Error ? error.message : "Failed to advance tick",
 				);
 			}
 		} finally {

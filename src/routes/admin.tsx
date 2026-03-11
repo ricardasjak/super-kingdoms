@@ -154,10 +154,12 @@ function AdminPage() {
 							gap: "1rem",
 						}}
 					>
-						<PlayButton 
-							onExecutionTime={setExecutionTime} 
+						<PlayButton
+							onExecutionTime={setExecutionTime}
 							onError={setErrorMsg}
-							onSuccess={() => { clearMessages(); }}
+							onSuccess={() => {
+								clearMessages();
+							}}
 						/>
 
 						<button

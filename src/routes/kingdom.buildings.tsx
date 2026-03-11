@@ -123,7 +123,7 @@ function KingdomBuildingsPage() {
 		0,
 	);
 
-	const buildingCost = GAME_PARAMS.buildingCost(myKingdom.land);
+	const buildingCost = GAME_PARAMS.buildings.cost(myKingdom.land);
 	const totalCost = requestSum * buildingCost;
 
 	const handleBuild = async (e: React.FormEvent) => {

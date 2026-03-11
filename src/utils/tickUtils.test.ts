@@ -12,6 +12,7 @@ describe("processKingdomTick", () => {
 			power: 1000,
 			moneyIncome: 0,
 			powerIncome: 0,
+			probes: 0,
 			landQueue: [],
 		};
 		const buildings = {
@@ -23,6 +24,7 @@ describe("processKingdomTick", () => {
 			tc: 0,
 			asb: 0,
 			ach: 0,
+			rubble: 0,
 			queue: {
 				res: [],
 				sm: [],
@@ -66,6 +68,7 @@ describe("processKingdomTick", () => {
 			power: 0,
 			moneyIncome: 0,
 			powerIncome: 0,
+			probes: 0,
 			landQueue: [50],
 		};
 		const buildings = {
@@ -77,6 +80,7 @@ describe("processKingdomTick", () => {
 			tc: 0,
 			asb: 0,
 			ach: 0,
+			rubble: 0,
 			queue: {
 				res: [10, 20],
 				sm: [5],

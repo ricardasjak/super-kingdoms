@@ -21,7 +21,7 @@ function KingdomExplore() {
 	const maxPossibleExplore = Math.floor(myKingdom.land * 0.1);
 	const maxExplore = Math.max(0, maxPossibleExplore - currentlyInQueue);
 
-	const costPerLand = GAME_PARAMS.explorationCost(myKingdom.land);
+	const costPerLand = GAME_PARAMS.explore.cost(myKingdom.land);
 	const totalCost = costPerLand * amount;
 	const isOverLimit = amount > maxExplore;
 	const isBroke = myKingdom.money < totalCost;
@@ -106,9 +106,7 @@ function KingdomExplore() {
 								>
 									Total Cost Estimate: ${totalCost.toLocaleString()}
 								</li>
-								<li>
-									Completion Time: {GAME_PARAMS.explorationDuration} ticks
-								</li>
+								<li>Completion Time: {GAME_PARAMS.explore.duration} ticks</li>
 							</ul>
 							<button
 								type="button"

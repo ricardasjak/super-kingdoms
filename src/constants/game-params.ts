@@ -27,8 +27,6 @@ export const RACE_TYPES = [
 
 export const GAME_PARAMS = {
 	roundLength: 480,
-	buildingCost: (land: number) => Math.round(Math.sqrt(land) * 63),
-	explorationCost: (land: number) => Math.round(Math.sqrt(land) * 111),
 	income: {
 		population: 2,
 		sm: 140,
@@ -46,6 +44,12 @@ export const GAME_PARAMS = {
 			plants: 1000,
 		},
 	},
-	constructionTime: 16,
-	explorationDuration: 24,
+	explore: {
+		duration: 24,
+		cost: (land: number) => Math.round(Math.sqrt(land) * 111),
+	},
+	buildings: {
+		duration: 16,
+		cost: (land: number) => Math.round(Math.sqrt(land) * 63),
+	},
 } as const;

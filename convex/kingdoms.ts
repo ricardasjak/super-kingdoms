@@ -211,7 +211,7 @@ export const buildBuildings = mutation({
 			throw new Error("Not enough free land");
 		}
 
-		const buildingCost = GAME_PARAMS.buildingCost(kingdom.land);
+		const buildingCost = GAME_PARAMS.buildings.cost(kingdom.land);
 		const totalCost = requestSum * buildingCost;
 
 		if (kingdom.money < totalCost) {
@@ -221,7 +221,7 @@ export const buildBuildings = mutation({
 		const newQueue = calculateNewQueue(
 			kingdom.buildings.queue,
 			args,
-			GAME_PARAMS.constructionTime,
+			GAME_PARAMS.buildings.duration,
 		);
 
 		await ctx.db.patch(kingdom._id, {
@@ -254,6 +254,7 @@ export const exploreLand = mutation({
 
 		const currentQueueSum = kingdom.landQueue.reduce((a, b) => a + b, 0);
 		const maxPossibleExplore = Math.floor(kingdom.land * 0.1);
+
 		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
 
 		if (args.amount > maxExplore) {
@@ -262,7 +263,7 @@ export const exploreLand = mutation({
 			);
 		}
 
-		const costPerLand = GAME_PARAMS.explorationCost(kingdom.land);
+		const costPerLand = GAME_PARAMS.explore.cost(kingdom.land);
 		const totalCost = costPerLand * args.amount;
 
 		if (kingdom.money < totalCost) {
@@ -273,7 +274,7 @@ export const exploreLand = mutation({
 		const newQueue = calculateExplorationQueue(
 			currentQueue,
 			args.amount,
-			GAME_PARAMS.explorationDuration,
+			GAME_PARAMS.explore.duration,
 		);
 
 		await ctx.db.patch(kingdom._id, {

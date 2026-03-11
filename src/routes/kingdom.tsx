@@ -57,10 +57,14 @@ function KingdomLayout() {
 						</ul>
 						<ul>
 							<li>
-								<PlayButton 
-									showText={false} 
-									className="outline" 
-									style={{ padding: "0.25rem 0.5rem", margin: 0, border: "none" }} 
+								<PlayButton
+									showText={false}
+									className="outline"
+									style={{
+										padding: "0.25rem 0.5rem",
+										margin: 0,
+										border: "none",
+									}}
 								/>
 							</li>
 							<li>
