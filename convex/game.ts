@@ -139,6 +139,7 @@ export const resetGameStatus = internalMutation({
 			await ctx.db.patch(existingStatus._id, {
 				currentTick: 0,
 				roundNumber: (existingStatus.roundNumber ?? 1) + 1,
+				endTick: GAME_PARAMS.roundLength,
 			});
 		} else {
 			await ctx.db.insert("gameStatus", {

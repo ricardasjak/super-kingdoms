@@ -17,7 +17,7 @@ function LandingPage() {
 		<>
 			<header>
 				<hgroup>
-					<h1>SK-5</h1>
+					<h1>SuperKingdoms</h1>
 					<p>Welcome to the game</p>
 				</hgroup>
 			</header>
