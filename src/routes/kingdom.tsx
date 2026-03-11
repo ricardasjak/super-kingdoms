@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-
+import { PlayButton } from "../components/play-button";
 export const Route = createFileRoute("/kingdom")({
 	component: KingdomLayout,
 });
@@ -56,6 +56,13 @@ function KingdomLayout() {
 							</li>
 						</ul>
 						<ul>
+							<li>
+								<PlayButton 
+									showText={false} 
+									className="outline" 
+									style={{ padding: "0.25rem 0.5rem", margin: 0, border: "none" }} 
+								/>
+							</li>
 							<li>
 								<Link to="/auth/signout" className="secondary">
 									Sign out

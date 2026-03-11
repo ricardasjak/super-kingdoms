@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
-
+import { PlayButton } from "../components/play-button";
 export const Route = createFileRoute("/admin")({
 	component: AdminPage,
 });
@@ -10,7 +10,6 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
 	const gameStatus = useQuery(api.game.getGameStatus);
 	const kingdomsCount = useQuery(api.kingdoms.getKingdomsCount);
-	const advanceTick = useAction(api.game.advanceTick);
 	const restartGame = useAction(api.game.restartGame);
 	const populateKingdoms = useMutation(api.kingdoms.populateKingdoms);
 	const migrateKingdoms = useAction(api.kingdoms.migrateKingdoms);
@@ -23,22 +22,6 @@ function AdminPage() {
 	const clearMessages = () => {
 		setErrorMsg(null);
 		setSuccessMsg(null);
-	};
-
-	const handleAdvanceTick = async () => {
-		clearMessages();
-		try {
-			const result = await advanceTick();
-			console.log("Mutation Result:", result);
-			if (result?.executionTimeMs) {
-				setExecutionTime(result.executionTimeMs);
-			}
-		} catch (error) {
-			console.error("Failed to advance tick", error);
-			setErrorMsg(
-				error instanceof Error ? error.message : "Failed to advance tick",
-			);
-		}
 	};
 
 	const handleRestartGame = async () => {
@@ -171,30 +154,11 @@ function AdminPage() {
 							gap: "1rem",
 						}}
 					>
-						<button
-							type="button"
-							onClick={handleAdvanceTick}
-							disabled={
-								!gameStatus || gameStatus.currentTick >= gameStatus.endTick
-							}
-							style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="24"
-								height="24"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							>
-								<title>Play Next Tick</title>
-								<polygon points="5 3 19 12 5 21 5 3"></polygon>
-							</svg>
-							Play Next Tick
-						</button>
+						<PlayButton 
+							onExecutionTime={setExecutionTime} 
+							onError={setErrorMsg}
+							onSuccess={() => { clearMessages(); }}
+						/>
 
 						<button
 							type="button"
