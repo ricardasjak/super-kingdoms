@@ -15,25 +15,31 @@ interface MessageContextType {
 	messageType: MessageType;
 	showMessage: (msg: string, type: MessageType) => void;
 	clearMessage: () => void;
+	remainingTime: number;
 }
 
 const KingdomMessageContext = createContext<MessageContextType | undefined>(
 	undefined,
 );
 
+const MESSAGE_DURATION = 3000;
+
 export function KingdomMessageProvider({ children }: { children: ReactNode }) {
 	const [message, setMessage] = useState<string | null>(null);
 	const [messageType, setMessageType] = useState<MessageType>(null);
+	const [remainingTime, setRemainingTime] = useState<number>(0);
 	const location = useLocation();
 
 	const clearMessage = useCallback(() => {
 		setMessage(null);
 		setMessageType(null);
+		setRemainingTime(0);
 	}, []);
 
 	const showMessage = (msg: string, type: MessageType) => {
 		setMessage(msg);
 		setMessageType(type);
+		setRemainingTime(MESSAGE_DURATION);
 	};
 
 	// Clear on navigation
@@ -43,19 +49,25 @@ export function KingdomMessageProvider({ children }: { children: ReactNode }) {
 		}
 	}, [clearMessage, location]);
 
-	// Clear after 10 seconds
+	// Countdown timer
 	useEffect(() => {
-		if (message) {
-			const timer = setTimeout(() => {
-				clearMessage();
-			}, 10000);
-			return () => clearTimeout(timer);
+		if (message && remainingTime > 0) {
+			const interval = setInterval(() => {
+				setRemainingTime((prev) => {
+					if (prev <= 100) {
+						clearMessage();
+						return 0;
+					}
+					return prev - 100;
+				});
+			}, 100);
+			return () => clearInterval(interval);
 		}
-	}, [message, clearMessage]);
+	}, [message, remainingTime, clearMessage]);
 
 	return (
 		<KingdomMessageContext.Provider
-			value={{ message, messageType, showMessage, clearMessage }}
+			value={{ message, messageType, showMessage, clearMessage, remainingTime }}
 		>
 			{children}
 		</KingdomMessageContext.Provider>

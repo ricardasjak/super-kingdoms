@@ -630,9 +630,7 @@ function KingdomBuildingsPage() {
 									},
 								});
 								showMessage(
-									isChecked
-										? "Auto-Build enabled!"
-										: "Auto-Build disabled!",
+									isChecked ? "Auto-Build enabled!" : "Auto-Build disabled!",
 									isChecked ? "success" : "warning",
 								);
 							} catch (error) {

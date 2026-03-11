@@ -76,14 +76,21 @@ function KingdomLayoutContent() {
 					{message && (
 						<div
 							style={{
+								position: "fixed",
+								top: "1rem",
+								left: "50%",
+								transform: "translateX(-50%)",
+								zIndex: 1000,
+								minWidth: "350px",
+								maxWidth: "500px",
+								padding: "0.75rem 1rem",
+								backgroundColor: "var(--pico-background-color)",
 								color:
 									messageType === "error"
 										? "var(--pico-del-color)"
 										: messageType === "warning"
 											? "#d97706"
 											: "var(--pico-ins-color)",
-								padding: "1rem",
-								marginBottom: "1rem",
 								border: `1px solid ${
 									messageType === "error"
 										? "var(--pico-del-color)"
@@ -91,18 +98,24 @@ function KingdomLayoutContent() {
 											? "#d97706"
 											: "var(--pico-ins-color)"
 								}`,
-								borderRadius: "4px",
+								borderRadius: "6px",
+								boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+								display: "flex",
+								alignItems: "center",
+								gap: "0.5rem",
 							}}
 						>
-							<strong>
-								{messageType === "error"
-									? "Error"
-									: messageType === "warning"
-										? "Warning"
-										: "Success"}
-							</strong>
-							{": "}
-							{message}
+							<div>
+								<strong>
+									{messageType === "error"
+										? "Error"
+										: messageType === "warning"
+											? "Warning"
+											: "Success"}
+									: &nbsp;
+								</strong>
+								<span>{message}</span>
+							</div>
 						</div>
 					)}
 				</header>
