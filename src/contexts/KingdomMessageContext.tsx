@@ -1,10 +1,10 @@
-import { useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import {
 	createContext,
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useState,
 } from "react";
 
@@ -28,7 +28,6 @@ export function KingdomMessageProvider({ children }: { children: ReactNode }) {
 	const [message, setMessage] = useState<string | null>(null);
 	const [messageType, setMessageType] = useState<MessageType>(null);
 	const [remainingTime, setRemainingTime] = useState<number>(0);
-	const location = useLocation();
 
 	const clearMessage = useCallback(() => {
 		setMessage(null);
@@ -36,39 +35,34 @@ export function KingdomMessageProvider({ children }: { children: ReactNode }) {
 		setRemainingTime(0);
 	}, []);
 
-	const showMessage = (msg: string, type: MessageType) => {
+	const showMessage = useCallback((msg: string, type: MessageType) => {
 		setMessage(msg);
 		setMessageType(type);
 		setRemainingTime(MESSAGE_DURATION);
-	};
+	}, []);
+
+	const contextValue = useMemo(
+		() => ({ message, messageType, showMessage, clearMessage, remainingTime }),
+		[message, messageType, showMessage, clearMessage, remainingTime],
+	);
 
 	// Clear on navigation
 	useEffect(() => {
-		if (location) {
-			clearMessage();
-		}
-	}, [clearMessage, location]);
+		clearMessage();
+	}, [clearMessage]);
 
 	// Countdown timer
 	useEffect(() => {
 		if (message && remainingTime > 0) {
-			const interval = setInterval(() => {
-				setRemainingTime((prev) => {
-					if (prev <= 100) {
-						clearMessage();
-						return 0;
-					}
-					return prev - 100;
-				});
-			}, 100);
-			return () => clearInterval(interval);
+			const timeout = setTimeout(() => {
+				clearMessage();
+			}, remainingTime);
+			return () => clearTimeout(timeout);
 		}
 	}, [message, remainingTime, clearMessage]);
 
 	return (
-		<KingdomMessageContext.Provider
-			value={{ message, messageType, showMessage, clearMessage, remainingTime }}
-		>
+		<KingdomMessageContext.Provider value={contextValue}>
 			{children}
 		</KingdomMessageContext.Provider>
 	);

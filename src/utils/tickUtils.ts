@@ -57,13 +57,29 @@ export function processKingdomTick(
 		kingdom.scientists * GAME_PARAMS.power.consumption.scientists +
 		kingdom.soldiers * GAME_PARAMS.power.consumption.soldiers;
 	const powerIncome =
-		buildings.plants * GAME_PARAMS.power.production.plants - powerConsumption;
+		buildings.plants * GAME_PARAMS.buildings.plant_production -
+		powerConsumption;
+
+	const maxPopulation = buildings.res * GAME_PARAMS.buildings.residence_cap;
+	let populationChange = 0;
+	if (kingdom.population < maxPopulation) {
+		populationChange = Math.ceil(
+			kingdom.population * GAME_PARAMS.population.growth,
+		);
+	} else if (kingdom.population > maxPopulation) {
+		populationChange = -GAME_PARAMS.population.decline(
+			kingdom.population,
+			kingdom.land,
+		);
+	}
 
 	const newKingdom = {
 		...kingdom,
 		money: kingdom.money + moneyIncome,
+		population: Math.max(0, kingdom.population + populationChange),
+		popChange: populationChange,
 		power: Math.min(
-			GAME_PARAMS.power.storage.plants * buildings.plants,
+			GAME_PARAMS.buildings.plant_storage * buildings.plants,
 			Math.max(0, Math.round(kingdom.power + powerIncome)),
 		),
 		probes: kingdom.probes + buildings.pf,

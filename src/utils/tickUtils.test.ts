@@ -48,7 +48,7 @@ describe("processKingdomTick", () => {
 		expect(updatedKingdom.money).toBe(7700);
 
 		const expectedPowerIncome = Math.round(
-			buildings.plants * GAME_PARAMS.power.production.plants -
+			buildings.plants * GAME_PARAMS.buildings.plant_production -
 				(kingdom.population * GAME_PARAMS.power.consumption.population +
 					kingdom.scientists * GAME_PARAMS.power.consumption.scientists +
 					kingdom.soldiers * GAME_PARAMS.power.consumption.soldiers),

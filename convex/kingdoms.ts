@@ -10,6 +10,7 @@ import { action, internalMutation, mutation, query } from "./_generated/server";
 
 const STARTING_VALUES = {
 	population: 2250,
+	popChange: 0,
 	land: 250,
 	money: 300000,
 	power: 10000,
@@ -352,6 +353,8 @@ export const saveAutoBuildSettings = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+
+		console.log("args.target", args.target);
 
 		const sum =
 			args.target.res +

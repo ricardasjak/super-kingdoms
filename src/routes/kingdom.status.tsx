@@ -41,6 +41,16 @@ function KingdomStatusPage() {
 					<table>
 						<tbody>
 							<tr>
+								<td>Population</td>
+								<td>
+									{myKingdom.population.toLocaleString()} ({">"}
+									{myKingdom.popChange > 0
+										? `+${myKingdom.popChange}`
+										: myKingdom.popChange}
+									)
+								</td>
+							</tr>
+							<tr>
 								<td>Net Income</td>
 								<td>${myKingdom.moneyIncome.toLocaleString()}</td>
 							</tr>

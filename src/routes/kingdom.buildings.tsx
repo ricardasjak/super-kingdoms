@@ -89,14 +89,16 @@ function KingdomBuildingsPage() {
 
 				if (total > 0) {
 					setTargetQueue({
-						res: Math.round((buildings.res / total) * 100).toString(),
-						plants: Math.round((buildings.plants / total) * 100).toString(),
-						rax: Math.round((buildings.rax / total) * 100).toString(),
-						sm: Math.round((buildings.sm / total) * 100).toString(),
-						pf: Math.round((buildings.pf / total) * 100).toString(),
-						tc: Math.round((buildings.tc / total) * 100).toString(),
-						asb: Math.round((buildings.asb / total) * 100).toString(),
-						ach: Math.round((buildings.ach / total) * 100).toString(),
+						res: Math.round((buildings.res / myKingdom.land) * 100).toString(),
+						plants: Math.round(
+							(buildings.plants / myKingdom.land) * 100,
+						).toString(),
+						rax: Math.round((buildings.rax / myKingdom.land) * 100).toString(),
+						sm: Math.round((buildings.sm / myKingdom.land) * 100).toString(),
+						pf: Math.round((buildings.pf / myKingdom.land) * 100).toString(),
+						tc: Math.round((buildings.tc / myKingdom.land) * 100).toString(),
+						asb: Math.round((buildings.asb / myKingdom.land) * 100).toString(),
+						ach: Math.round((buildings.ach / myKingdom.land) * 100).toString(),
 					});
 				} else {
 					setTargetQueue({
@@ -113,7 +115,7 @@ function KingdomBuildingsPage() {
 			}
 			setTargetInitialized(true);
 		}
-	}, [buildings, targetInitialized]);
+	}, [buildings, targetInitialized, myKingdom.land]);
 
 	if (myKingdom === undefined) {
 		return (

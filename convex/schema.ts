@@ -11,6 +11,7 @@ const schema = defineSchema({
 		planetType: v.string(),
 		raceType: v.string(),
 		population: v.number(),
+		popChange: v.number(),
 		land: v.number(),
 		money: v.number(),
 		power: v.number(),
