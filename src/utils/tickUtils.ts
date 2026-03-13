@@ -2,11 +2,40 @@ import { GAME_PARAMS } from "../constants/game-params";
 import { calculateFreeLand, calculateNewQueue } from "./buildingUtils";
 import { calculateExplorationQueue } from "./landUtils";
 
+type MilitaryUnits = {
+	sol: number;
+	tr: number;
+	dr: number;
+	ft: number;
+	tf: number;
+	lt: number;
+	ld: number;
+	lf: number;
+	f74: number;
+	t: number;
+	hgl: number;
+	ht: number;
+	sci: number;
+	queue: {
+		sol: number[];
+		tr: number[];
+		dr: number[];
+		ft: number[];
+		tf: number[];
+		lt: number[];
+		ld: number[];
+		lf: number[];
+		f74: number[];
+		t: number[];
+		hgl: number[];
+		ht: number[];
+		sci: number[];
+	};
+};
+
 export function processKingdomTick(
 	kingdom: {
 		population: number;
-		soldiers: number;
-		scientists: number;
 		land: number;
 		money: number;
 		power: number;
@@ -48,14 +77,15 @@ export function processKingdomTick(
 			ach: number[];
 		};
 	},
+	military: MilitaryUnits,
 ) {
 	const moneyIncome =
 		buildings.sm * GAME_PARAMS.income.sm +
 		kingdom.population * GAME_PARAMS.income.population;
 	const powerConsumption =
 		kingdom.population * GAME_PARAMS.power.consumption.population +
-		kingdom.scientists * GAME_PARAMS.power.consumption.scientists +
-		kingdom.soldiers * GAME_PARAMS.power.consumption.soldiers;
+		military.sci * GAME_PARAMS.power.consumption.scientists +
+		military.sol * GAME_PARAMS.power.consumption.soldiers;
 	const powerIncome =
 		buildings.plants * GAME_PARAMS.buildings.plant_production -
 		powerConsumption;
@@ -230,12 +260,58 @@ export function processKingdomTick(
 		}
 	}
 
+	const newMilitary = {
+		...military,
+		queue: {
+			sol: [...military.queue.sol],
+			tr: [...military.queue.tr],
+			dr: [...military.queue.dr],
+			ft: [...military.queue.ft],
+			tf: [...military.queue.tf],
+			lt: [...military.queue.lt],
+			ld: [...military.queue.ld],
+			lf: [...military.queue.lf],
+			f74: [...military.queue.f74],
+			t: [...military.queue.t],
+			hgl: [...military.queue.hgl],
+			ht: [...military.queue.ht],
+			sci: [...(military.queue.sci || [])],
+		},
+	};
+	let militaryChanged = false;
+
+	const MILITARY_KEYS = [
+		"sol",
+		"tr",
+		"dr",
+		"ft",
+		"tf",
+		"lt",
+		"ld",
+		"lf",
+		"f74",
+		"t",
+		"hgl",
+		"ht",
+		"sci",
+	] as const;
+
+	if (newMilitary.queue.sol.length > 0) {
+		for (const key of MILITARY_KEYS) {
+			const completed = newMilitary.queue[key][0] || 0;
+			newMilitary[key] += completed;
+			newMilitary.queue[key] = newMilitary.queue[key].slice(1);
+		}
+		militaryChanged = true;
+	}
+
 	return {
 		updatedKingdom:
 			kingdomChanged || moneyIncome !== 0 || powerIncome !== 0
 				? newKingdom
 				: newKingdom,
 		updatedBuildings: queueChanged ? newBuildings : null,
+		updatedMilitary: militaryChanged ? newMilitary : null,
 		kingdomChanged: kingdomChanged,
 	};
 }

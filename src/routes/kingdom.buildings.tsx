@@ -115,7 +115,7 @@ function KingdomBuildingsPage() {
 			}
 			setTargetInitialized(true);
 		}
-	}, [buildings, targetInitialized, myKingdom.land]);
+	}, [buildings, targetInitialized, myKingdom?.land]);
 
 	if (myKingdom === undefined) {
 		return (

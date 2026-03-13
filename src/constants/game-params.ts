@@ -56,4 +56,32 @@ export const GAME_PARAMS = {
 		plant_production: 140,
 		plant_storage: 1000,
 	},
+	military: {
+		duration: 24,
+		soldierDuration: 16,
+		units: {
+			sol: { cost: 150, power: 0.7, housing: 1 },
+			tr: { cost: 350, power: 0.7, housing: 1 },
+			dr: { cost: 450, power: 0.7, housing: 1 },
+			ft: { cost: 550, power: 0.7, housing: 1 },
+			tf: {
+				cost: 1500,
+				power: 1.4,
+				housing: 1,
+				requiresBuilding: "asb",
+			},
+			lt: { cost: 375, power: 0.7, housing: 1 },
+			ld: { cost: 500, power: 0.7, housing: 1 },
+			lf: { cost: 625, power: 0.7, housing: 1 },
+			f74: {
+				cost: 975,
+				power: 1.4,
+				housing: 1,
+				requiresBuilding: "ach",
+			},
+			t: { cost: 1750, power: 1.4, housing: 2 },
+			hgl: { cost: 1000, power: 0.7, housing: 1 },
+			ht: { cost: 2250, power: 1.4, housing: 2 },
+		},
+	},
 } as const;

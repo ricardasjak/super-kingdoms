@@ -43,7 +43,7 @@ function KingdomStatusPage() {
 							<tr>
 								<td>Population</td>
 								<td>
-									{myKingdom.population.toLocaleString()} ({">"}
+									{myKingdom.population.toLocaleString()} (
 									{myKingdom.popChange > 0
 										? `+${myKingdom.popChange}`
 										: myKingdom.popChange}
@@ -61,11 +61,11 @@ function KingdomStatusPage() {
 
 							<tr>
 								<td>Scientists</td>
-								<td>{myKingdom.scientists.toLocaleString()}</td>
+								<td>{myKingdom.military.sci.toLocaleString()}</td>
 							</tr>
 							<tr>
 								<td>Soldiers</td>
-								<td>{myKingdom.soldiers.toLocaleString()}</td>
+								<td>{myKingdom.military.sol.toLocaleString()}</td>
 							</tr>
 							<tr>
 								<td>Probes</td>

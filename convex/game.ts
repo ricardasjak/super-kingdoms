@@ -82,13 +82,12 @@ export const processBatch = internalMutation({
 		await Promise.all(
 			results.page.map(async (kingdom) => {
 				const buildings = kingdom.buildings;
+				const military = kingdom.military;
 
 				if (!buildings) return;
 
-				const { updatedKingdom, updatedBuildings } = processKingdomTick(
-					kingdom,
-					buildings,
-				);
+				const { updatedKingdom, updatedBuildings, updatedMilitary } =
+					processKingdomTick(kingdom, buildings, military);
 
 				const patchData: Parameters<typeof ctx.db.patch>[1] = {
 					money: updatedKingdom.money,
@@ -104,6 +103,10 @@ export const processBatch = internalMutation({
 
 				if (updatedBuildings) {
 					patchData.buildings = updatedBuildings;
+				}
+
+				if (updatedMilitary) {
+					patchData.military = updatedMilitary;
 				}
 
 				await ctx.db.patch(kingdom._id, patchData);

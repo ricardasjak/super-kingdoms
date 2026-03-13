@@ -6,8 +6,6 @@ describe("processKingdomTick", () => {
 	it("should correctly calculate money and power income", () => {
 		const kingdom = {
 			population: 1000,
-			soldiers: 100,
-			scientists: 100,
 			land: 200,
 			money: 5000,
 			power: 1000,
@@ -37,10 +35,41 @@ describe("processKingdomTick", () => {
 				ach: [],
 			},
 		};
+		const military = {
+			sol: 100,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			hgl: 0,
+			ht: 0,
+			sci: 100,
+			queue: {
+				sol: [],
+				tr: [],
+				dr: [],
+				ft: [],
+				tf: [],
+				lt: [],
+				ld: [],
+				lf: [],
+				f74: [],
+				t: [],
+				hgl: [],
+				ht: [],
+				sci: [],
+			},
+		};
 
 		const { updatedKingdom, updatedBuildings } = processKingdomTick(
 			kingdom,
 			buildings,
+			military,
 		);
 
 		// Check money income
@@ -50,8 +79,8 @@ describe("processKingdomTick", () => {
 		const expectedPowerIncome = Math.round(
 			buildings.plants * GAME_PARAMS.buildings.plant_production -
 				(kingdom.population * GAME_PARAMS.power.consumption.population +
-					kingdom.scientists * GAME_PARAMS.power.consumption.scientists +
-					kingdom.soldiers * GAME_PARAMS.power.consumption.soldiers),
+					military.sci * GAME_PARAMS.power.consumption.scientists +
+					military.sol * GAME_PARAMS.power.consumption.soldiers),
 		);
 		expect(updatedKingdom.powerIncome).toBe(expectedPowerIncome);
 		expect(updatedKingdom.power).toBe(1000 + expectedPowerIncome);
@@ -62,8 +91,6 @@ describe("processKingdomTick", () => {
 	it("should correctly progress the building queue", () => {
 		const kingdom = {
 			population: 0,
-			soldiers: 0,
-			scientists: 0,
 			land: 0,
 			money: 0,
 			power: 0,
@@ -94,9 +121,41 @@ describe("processKingdomTick", () => {
 			},
 		};
 
+		const military = {
+			sol: 0,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			hgl: 0,
+			ht: 0,
+			sci: 0,
+			queue: {
+				sol: [],
+				tr: [],
+				dr: [],
+				ft: [],
+				tf: [],
+				lt: [],
+				ld: [],
+				lf: [],
+				f74: [],
+				t: [],
+				hgl: [],
+				ht: [],
+				sci: [],
+			},
+		};
+
 		const { updatedKingdom, updatedBuildings } = processKingdomTick(
 			kingdom,
 			buildings,
+			military,
 		);
 
 		// Check land queue progressing natively

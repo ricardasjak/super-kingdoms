@@ -17,11 +17,39 @@ const STARTING_VALUES = {
 	probes: 0,
 	moneyIncome: 0,
 	powerIncome: 0,
-	scientists: 100,
-	soldiers: 200,
 	landQueue: [] as number[],
 	autoExplore: false,
 	autoBuild: false,
+	military: {
+		sol: 200,
+		tr: 0,
+		dr: 0,
+		ft: 0,
+		tf: 0,
+		lt: 0,
+		ld: 0,
+		lf: 0,
+		f74: 0,
+		t: 0,
+		hgl: 0,
+		ht: 0,
+		sci: 100,
+		queue: {
+			sol: [],
+			tr: [],
+			dr: [],
+			ft: [],
+			tf: [],
+			lt: [],
+			ld: [],
+			lf: [],
+			f74: [],
+			t: [],
+			hgl: [],
+			ht: [],
+			sci: [],
+		},
+	},
 };
 
 export const getMyKingdom = query({
@@ -172,6 +200,7 @@ export const populateKingdoms = mutation({
 
 import {
 	calculateFreeLand,
+	calculateMilitaryQueue,
 	calculateNewQueue,
 } from "../src/utils/buildingUtils";
 
@@ -251,6 +280,112 @@ export const buildBuildings = mutation({
 		await ctx.db.patch(kingdom._id, {
 			money: kingdom.money - totalCost,
 			buildings: { ...kingdom.buildings, queue: newQueue },
+		});
+	},
+});
+
+export const trainMilitary = mutation({
+	args: {
+		sol: v.number(),
+		tr: v.number(),
+		dr: v.number(),
+		ft: v.number(),
+		tf: v.number(),
+		lt: v.number(),
+		ld: v.number(),
+		lf: v.number(),
+		f74: v.number(),
+		t: v.number(),
+		hgl: v.number(),
+		ht: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		if (!kingdom.military) throw new Error("Military not found");
+
+		const units = GAME_PARAMS.military.units;
+		let totalCost = 0;
+		let hasValidUnit = false;
+
+		const trainableUnits = [
+			{ key: "sol", value: args.sol, cost: units.sol.cost },
+			{ key: "tr", value: args.tr, cost: units.tr.cost },
+			{ key: "dr", value: args.dr, cost: units.dr.cost },
+			{ key: "ft", value: args.ft, cost: units.ft.cost },
+			{
+				key: "tf",
+				value: args.tf,
+				cost: units.tf.cost,
+			},
+			{
+				key: "lt",
+				value: args.lt,
+				cost: units.lt.cost,
+			},
+			{
+				key: "ld",
+				value: args.ld,
+				cost: units.ld.cost,
+			},
+			{
+				key: "lf",
+				value: args.lf,
+				cost: units.lf.cost,
+			},
+			{
+				key: "f74",
+				value: args.f74,
+				cost: units.f74.cost,
+			},
+			{ key: "t", value: args.t, cost: units.t.cost },
+			{
+				key: "hgl",
+				value: args.hgl,
+				cost: units.hgl.cost,
+			},
+			{
+				key: "ht",
+				value: args.ht,
+				cost: units.ht.cost,
+			},
+		];
+
+		for (const unit of trainableUnits) {
+			if (unit.value < 0) {
+				throw new Error("Invalid request: negative unit counts");
+			}
+			if (unit.value > 0) {
+				hasValidUnit = true;
+			}
+			totalCost += unit.value * unit.cost;
+		}
+
+		if (!hasValidUnit) {
+			throw new Error("Invalid request: no units specified");
+		}
+
+		if (kingdom.money < totalCost) {
+			throw new Error("Not enough money");
+		}
+
+		const newQueue = calculateMilitaryQueue(
+			kingdom.military.queue,
+			args,
+			GAME_PARAMS.military.duration,
+		);
+
+		await ctx.db.patch(kingdom._id, {
+			money: kingdom.money - totalCost,
+			military: { ...kingdom.military, queue: newQueue },
 		});
 	},
 });
