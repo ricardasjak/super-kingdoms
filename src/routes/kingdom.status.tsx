@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { GAME_PARAMS } from "../constants/game-params";
 
 export const Route = createFileRoute("/kingdom/status")({
 	component: KingdomStatusPage,
@@ -18,6 +19,21 @@ function KingdomStatusPage() {
 		navigate({ to: "/kingdom/create" });
 		return null;
 	}
+
+	const raxUsage =
+		myKingdom.military.sol +
+		myKingdom.military.tr +
+		myKingdom.military.dr +
+		myKingdom.military.ft +
+		myKingdom.military.lt +
+		myKingdom.military.ld +
+		myKingdom.military.lf +
+		myKingdom.military.sci +
+		myKingdom.military.t * 2 +
+		myKingdom.military.ht * 2;
+	const raxCapacity =
+		myKingdom.buildings.rax * GAME_PARAMS.buildings.raxCapacity;
+	const raxRatio = raxCapacity > 0 ? (raxUsage / raxCapacity) * 100 : 0;
 
 	return (
 		<main className="container">
@@ -70,6 +86,13 @@ function KingdomStatusPage() {
 							<tr>
 								<td>Probes</td>
 								<td>{myKingdom.probes.toLocaleString()}</td>
+							</tr>
+							<tr>
+								<td>Barracks Usage</td>
+								<td>
+									{raxUsage.toLocaleString()} / {raxCapacity.toLocaleString()} (
+									{raxRatio.toFixed(1)}%)
+								</td>
 							</tr>
 						</tbody>
 					</table>
