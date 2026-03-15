@@ -59,8 +59,10 @@ export const GAME_PARAMS = {
 	military: {
 		duration: 24,
 		soldierDuration: 16,
+		soldiersLimit: 0.1,
 		units: {
 			sol: { cost: 150, power: 0.7, housing: 1 },
+			sci: { cost: 1000, power: 0.7, housing: 1 },
 			tr: { cost: 350, power: 0.7, housing: 1 },
 			dr: { cost: 450, power: 0.7, housing: 1 },
 			ft: { cost: 550, power: 0.7, housing: 1 },

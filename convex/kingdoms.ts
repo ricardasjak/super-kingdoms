@@ -287,6 +287,7 @@ export const buildBuildings = mutation({
 export const trainMilitary = mutation({
 	args: {
 		sol: v.number(),
+		sci: v.number(),
 		tr: v.number(),
 		dr: v.number(),
 		ft: v.number(),
@@ -315,6 +316,7 @@ export const trainMilitary = mutation({
 		const units = GAME_PARAMS.military.units;
 		let totalCost = 0;
 		let hasValidUnit = false;
+		let soldiersToDeduct = 0;
 
 		const trainableUnits = [
 			{ key: "sol", value: args.sol, cost: units.sol.cost },
@@ -360,7 +362,10 @@ export const trainMilitary = mutation({
 		];
 
 		for (const unit of trainableUnits) {
-			if (unit.value < 0) {
+			if (unit.key === "sol" && unit.value < 0) {
+				soldiersToDeduct = -unit.value;
+				unit.value = 0;
+			} else if (unit.value < 0) {
 				throw new Error("Invalid request: negative unit counts");
 			}
 			if (unit.value > 0) {
@@ -385,7 +390,11 @@ export const trainMilitary = mutation({
 
 		await ctx.db.patch(kingdom._id, {
 			money: kingdom.money - totalCost,
-			military: { ...kingdom.military, queue: newQueue },
+			military: {
+				...kingdom.military,
+				sol: kingdom.military.sol - soldiersToDeduct,
+				queue: newQueue,
+			},
 		});
 	},
 });

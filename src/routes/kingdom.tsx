@@ -1,4 +1,9 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	Outlet,
+	useNavigate,
+} from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { PlayButton } from "../components/play-button";
@@ -11,9 +16,19 @@ export const Route = createFileRoute("/kingdom")({
 });
 
 function KingdomLayoutContent() {
+	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const gameStatus = useQuery(api.game.getGameStatus);
 	const { message, messageType } = useKingdomMessage();
+
+	if (myKingdom === undefined) {
+		return <p aria-busy="true">Loading kingdom data...</p>;
+	}
+
+	if (!myKingdom) {
+		navigate({ to: "/" });
+		return null;
+	}
 
 	return (
 		<div>
