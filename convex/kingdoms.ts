@@ -382,6 +382,37 @@ export const trainMilitary = mutation({
 			throw new Error("Not enough money");
 		}
 
+		const tfHousingLimit =
+			kingdom.buildings.asb * GAME_PARAMS.buildings.asbCapacity;
+		const currentTf = kingdom.military.tf || 0;
+		const tfInQueue = (kingdom.military.queue.tf || []).reduce(
+			(a, b) => a + b,
+			0,
+		);
+		const newTfCount = args.tf;
+		if (newTfCount > 0 && currentTf + tfInQueue + newTfCount > tfHousingLimit) {
+			throw new Error(
+				`Cannot train Tactical Fighters. Housing capacity: ${tfHousingLimit} (ASB: ${kingdom.buildings.asb} × ${GAME_PARAMS.buildings.asbCapacity}). Currently have ${currentTf} + ${tfInQueue} in queue.`,
+			);
+		}
+
+		const f74HousingLimit =
+			kingdom.buildings.ach * GAME_PARAMS.buildings.achCapacity;
+		const currentF74 = kingdom.military.f74 || 0;
+		const f74InQueue = (kingdom.military.queue.f74 || []).reduce(
+			(a, b) => a + b,
+			0,
+		);
+		const newF74Count = args.f74;
+		if (
+			newF74Count > 0 &&
+			currentF74 + f74InQueue + newF74Count > f74HousingLimit
+		) {
+			throw new Error(
+				`Cannot train Interceptor Drones. Housing capacity: ${f74HousingLimit} (ACH: ${kingdom.buildings.ach} × ${GAME_PARAMS.buildings.achCapacity}). Currently have ${currentF74} + ${f74InQueue} in queue.`,
+			);
+		}
+
 		const newQueue = calculateMilitaryQueue(
 			kingdom.military.queue,
 			args,

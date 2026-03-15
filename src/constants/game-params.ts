@@ -51,10 +51,12 @@ export const GAME_PARAMS = {
 	buildings: {
 		duration: 16,
 		cost: (land: number) => Math.round(Math.sqrt(land) * 63),
-		residence_cap: 50,
-		rax_cap: 75,
-		plant_production: 140,
-		plant_storage: 1000,
+		resCapacity: 50,
+		raxCapacity: 75,
+		asbCapacity: 40,
+		achCapacity: 60,
+		plantProduction: 140,
+		plantStorage: 1000,
 	},
 	military: {
 		duration: 24,

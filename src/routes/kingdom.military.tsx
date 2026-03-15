@@ -25,21 +25,6 @@ const UNIT_KEYS = [
 	"ht",
 ] as const;
 
-const ALL_UNIT_KEYS = [
-	"sol",
-	"tr",
-	"dr",
-	"ft",
-	"tf",
-	"lt",
-	"ld",
-	"lf",
-	"f74",
-	"t",
-	"hgl",
-	"ht",
-] as const;
-
 const UNIT_LABELS: Record<string, string> = {
 	sol: "Soldiers",
 	tr: "Troopers",
@@ -397,7 +382,32 @@ function KingdomMilitaryPage() {
 									const maxBySoldiers = needsSoldiers
 										? currentSoldiers
 										: Infinity;
-									const maxUnits = Math.min(maxByMoney, maxBySoldiers);
+									const tfHousingLimit =
+										key === "tf"
+											? Math.max(
+													0,
+													myKingdom.buildings.asb *
+														GAME_PARAMS.buildings.asbCapacity -
+														unitCount -
+														queueCount,
+												)
+											: Infinity;
+									const f74HousingLimit =
+										key === "f74"
+											? Math.max(
+													0,
+													myKingdom.buildings.ach *
+														GAME_PARAMS.buildings.achCapacity -
+														unitCount -
+														queueCount,
+												)
+											: Infinity;
+									const maxUnits = Math.min(
+										maxByMoney,
+										maxBySoldiers,
+										tfHousingLimit,
+										f74HousingLimit,
+									);
 									const maxUnitsRounded = roundToDuration(
 										maxUnits,
 										GAME_PARAMS.military.duration,
