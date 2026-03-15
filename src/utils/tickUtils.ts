@@ -183,51 +183,57 @@ export function processKingdomTick(
 				}
 
 				if (totalDeficiency > 0) {
-					const toBuild = {
-						res: 0,
-						plants: 0,
-						rax: 0,
-						sm: 0,
-						pf: 0,
-						tc: 0,
-						asb: 0,
-						ach: 0,
-					};
-					let remainingToBuild = Math.min(maxToBuild, totalDeficiency);
-					const totalWillBuild = remainingToBuild;
+					const rawToBuild = Math.min(maxToBuild, totalDeficiency);
+					const totalWillBuild =
+						Math.floor(rawToBuild / GAME_PARAMS.buildings.duration) *
+						GAME_PARAMS.buildings.duration;
 
-					for (const key of keys) {
-						if (deficiencies[key] > 0) {
-							const proportion = Math.floor(
-								(deficiencies[key] / totalDeficiency) * totalWillBuild,
-							);
-							toBuild[key] = proportion;
-							remainingToBuild -= proportion;
-						}
-					}
+					if (totalWillBuild > 0) {
+						const toBuild = {
+							res: 0,
+							plants: 0,
+							rax: 0,
+							sm: 0,
+							pf: 0,
+							tc: 0,
+							asb: 0,
+							ach: 0,
+						};
+						let remainingToBuild = totalWillBuild;
 
-					while (remainingToBuild > 0) {
 						for (const key of keys) {
-							if (remainingToBuild > 0 && deficiencies[key] > toBuild[key]) {
-								toBuild[key]++;
-								remainingToBuild--;
+							if (deficiencies[key] > 0) {
+								const proportion = Math.floor(
+									(deficiencies[key] / totalDeficiency) * totalWillBuild,
+								);
+								toBuild[key] = proportion;
+								remainingToBuild -= proportion;
 							}
 						}
-					}
 
-					let actualBuiltSum = 0;
-					for (const key of keys) {
-						actualBuiltSum += toBuild[key];
-					}
+						while (remainingToBuild > 0) {
+							for (const key of keys) {
+								if (remainingToBuild > 0 && deficiencies[key] > toBuild[key]) {
+									toBuild[key]++;
+									remainingToBuild--;
+								}
+							}
+						}
 
-					if (actualBuiltSum > 0) {
-						newKingdom.money -= actualBuiltSum * buildingCost;
-						newBuildings.queue = calculateNewQueue(
-							newBuildings.queue,
-							toBuild,
-							GAME_PARAMS.buildings.duration,
-						);
-						queueChanged = true;
+						let actualBuiltSum = 0;
+						for (const key of keys) {
+							actualBuiltSum += toBuild[key];
+						}
+
+						if (actualBuiltSum > 0) {
+							newKingdom.money -= actualBuiltSum * buildingCost;
+							newBuildings.queue = calculateNewQueue(
+								newBuildings.queue,
+								toBuild,
+								GAME_PARAMS.buildings.duration,
+							);
+							queueChanged = true;
+						}
 					}
 				}
 			}
