@@ -610,3 +610,61 @@ export const migrateKingdoms = action({
 		return { success: true, count: totalMigrated };
 	},
 });
+
+export const getSpyReports = query({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) return [];
+		return await ctx.db
+			.query("spyReports")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.order("desc")
+			.take(20);
+	},
+});
+
+export const saveSpyReport = mutation({
+	args: {
+		targetKdName: v.string(),
+		targetRulerName: v.string(),
+		targetPlanetType: v.string(),
+		targetRaceType: v.string(),
+		targetLevel: v.number(),
+		land: v.number(),
+		networth: v.number(),
+		honor: v.number(),
+		money: v.number(),
+		population: v.number(),
+		power: v.number(),
+		probes: v.number(),
+		scientists: v.number(),
+		maProtection: v.number(),
+		military: v.object({
+			sol: v.number(),
+			tr: v.number(),
+			dr: v.number(),
+			ft: v.number(),
+			tf: v.number(),
+			lt: v.number(),
+			ld: v.number(),
+			lf: v.number(),
+			f74: v.number(),
+			t: v.number(),
+			hgl: v.number(),
+			ht: v.number(),
+		}),
+		maxDefPotential: v.number(),
+		maxOffPotential: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		await ctx.db.insert("spyReports", {
+			userId,
+			...args,
+			spiedAt: Date.now(),
+		});
+	},
+});
