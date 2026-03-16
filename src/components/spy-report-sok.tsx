@@ -170,7 +170,7 @@ export function SpyReportSOK({
 			<div
 				style={{
 					display: "grid",
-					gridTemplateColumns: "140px 1fr",
+					gridTemplateColumns: "180px 1fr",
 					gap: "0.15rem",
 				}}
 			>
@@ -205,40 +205,37 @@ export function SpyReportSOK({
 			<div
 				style={{
 					display: "grid",
-					gridTemplateColumns: "140px 1fr",
+					gridTemplateColumns: "180px 1fr",
 					gap: "0.15rem",
 				}}
 			>
-				<span>Soldiers:</span>
-				<span>{military.sol.toLocaleString()}</span>
-				<span>Laser Troopers:</span>
-				<span>{military.tr.toLocaleString()}</span>
-				<span>Laser Dragoons:</span>
-				<span>{military.dr.toLocaleString()}</span>
-				<span>Laser Fighters:</span>
-				<span>{military.ft.toLocaleString()}</span>
-				<span>F74 Interceptor Drones:</span>
-				<span>{military.f74.toLocaleString()}</span>
-				<span>High Guard Lancers:</span>
-				<span>{military.hgl.toLocaleString()}</span>
-				<span>Tanks:</span>
-				<span>{military.t.toLocaleString()}</span>
-				<span>Hover Tanks:</span>
-				<span>{military.ht.toLocaleString()}</span>
-				<span>Troopers:</span>
-				<span>{military.lt.toLocaleString()}</span>
-				<span>Dragoons:</span>
-				<span>{military.ld.toLocaleString()}</span>
-				<span>Fighters:</span>
-				<span>{military.lf.toLocaleString()}</span>
-				<span>Tactical Fighters:</span>
-				<span>{military.tf.toLocaleString()}</span>
+				{[
+					{ label: "Soldiers", value: military.sol },
+					{ label: "Troopers", value: military.tr },
+					{ label: "Dragoons", value: military.dr },
+					{ label: "Fighters", value: military.ft },
+					{ label: "Tactical Fighters", value: military.tf },
+					{ label: "Laser Troopers", value: military.lt },
+					{ label: "Laser Dragoons", value: military.ld },
+					{ label: "Laser Fighters", value: military.lf },
+					{ label: "F74 Interceptor Drones", value: military.f74 },
+					{ label: "Tanks", value: military.t },
+					{ label: "High Guard Lancers", value: military.hgl },
+					{ label: "Hover Tanks", value: military.ht },
+				]
+					.filter((u) => u.value > 0)
+					.map((u) => (
+						<>
+							<span>{u.label}:</span>
+							<span>{u.value.toLocaleString()}</span>
+						</>
+					))}
 			</div>
 			<hr style={{ margin: "0.4rem 0" }} />
 			<div
 				style={{
 					display: "grid",
-					gridTemplateColumns: "140px 1fr",
+					gridTemplateColumns: "180px 1fr",
 					gap: "0.15rem",
 				}}
 			>
