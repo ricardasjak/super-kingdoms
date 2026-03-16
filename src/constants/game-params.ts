@@ -68,29 +68,63 @@ export const GAME_PARAMS = {
 		soldierDuration: 16,
 		soldiersLimit: 0.1,
 		units: {
-			sol: { cost: 150, power: 0.7, housing: 1 },
-			sci: { cost: 1000, power: 0.7, housing: 1 },
-			tr: { cost: 350, power: 0.7, housing: 1 },
-			dr: { cost: 450, power: 0.7, housing: 1 },
-			ft: { cost: 550, power: 0.7, housing: 1 },
+			sol: { cost: 150, power: 0.7, housing: 1, off: 1, def: 1 },
+			sci: { cost: 1000, power: 0.7, housing: 1, off: 0, def: 0 },
+			tr: { cost: 350, power: 0.7, housing: 1, off: 4, def: 0 },
+			dr: { cost: 450, power: 0.7, housing: 1, off: 5, def: 0 },
+			ft: { cost: 550, power: 0.7, housing: 1, off: 6, def: 0 },
 			tf: {
 				cost: 1500,
 				power: 1.4,
 				housing: 1,
+				off: 12,
+				def: 0,
 				requiresBuilding: "asb",
 			},
-			lt: { cost: 375, power: 0.7, housing: 1 },
-			ld: { cost: 500, power: 0.7, housing: 1 },
-			lf: { cost: 625, power: 0.7, housing: 1 },
+			lt: { cost: 375, power: 0.7, housing: 1, off: 0, def: 4 },
+			ld: { cost: 500, power: 0.7, housing: 1, off: 0, def: 5 },
+			lf: { cost: 625, power: 0.7, housing: 1, off: 0, def: 6 },
 			f74: {
 				cost: 975,
 				power: 1.4,
 				housing: 1,
+				off: 0,
+				def: 8,
 				requiresBuilding: "ach",
 			},
-			t: { cost: 1750, power: 1.4, housing: 2 },
-			hgl: { cost: 1000, power: 0.7, housing: 1 },
-			ht: { cost: 2250, power: 1.4, housing: 2 },
+			t: { cost: 1750, power: 1.4, housing: 2, off: 9, def: 9 },
+			hgl: { cost: 1000, power: 0.7, housing: 1, off: 6, def: 6 },
+			ht: { cost: 2250, power: 1.4, housing: 2, off: 12, def: 12 },
+		},
+		calculateMaxDefPotential: (military: Record<string, number>) => {
+			const units = GAME_PARAMS.military.units;
+			let total = 0;
+			for (const [unit, count] of Object.entries(military)) {
+				const unitDef = units[unit as keyof typeof units]?.def ?? 0;
+				total += unitDef * count;
+			}
+			return total;
+		},
+		calculateMaxOffPotential: (military: Record<string, number>) => {
+			const units = GAME_PARAMS.military.units;
+			let total = 0;
+			for (const [unit, count] of Object.entries(military)) {
+				const unitOff = units[unit as keyof typeof units]?.off ?? 0;
+				total += unitOff * count;
+			}
+			return total;
+		},
+		calculateMinDefPotential: (military: Record<string, number>) => {
+			const units = GAME_PARAMS.military.units;
+			let total = 0;
+			const pureDefUnits = ["lt", "ld", "lf", "f74"];
+			for (const [unit, count] of Object.entries(military)) {
+				if (pureDefUnits.includes(unit)) {
+					const unitDef = units[unit as keyof typeof units]?.def ?? 0;
+					total += unitDef * count;
+				}
+			}
+			return total;
 		},
 	},
 	nw: {

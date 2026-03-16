@@ -1,3 +1,4 @@
+import { GAME_PARAMS } from "../constants/game-params";
 import { calculateNw } from "../utils/nwUtils";
 
 export function calculateLevel(land: number): number {
@@ -55,24 +56,7 @@ export function calculateMaxDefPotential(military: {
 	hgl: number;
 	ht: number;
 }): number {
-	const defPower: Record<string, number> = {
-		sol: 5,
-		tr: 8,
-		dr: 12,
-		ft: 15,
-		lt: 5,
-		ld: 8,
-		lf: 12,
-		t: 25,
-		hgl: 40,
-		ht: 30,
-	};
-
-	let total = 0;
-	for (const [unit, count] of Object.entries(military)) {
-		total += (defPower[unit] || 0) * count;
-	}
-	return Math.floor(total * 100);
+	return GAME_PARAMS.military.calculateMaxDefPotential(military);
 }
 
 export function calculateMaxOffPotential(military: {
@@ -88,25 +72,16 @@ export function calculateMaxOffPotential(military: {
 	hgl: number;
 	ht: number;
 }): number {
-	const offPower: Record<string, number> = {
-		tr: 12,
-		dr: 18,
-		ft: 25,
-		tf: 30,
-		lt: 8,
-		ld: 12,
-		lf: 20,
-		f74: 5,
-		t: 40,
-		hgl: 60,
-		ht: 50,
-	};
+	return GAME_PARAMS.military.calculateMaxOffPotential(military);
+}
 
-	let total = 0;
-	for (const [unit, count] of Object.entries(military)) {
-		total += (offPower[unit] || 0) * count;
-	}
-	return Math.floor(total * 100);
+export function calculateMinDefPotential(military: {
+	lt: number;
+	ld: number;
+	lf: number;
+	f74: number;
+}): number {
+	return GAME_PARAMS.military.calculateMinDefPotential(military);
 }
 
 function formatDate(timestamp: number) {

@@ -5,6 +5,7 @@ import {
 	calculateLevel,
 	calculateMaxDefPotential,
 	calculateMaxOffPotential,
+	calculateMinDefPotential,
 	calculateNetworth,
 	SpyReportSOK,
 } from "../components/spy-report-sok";
@@ -75,6 +76,12 @@ function KingdomStatusPage() {
 		hgl: myKingdom.military.hgl,
 		ht: myKingdom.military.ht,
 	});
+	const minDef = calculateMinDefPotential({
+		lt: myKingdom.military.lt,
+		ld: myKingdom.military.ld,
+		lf: myKingdom.military.lf,
+		f74: myKingdom.military.f74,
+	});
 
 	return (
 		<main className="container">
@@ -114,6 +121,18 @@ function KingdomStatusPage() {
 							<tr>
 								<td>Net Power</td>
 								<td>{myKingdom.powerIncome.toLocaleString()}</td>
+							</tr>
+							<tr>
+								<td>Max Off</td>
+								<td>{maxOff.toLocaleString()}</td>
+							</tr>
+							<tr>
+								<td>Max Def</td>
+								<td>{maxDef.toLocaleString()}</td>
+							</tr>
+							<tr>
+								<td>Min Def</td>
+								<td>{minDef.toLocaleString()}</td>
 							</tr>
 
 							<tr>
