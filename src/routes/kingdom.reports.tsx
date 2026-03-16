@@ -6,6 +6,7 @@ import {
 	calculateMaxDefPotential,
 	calculateMaxOffPotential,
 	calculateNetworth,
+	SpyReportSOB,
 	SpyReportSOK,
 } from "../components/spy-report-sok";
 
@@ -84,6 +85,18 @@ function KingdomReportsPage() {
 					military={myKingdom.military}
 					maxDefPotential={maxDef}
 					maxOffPotential={maxOff}
+				/>
+			</article>
+
+			<article>
+				<header>
+					<h3>Your SOB</h3>
+				</header>
+				<SpyReportSOB
+					kdName={myKingdom.kdName}
+					land={myKingdom.land}
+					buildings={myKingdom.buildings}
+					landQueue={myKingdom.landQueue}
 				/>
 			</article>
 

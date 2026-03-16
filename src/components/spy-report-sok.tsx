@@ -299,3 +299,138 @@ export function SpyReportSOK({
 		</article>
 	);
 }
+
+const BUILDING_NAMES: Record<string, string> = {
+	res: "Residences",
+	plants: "Power Plants",
+	rax: "Barracks",
+	sm: "Star Mines",
+	pf: "Probe Factories",
+	tc: "Training Camps",
+	asb: "Air Support Bays",
+	ach: "Aegis Control Hub",
+	rubble: "Rubble",
+	land: "Land",
+};
+
+export function SpyReportSOB({
+	kdName,
+	land,
+	buildings,
+	landQueue,
+	timestamp,
+}: {
+	kdName: string;
+	land: number;
+	buildings: {
+		res: number;
+		plants: number;
+		rax: number;
+		sm: number;
+		pf: number;
+		tc: number;
+		asb: number;
+		ach: number;
+		rubble: number;
+		queue: {
+			res: number[];
+			plants: number[];
+			rax: number[];
+			sm: number[];
+			pf: number[];
+			tc: number[];
+			asb: number[];
+			ach: number[];
+		};
+	};
+	landQueue?: number[];
+	timestamp?: number;
+}) {
+	const buildingKeys = [
+		"res",
+		"plants",
+		"rax",
+		"sm",
+		"pf",
+		"tc",
+		"asb",
+		"ach",
+		"rubble",
+	] as const;
+
+	const totalBuildings = land;
+	const queueLength = 24;
+
+	const renderQueueCell = (key: string, tickIndex: number) => {
+		const queue = buildings.queue[key as keyof typeof buildings.queue];
+		const value = queue?.[tickIndex] || 0;
+		return <span key={tickIndex}>{value}</span>;
+	};
+
+	const renderQueueRow = (key: string) => {
+		const cells = [];
+		for (let i = 0; i < queueLength; i++) {
+			cells.push(renderQueueCell(key, i));
+		}
+		return cells;
+	};
+
+	const queueHeader = [];
+	for (let i = 0; i < queueLength; i++) {
+		queueHeader.push(<span key={i}>{i + 1}</span>);
+	}
+
+	return (
+		<article style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
+			<header>
+				<strong>{kdName} SOB</strong>
+				{timestamp && (
+					<span
+						style={{ marginLeft: "0.5rem", color: "var(--pico-muted-color)" }}
+					>
+						{formatDate(timestamp)}
+					</span>
+				)}
+			</header>
+			<div
+				style={{
+					display: "grid",
+					gridTemplateColumns: `140px 80px 60px repeat(${queueLength}, 1fr)`,
+					gap: "0.15rem",
+					overflowX: "auto",
+				}}
+			>
+				<span style={{ fontWeight: "bold" }}>Building</span>
+				<span style={{ fontWeight: "bold" }}>Count</span>
+				<span style={{ fontWeight: "bold" }}>%</span>
+				{queueHeader}
+
+				{buildingKeys.map((key) => {
+					const count = buildings[key];
+					const pct = totalBuildings > 0 ? (count / totalBuildings) * 100 : 0;
+					return (
+						<>
+							<span key={`name-${key}`}>{BUILDING_NAMES[key]}</span>
+							<span key={`count-${key}`}>{count.toLocaleString()}</span>
+							<span key={`pct-${key}`}>{pct.toFixed(0)}%</span>
+							{renderQueueRow(key)}
+						</>
+					);
+				})}
+
+				<span style={{ fontWeight: "bold" }}>Land</span>
+				<span>{land.toLocaleString()}</span>
+				<span>100%</span>
+				{Array.from({ length: queueLength }, (_, i) => {
+					const queueValue = landQueue?.[i] ?? 0;
+					const tickNum = i + 1;
+					return (
+						<span key={`land-tick-${tickNum}`} style={{ fontWeight: "bold" }}>
+							{queueValue}
+						</span>
+					);
+				})}
+			</div>
+		</article>
+	);
+}
