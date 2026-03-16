@@ -59,6 +59,11 @@ export const GAME_PARAMS = {
 		plantStorage: 1000,
 	},
 	military: {
+		calculateTcDiscount: (tcCount: number, land: number) => {
+			if (land <= 0) return 0;
+			const ratio = tcCount / land;
+			return Math.min(30, Math.floor(ratio * 300));
+		},
 		duration: 24,
 		soldierDuration: 16,
 		soldiersLimit: 0.1,

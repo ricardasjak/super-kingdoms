@@ -55,8 +55,11 @@ const INITIAL_TRAIN_QUEUE: Record<string, string> = {
 	ht: "",
 };
 
-function getUnitCost(key: keyof typeof UNITS) {
-	return UNITS[key].cost;
+function getUnitCost(key: keyof typeof UNITS, tcCount: number, land: number) {
+	const baseCost = UNITS[key].cost;
+	if (key === "sol") return baseCost;
+	const discount = GAME_PARAMS.military.calculateTcDiscount(tcCount, land);
+	return Math.floor((baseCost * (100 - discount)) / 100);
 }
 
 function roundToDuration(value: number, duration: number) {
@@ -108,17 +111,21 @@ function KingdomMilitaryPage() {
 		return <p>Military not initialized</p>;
 	}
 
+	const buildings = myKingdom.buildings;
+	const tcCount = buildings?.tc ?? 0;
+	const land = myKingdom.land;
+
 	const requestSum = Object.values(trainQueue).reduce(
 		(sum, val) => sum + (parseInt(val, 10) || 0),
 		0,
 	);
 
 	const soldiersCount = parseInt(soldiersToTrain, 10) || 0;
-	const soldiersCost = soldiersCount * getUnitCost("sol");
+	const soldiersCost = soldiersCount * getUnitCost("sol", tcCount, land);
 
 	const currentSoldiers = military.sol as number;
 	const soldiersInQueue = (military.queue.sol || []).reduce((a, b) => a + b, 0);
-	const soldierCost = getUnitCost("sol");
+	const soldierCost = getUnitCost("sol", tcCount, land);
 	const maxByPop = Math.floor(
 		myKingdom.population * GAME_PARAMS.military.soldiersLimit,
 	);
@@ -186,7 +193,7 @@ function KingdomMilitaryPage() {
 
 	const totalCost = UNIT_KEYS.reduce((sum, key) => {
 		const count = parseInt(trainQueue[key], 10) || 0;
-		return sum + count * getUnitCost(key);
+		return sum + count * getUnitCost(key, tcCount, land);
 	}, 0);
 
 	const soldiersUsed = UNIT_KEYS.reduce((sum, key) => {
@@ -283,7 +290,7 @@ function KingdomMilitaryPage() {
 									<td>Soldiers</td>
 									<td>{(military.sol as number).toLocaleString()}</td>
 									<td>{soldiersInQueue.toLocaleString()}</td>
-									<td>${getUnitCost("sol")}</td>
+									<td>${getUnitCost("sol", tcCount, land)}</td>
 									<td>
 										<button
 											type="button"
@@ -375,7 +382,7 @@ function KingdomMilitaryPage() {
 									const unitCount = military[
 										key as keyof typeof military
 									] as number;
-									const unitCost = getUnitCost(key);
+									const unitCost = getUnitCost(key, tcCount, land);
 									const maxByMoney = Math.floor(myKingdom.money / unitCost);
 									const needsSoldiers =
 										!UNITS_WITHOUT_SOLDIER_COST.includes(key);

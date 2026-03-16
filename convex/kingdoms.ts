@@ -378,51 +378,59 @@ export const trainMilitary = mutation({
 
 		if (!kingdom.military) throw new Error("Military not found");
 
+		const buildings = kingdom.buildings;
+		const tcCount = buildings?.tc ?? 0;
+		const land = kingdom.land;
+		const tcDiscount = GAME_PARAMS.military.calculateTcDiscount(tcCount, land);
+
 		const units = GAME_PARAMS.military.units;
 		let totalCost = 0;
 		let hasValidUnit = false;
 		let soldiersToDeduct = 0;
 
+		const getDiscountedCost = (baseCost: number) =>
+			Math.floor((baseCost * (100 - tcDiscount)) / 100);
+
 		const trainableUnits = [
 			{ key: "sol", value: args.sol, cost: units.sol.cost },
-			{ key: "tr", value: args.tr, cost: units.tr.cost },
-			{ key: "dr", value: args.dr, cost: units.dr.cost },
-			{ key: "ft", value: args.ft, cost: units.ft.cost },
+			{ key: "tr", value: args.tr, cost: getDiscountedCost(units.tr.cost) },
+			{ key: "dr", value: args.dr, cost: getDiscountedCost(units.dr.cost) },
+			{ key: "ft", value: args.ft, cost: getDiscountedCost(units.ft.cost) },
 			{
 				key: "tf",
 				value: args.tf,
-				cost: units.tf.cost,
+				cost: getDiscountedCost(units.tf.cost),
 			},
 			{
 				key: "lt",
 				value: args.lt,
-				cost: units.lt.cost,
+				cost: getDiscountedCost(units.lt.cost),
 			},
 			{
 				key: "ld",
 				value: args.ld,
-				cost: units.ld.cost,
+				cost: getDiscountedCost(units.ld.cost),
 			},
 			{
 				key: "lf",
 				value: args.lf,
-				cost: units.lf.cost,
+				cost: getDiscountedCost(units.lf.cost),
 			},
 			{
 				key: "f74",
 				value: args.f74,
-				cost: units.f74.cost,
+				cost: getDiscountedCost(units.f74.cost),
 			},
-			{ key: "t", value: args.t, cost: units.t.cost },
+			{ key: "t", value: args.t, cost: getDiscountedCost(units.t.cost) },
 			{
 				key: "hgl",
 				value: args.hgl,
-				cost: units.hgl.cost,
+				cost: getDiscountedCost(units.hgl.cost),
 			},
 			{
 				key: "ht",
 				value: args.ht,
-				cost: units.ht.cost,
+				cost: getDiscountedCost(units.ht.cost),
 			},
 		];
 
