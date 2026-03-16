@@ -37,7 +37,7 @@ function LandingPage() {
 									Enter Kingdom
 								</Link>
 							) : (
-								<Link to="/kingdom/create" role="button">
+								<Link to="/create" role="button">
 									Create Kingdom
 								</Link>
 							)}

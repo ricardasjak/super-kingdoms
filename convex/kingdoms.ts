@@ -5,6 +5,7 @@ import {
 	PLANET_TYPES,
 	RACE_TYPES,
 } from "../src/constants/game-params";
+import { calculateNw } from "../src/utils/nwUtils";
 import { internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 
@@ -88,6 +89,68 @@ export const createKingdom = mutation({
 			throw new Error(`Invalid race type: ${args.raceType}`);
 		}
 
+		const buildings = {
+			res: 80,
+			plants: 40,
+			rax: 10,
+			sm: 30,
+			pf: 10,
+			tc: 0,
+			asb: 0,
+			ach: 0,
+			rubble: 0,
+			queue: {
+				res: [],
+				plants: [],
+				rax: [],
+				sm: [],
+				pf: [],
+				tc: [],
+				asb: [],
+				ach: [],
+			},
+		};
+
+		const military = {
+			sol: 200,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			hgl: 0,
+			ht: 0,
+			sci: 100,
+			queue: {
+				sol: [],
+				tr: [],
+				dr: [],
+				ft: [],
+				tf: [],
+				lt: [],
+				ld: [],
+				lf: [],
+				f74: [],
+				t: [],
+				hgl: [],
+				ht: [],
+				sci: [],
+			},
+		};
+
+		const nw = calculateNw({
+			military,
+			buildings,
+			land: STARTING_VALUES.land,
+			population: STARTING_VALUES.population,
+			money: STARTING_VALUES.money,
+			probes: STARTING_VALUES.probes,
+		});
+
 		await ctx.db.insert("kingdoms", {
 			userId,
 			kdName: args.kdName,
@@ -95,6 +158,8 @@ export const createKingdom = mutation({
 			planetType: args.planetType,
 			raceType: args.raceType,
 			...STARTING_VALUES,
+			nw,
+			military,
 			buildings: {
 				res: 80,
 				plants: 40,

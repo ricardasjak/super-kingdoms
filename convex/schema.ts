@@ -18,6 +18,7 @@ const schema = defineSchema({
 		probes: v.number(),
 		moneyIncome: v.number(),
 		powerIncome: v.number(),
+		nw: v.number(),
 		autoExplore: v.optional(v.boolean()),
 		autoBuild: v.optional(v.boolean()),
 		landQueue: v.array(v.number()),

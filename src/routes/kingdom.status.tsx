@@ -23,7 +23,7 @@ function KingdomStatusPage() {
 	}
 
 	if (!myKingdom) {
-		navigate({ to: "/kingdom/create" });
+		navigate({ to: "/create" });
 		return null;
 	}
 

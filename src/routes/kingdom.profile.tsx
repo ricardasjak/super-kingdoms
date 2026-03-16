@@ -26,7 +26,7 @@ function KingdomProfilePage() {
 	}
 
 	if (myKingdom === null) {
-		navigate({ to: "/kingdom/create" });
+		navigate({ to: "/create" });
 		return null;
 	}
 

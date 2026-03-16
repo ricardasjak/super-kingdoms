@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { GAME_PARAMS } from "../src/constants/game-params";
+import { calculateNw } from "../src/utils/nwUtils";
 import { processKingdomTick } from "../src/utils/tickUtils";
 import { internal } from "./_generated/api";
 import { action, internalMutation, query } from "./_generated/server";
@@ -39,6 +40,8 @@ export const advanceTick = action({
 			isDone = batchResult.isDone;
 			cursor = batchResult.continueCursor;
 		}
+
+		await ctx.runMutation(internal.game.calculateNetworth);
 
 		const endTime = Date.now();
 		const finalExecutionTime = endTime - startTime;
@@ -164,5 +167,30 @@ export const deleteEntitiesBatch = internalMutation({
 		await Promise.all(kingdoms.map((kd) => ctx.db.delete(kd._id)));
 
 		return { isDone: kingdoms.length === 0 };
+	},
+});
+
+export const calculateNetworth = internalMutation({
+	args: {},
+	handler: async (ctx) => {
+		const kingdoms = await ctx.db.query("kingdoms").collect();
+		await Promise.all(
+			kingdoms.map(async (kd) => {
+				const military = kd.military;
+				const buildings = kd.buildings;
+				if (!military || !buildings) return;
+
+				const nw = calculateNw({
+					military,
+					buildings,
+					land: kd.land,
+					population: kd.population,
+					money: kd.money,
+					probes: kd.probes,
+				});
+
+				await ctx.db.patch(kd._id, { nw });
+			}),
+		);
 	},
 });

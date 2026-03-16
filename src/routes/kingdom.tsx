@@ -52,7 +52,10 @@ function KingdomLayoutContent() {
 									{gameStatus.endTick}
 								</li>
 							)}
-							<li>Land: {myKingdom.land.toLocaleString()}</li>
+							<li>
+								Land: {myKingdom.land.toLocaleString()} (
+								{myKingdom.nw.toLocaleString()} NW)
+							</li>
 							<li>Pop: {myKingdom.population.toLocaleString()}</li>
 							<li>Power: {myKingdom.power.toLocaleString()}</li>
 							<li>Money: ${myKingdom.money.toLocaleString()}</li>

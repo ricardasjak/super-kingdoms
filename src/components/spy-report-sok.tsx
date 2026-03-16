@@ -1,3 +1,5 @@
+import { calculateNw } from "../utils/nwUtils";
+
 export function calculateLevel(land: number): number {
 	return Math.floor(Math.sqrt(land) / 10) + 1;
 }
@@ -31,40 +33,14 @@ export function calculateNetworth(
 	},
 	population: number,
 ): number {
-	const buildingNetworth =
-		buildings.res +
-		buildings.plants +
-		buildings.rax +
-		buildings.sm +
-		buildings.pf +
-		buildings.tc +
-		buildings.asb +
-		buildings.ach;
-
-	const unitValues: Record<string, number> = {
-		sol: 150,
-		tr: 350,
-		dr: 450,
-		ft: 550,
-		tf: 350,
-		lt: 250,
-		ld: 350,
-		lf: 450,
-		f74: 200,
-		t: 800,
-		hgl: 1200,
-		ht: 1000,
-		sci: 1000,
-	};
-
-	let militaryNetworth = 0;
-	for (const [unit, count] of Object.entries(military)) {
-		militaryNetworth += (unitValues[unit] || 0) * count;
-	}
-
-	return Math.floor(
-		land * 100 + buildingNetworth * 500 + militaryNetworth + population * 2,
-	);
+	return calculateNw({
+		military,
+		buildings,
+		land,
+		population,
+		money: 0,
+		probes: 0,
+	});
 }
 
 export function calculateMaxDefPotential(military: {

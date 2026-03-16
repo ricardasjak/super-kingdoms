@@ -16,14 +16,14 @@ function KingdomDeletePage() {
 	}
 
 	if (!myKingdom) {
-		navigate({ to: "/kingdom/create" });
+		navigate({ to: "/create" });
 		return null;
 	}
 
 	const handleDelete = async () => {
 		try {
 			await deleteKingdom();
-			navigate({ to: "/kingdom/create" });
+			navigate({ to: "/create" });
 		} catch (error) {
 			console.error("Failed to delete kingdom", error);
 			alert("Failed to delete kingdom. Please try again.");
