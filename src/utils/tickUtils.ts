@@ -89,11 +89,30 @@ export function processKingdomTick(
 	const powerIncome =
 		buildings.plants * GAME_PARAMS.buildings.plantProduction - powerConsumption;
 
-	const maxPopulation = buildings.res * GAME_PARAMS.buildings.resCapacity;
+	const raxUsage =
+		military.sol +
+		military.tr +
+		military.dr +
+		military.ft +
+		military.lt +
+		military.ld +
+		military.lf +
+		military.sci +
+		military.t * 2 +
+		military.ht * 2;
+	const raxCapacity = buildings.rax * GAME_PARAMS.buildings.raxCapacity;
+	const raxSurplus = Math.max(0, raxUsage - raxCapacity);
+
+	const maxPopulation =
+		buildings.res * GAME_PARAMS.buildings.resCapacity - raxSurplus;
 	let populationChange = 0;
 	if (kingdom.population < maxPopulation) {
 		populationChange = Math.ceil(
 			kingdom.population * GAME_PARAMS.population.growth,
+		);
+		populationChange = Math.min(
+			populationChange,
+			maxPopulation - kingdom.population,
 		);
 	} else if (kingdom.population > maxPopulation) {
 		populationChange = -GAME_PARAMS.population.decline(

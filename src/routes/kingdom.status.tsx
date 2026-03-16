@@ -34,6 +34,7 @@ function KingdomStatusPage() {
 	const raxCapacity =
 		myKingdom.buildings.rax * GAME_PARAMS.buildings.raxCapacity;
 	const raxRatio = raxCapacity > 0 ? (raxUsage / raxCapacity) * 100 : 0;
+	const raxSurplus = Math.max(0, raxUsage - raxCapacity);
 
 	return (
 		<main className="container">
@@ -92,6 +93,16 @@ function KingdomStatusPage() {
 								<td>
 									{raxUsage.toLocaleString()} / {raxCapacity.toLocaleString()} (
 									{raxRatio.toFixed(1)}%)
+									{raxSurplus > 0 && (
+										<span style={{ color: "var(--pico-del-color)" }}>
+											{" "}
+											(
+											{Math.ceil(
+												raxSurplus / GAME_PARAMS.buildings.resCapacity,
+											)}{" "}
+											Residences used)
+										</span>
+									)}
 								</td>
 							</tr>
 						</tbody>
