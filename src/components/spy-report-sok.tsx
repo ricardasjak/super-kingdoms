@@ -254,8 +254,6 @@ export function SpyReportSoE({
 	kdName,
 	moneyIncome,
 	powerIncome,
-	money,
-	probes,
 	pfCount,
 	population,
 	popChange,
@@ -265,8 +263,6 @@ export function SpyReportSoE({
 	kdName: string;
 	moneyIncome: number;
 	powerIncome: number;
-	money: number;
-	probes: number;
 	pfCount: number;
 	population: number;
 	popChange: number;

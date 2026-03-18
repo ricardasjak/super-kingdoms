@@ -5,6 +5,7 @@ import {
 	calculateLevel,
 	calculateMaxDefPotential,
 	calculateMaxOffPotential,
+	calculateMinDefPotential,
 	calculateNetworth,
 	SpyReportSOB,
 	SpyReportSOK,
@@ -60,6 +61,12 @@ function KingdomReportsPage() {
 		hgl: myKingdom.military.hgl,
 		ht: myKingdom.military.ht,
 	});
+	const minDef = calculateMinDefPotential({
+		lt: myKingdom.military.lt,
+		ld: myKingdom.military.ld,
+		lf: myKingdom.military.lf,
+		f74: myKingdom.military.f74,
+	});
 
 	return (
 		<main className="container">
@@ -85,6 +92,7 @@ function KingdomReportsPage() {
 					military={myKingdom.military}
 					maxDefPotential={maxDef}
 					maxOffPotential={maxOff}
+					minDefPotential={minDef}
 				/>
 			</article>
 
@@ -107,29 +115,38 @@ function KingdomReportsPage() {
 					</header>
 					{spyReports
 						.filter((report) => report.targetKdName !== myKingdom.kdName)
-						.map((report) => (
-							<SpyReportSOK
-								key={report._id}
-								kdName={report.targetKdName}
-								rulerName={report.targetRulerName}
-								planetType={report.targetPlanetType}
-								raceType={report.targetRaceType}
-								level={report.targetLevel}
-								land={report.land}
-								networth={report.networth}
-								honor={report.honor}
-								money={report.money}
-								population={report.population}
-								power={report.power}
-								probes={report.probes}
-								scientists={report.scientists}
-								maProtection={report.maProtection}
-								military={report.military}
-								maxDefPotential={report.maxDefPotential}
-								maxOffPotential={report.maxOffPotential}
-								timestamp={report.spiedAt}
-							/>
-						))}
+						.map((report) => {
+							const reportMinDef = calculateMinDefPotential({
+								lt: report.military.lt,
+								ld: report.military.ld,
+								lf: report.military.lf,
+								f74: report.military.f74,
+							});
+							return (
+								<SpyReportSOK
+									key={report._id}
+									kdName={report.targetKdName}
+									rulerName={report.targetRulerName}
+									planetType={report.targetPlanetType}
+									raceType={report.targetRaceType}
+									level={report.targetLevel}
+									land={report.land}
+									networth={report.networth}
+									honor={report.honor}
+									money={report.money}
+									population={report.population}
+									power={report.power}
+									probes={report.probes}
+									scientists={report.scientists}
+									maProtection={report.maProtection}
+									military={report.military}
+									maxDefPotential={report.maxDefPotential}
+									maxOffPotential={report.maxOffPotential}
+									minDefPotential={reportMinDef}
+									timestamp={report.spiedAt}
+								/>
+							);
+						})}
 				</article>
 			)}
 		</main>

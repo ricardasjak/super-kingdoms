@@ -97,8 +97,6 @@ function KingdomStatusPage() {
 						kdName={myKingdom.kdName}
 						moneyIncome={myKingdom.moneyIncome}
 						powerIncome={myKingdom.powerIncome}
-						money={myKingdom.money}
-						probes={myKingdom.probes}
 						pfCount={myKingdom.buildings.pf}
 						population={myKingdom.population}
 						popChange={myKingdom.popChange}
