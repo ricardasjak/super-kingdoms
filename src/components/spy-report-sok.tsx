@@ -119,6 +119,7 @@ export function SpyReportSOK({
 	military,
 	maxDefPotential,
 	maxOffPotential,
+	minDefPotential,
 	timestamp,
 }: {
 	kdName: string;
@@ -151,14 +152,13 @@ export function SpyReportSOK({
 	};
 	maxDefPotential: number;
 	maxOffPotential: number;
+	minDefPotential: number;
 	timestamp?: number;
 }) {
 	return (
 		<article style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
 			<header>
-				<strong>
-					{kdName} ({level})
-				</strong>
+				<strong>{kdName} - SOK</strong>
 				{timestamp && (
 					<span
 						style={{ marginLeft: "0.5rem", color: "var(--pico-muted-color)" }}
@@ -241,8 +241,67 @@ export function SpyReportSOK({
 			>
 				<span>Max Def. Potential:</span>
 				<span>{maxDefPotential.toLocaleString()}</span>
+				<span>Min Def. Potential:</span>
+				<span>{minDefPotential.toLocaleString()}</span>
 				<span>Max Off. Potential:</span>
 				<span>{maxOffPotential.toLocaleString()}</span>
+			</div>
+		</article>
+	);
+}
+
+export function SpyReportSoE({
+	kdName,
+	moneyIncome,
+	powerIncome,
+	money,
+	probes,
+	pfCount,
+	population,
+	popChange,
+	barracksUsage,
+	barracksCap,
+}: {
+	kdName: string;
+	moneyIncome: number;
+	powerIncome: number;
+	money: number;
+	probes: number;
+	pfCount: number;
+	population: number;
+	popChange: number;
+	barracksUsage: number;
+	barracksCap: number;
+}) {
+	const probeProduction = pfCount * 1;
+	return (
+		<article style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
+			<header>
+				<strong>{kdName} - Economy</strong>
+			</header>
+			<div
+				style={{
+					display: "grid",
+					gridTemplateColumns: "180px 1fr",
+					gap: "0.15rem",
+				}}
+			>
+				<span>Net Income:</span>
+				<span>${moneyIncome.toLocaleString()}</span>
+				<span>Net Power:</span>
+				<span>{powerIncome.toLocaleString()}</span>
+
+				<span>Probes production:</span>
+				<span>{probeProduction.toLocaleString()}</span>
+				<span>Population:</span>
+				<span>
+					{population.toLocaleString()} (
+					{popChange > 0 ? `+${popChange}` : popChange})
+				</span>
+				<span>Barracks:</span>
+				<span>
+					{barracksUsage.toLocaleString()} / {barracksCap.toLocaleString()}
+				</span>
 			</div>
 		</article>
 	);
