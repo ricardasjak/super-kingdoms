@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+# Super Kingdoms
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based game built with React, Vite, TypeScript, Convex, and Discord OAuth.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 20+
+- Docker (for local services)
+- Discord account (for authentication)
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Clone and install dependencies
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Set up Discord OAuth
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Go to OAuth2 > General
+4. Add redirect: `https://localhost:5173/api/auth/callback/discord`
+5. Copy Client ID and Secret to `.env.local`:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+AUTH_DISCORD_ID=your_client_id
+AUTH_DISCORD_SECRET=your_client_secret
 ```
+
+### 3. Generate HTTPS certificates (for local development)
+
+```bash
+npm run generate-certs
+```
+
+This creates `dev.crt` and `dev.key` in the project root.
+
+### 4. Start development server
+
+```bash
+npm run dev:https
+npm run dev
+```
+
+This starts:
+- Docker services (database, etc.)
+- Vite dev server on `https://localhost:5173`
+- Convex dev server
+- TypeScript watcher
+
+Without HTTPS certificates, the server runs on `http://localhost:5173`.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev:https` | Start development server with HTTPS |
+| `npm run dev` | Start development server |
+| `npm run generate-certs` | Generate HTTPS certificates |
+| `npm run build` | Build for production |
+| `npm run lint:fix` | Run linter and fix issues |
+| `npm run lint` | Run linter |
+| `npm run test` | Run tests |
+
+## Tech Stack
+
+- **Frontend**: React 19, TypeScript, Vite, TanStack Router
+- **Backend**: Convex (self-hosted)
+- **Styling**: Pico CSS
+- **Auth**: Discord OAuth via @convex-dev/auth

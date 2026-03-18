@@ -4,7 +4,10 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently -n docker,tunnel,vite,convex,tsc -c magenta,cyan,blue,green,yellow \"docker compose up -d\" \"bash tunnel.sh\" \"vite\" \"convex dev\"",
+		"dev": "concurrently -n docker,vite,convex,tsc -c magenta,blue,green,yellow \"docker compose up -d\" \"vite\" \"convex dev\"",
+		"docker:restart": "docker compose down && docker compose up -d",
+		"dev:https": "[ -f dev.crt ] && [ -f dev.key ] || npx -y mkcert-cli --outDir . --cert dev.crt --key dev.key && vite",
+		"generate-certs": "npx -y mkcert-cli --outDir . --cert dev.crt --key dev.key",
 		"convex": "convex dev",
 		"tsc": "tsc -b --watch",
 		"build": "tsc -b && vite build",
