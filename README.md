@@ -39,26 +39,22 @@ You can ask other developer to share his keys or create your own:
 4. Copy your **Client ID** and **Client Secret**.
 
 ### 3. Convex setup (server)
-1. Create Convex.dev account, do me a favor and create your account with [referal link](https://convex.dev/referral/RICARD2359)
-2. Run `npm run dev:server`
-   - You may need to log in to your convex account if this is your first time.
-   - The script will automatically create a new project (named `sk-db-local`), set it as a local deployment, and automatically bind your `CONVEX_DEPLOYMENT` variables in `.env.local` without any prompts!
+1. Create a Convex.dev account, do me a favor and create your account with my [referral link](https://convex.dev/referral/RICARD2359)
+2. **First-time Initialization:** Run `npm run dev:server:init` once!
+   - You may need to log in to your convex account if this is your very first time.
+   - The script will ask to create a new local DB and link it to cloud hosted Dashboard under your account. 
+   - If you have multiple dev machines, don't try to use same DB link, create a new one for each machine! Single dev db instance against different branches may cause issues.
+   - The script will automatically default to `local` deployment and bind your `CONVEX_DEPLOYMENT` variables into `.env.local` flawlessly!
 
 ### 4. Start the Application
 
-First, open a terminal and start the Convex backend server:
-
-```bash
-npm run dev:server
-```
-
-Then, in a new terminal tab, start the frontend and environment sync processes concurrently by running:
+Once initialized, start the entire full-stack application (Frontend, Convex Local Server, TypeScript compiler, and Env Synchronization) with a single command:
 
 ```bash
 npm run dev
 ```
 
-*(Note: During startup, our custom `setupEnv.mjs` script acts as a background process that will automatically listen for your backend to boot, read your `.env.local` Discord credentials, and securely inject them straight into your isolated Convex database automatically).*
+*(Note: During startup, our completely automated `setupEnv.mjs` worker script listens for your local database backend to boot up, dynamically verifies your local Convex Auth keys, and explicitly syncs your `.env.local` Discord credentials straight into your isolated Convex database container securely.)*
 
 - **Frontend:** `http://localhost:5173`
 - **Convex API:** `http://localhost:3210`
@@ -68,12 +64,12 @@ npm run dev
 ## Available Commands
 
 Most important commands:
-- `npm run dev:server` - Starts the local Convex backend and database.
-- `npm run dev` - Starts the Vite development server, TypeScript compiler, and environment pusher.
+- `npm run dev` - Starts the Vite development server, local Convex database, TypeScript compiler, and environment pusher securely via `concurrently`.
 - `npm run lint:fix` - Auto-formats and fixes all safely fixable linting issues (bind this to run after save).
 - `npm run test` - Runs unit tests using [Vitest](https://vitest.dev/).
 
 Other commands:
+- `npm run dev:server:init` - One-time script to auto-provision and connect your local Convex backend.
 - `npm run dev:server:dashboard` - Opens the Convex Admin Dashboard for your local convex db (server).
 - `npm run lint` - Runs [Biome](https://biomejs.dev/) to check for linting errors.
 - `npm run build` - Validates types and builds the Vite production artifact. 

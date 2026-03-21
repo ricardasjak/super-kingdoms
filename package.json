@@ -4,8 +4,8 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently -n vite,tsc,env -c blue,yellow,magenta \"vite\" \"npm run tsc\" \"node setupEnv.mjs\"",
-		"dev:server": "npx convex dev --typecheck enable --configure new --project sk-db-local --dev-deployment local",
+		"dev": "concurrently -n vite,tsc,env,convex -c blue,yellow,magenta,green \"vite\" \"npm run tsc\" \"node setupEnv.mjs\" \"npx convex dev --typecheck enable\"",
+		"dev:server:init": "npx convex dev --configure new --dev-deployment local --once && npm run lint:fix",
 		"dev:server:dashboard": "npx convex dashboard",
 		"tsc": "tsc -b --watch",
 		"build": "tsc -b && vite build",
