@@ -4,8 +4,9 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently -n docker,vite,convex,tsc -c magenta,blue,green,yellow \"docker compose up -d\" \"vite\" \"convex dev\"",
-		"convex": "convex dev",
+		"dev": "concurrently -n vite,tsc,env -c blue,yellow,magenta \"vite\" \"npm run tsc\" \"node setupEnv.mjs\"",
+		"dev:server": "npx convex dev --typecheck enable --configure new --project sk-db-local --dev-deployment local",
+		"dev:server:dashboard": "npx convex dashboard",
 		"tsc": "tsc -b --watch",
 		"build": "tsc -b && vite build",
 		"lint": "biome check .",
