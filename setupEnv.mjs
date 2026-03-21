@@ -25,7 +25,7 @@ async function run() {
 
 	try {
 		const env = fs.readFileSync(".env.local", "utf8");
-		const varsToPush = ["AUTH_DISCORD_ID", "AUTH_DISCORD_SECRET"];
+		const varsToPush = ["AUTH_DISCORD_ID", "AUTH_DISCORD_SECRET", "SITE_URL"];
 
 		console.log("Pushing Discord OAuth credentials from .env.local to Convex...");
 		for (const line of env.split("\n")) {
