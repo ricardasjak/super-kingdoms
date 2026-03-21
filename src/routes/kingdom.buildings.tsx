@@ -212,6 +212,29 @@ function KingdomBuildingsPage() {
 		return `${((count / myKingdom.land) * 100).toFixed(1)}%`;
 	};
 
+	const maxBuildings = Math.min(
+		freeLand,
+		Math.floor(myKingdom.money / buildingCost),
+	);
+	const maxBuildingsRounded =
+		Math.floor(maxBuildings / GAME_PARAMS.buildings.duration) *
+		GAME_PARAMS.buildings.duration;
+
+	const handleMaxClick = (key: string) => {
+		if (maxBuildingsRounded <= 0) return;
+		setBuildQueue({
+			res: "",
+			sm: "",
+			plants: "",
+			rax: "",
+			pf: "",
+			tc: "",
+			asb: "",
+			ach: "",
+			[key]: maxBuildingsRounded.toString(),
+		});
+	};
+
 	const handleBuild = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -284,6 +307,7 @@ function KingdomBuildingsPage() {
 									<th scope="col">Count</th>
 									<th scope="col">In Queue</th>
 									{myKingdom.autoBuild && <th scope="col">Target %</th>}
+									<th scope="col">Max</th>
 									<th scope="col">Build</th>
 								</tr>
 							</thead>
@@ -310,6 +334,20 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("res")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
 									<td>
 										<input
 											type="number"
@@ -344,6 +382,20 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("sm")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
+									<td>
 										<input
 											type="number"
 											name="sm"
@@ -376,6 +428,20 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("plants")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
 									<td>
 										<input
 											type="number"
@@ -410,6 +476,20 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("rax")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
+									<td>
 										<input
 											type="number"
 											name="rax"
@@ -442,6 +522,20 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("pf")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
 									<td>
 										<input
 											type="number"
@@ -476,6 +570,20 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("tc")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
+									<td>
 										<input
 											type="number"
 											name="tc"
@@ -508,6 +616,20 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("asb")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
 									<td>
 										<input
 											type="number"
@@ -542,6 +664,20 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
+										<button
+											type="button"
+											onClick={() => handleMaxClick("ach")}
+											disabled={maxBuildings <= 0}
+											style={{
+												padding: "0.25rem 0.5rem",
+												fontSize: "0.875rem",
+												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+											}}
+										>
+											{maxBuildings.toLocaleString()}
+										</button>
+									</td>
+									<td>
 										<input
 											type="number"
 											name="ach"
@@ -558,6 +694,7 @@ function KingdomBuildingsPage() {
 									<td>{buildings.rubble}</td>
 									<td>-</td>
 									{myKingdom.autoBuild && <td>-</td>}
+									<td>-</td>
 									<td>-</td>
 								</tr>
 							</tbody>
