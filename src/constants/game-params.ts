@@ -25,6 +25,24 @@ export const RACE_TYPES = [
 	"Shadow",
 ] as const;
 
+export const RESEARCH_WEIGHTS = {
+	pop: 0.00475,
+	power: 0.00311,
+	mil: 0.00291,
+	money: 0.00535,
+	fdc: 0.0004,
+	warp: 0.00173,
+} as const;
+
+export const RESEARCH_BONUS = {
+	pop: 20,
+	power: 50,
+	mil: 30,
+	money: 25,
+	fdc: 25,
+	warp: 20,
+} as const;
+
 export const GAME_PARAMS = {
 	roundLength: 480,
 	income: {
@@ -126,6 +144,12 @@ export const GAME_PARAMS = {
 			}
 			return total;
 		},
+	},
+	research: {
+		weights: RESEARCH_WEIGHTS,
+		bonuses: RESEARCH_BONUS,
+		required: (property: keyof typeof RESEARCH_WEIGHTS, land: number) =>
+			Math.round(land * land * RESEARCH_WEIGHTS[property]),
 	},
 	nw: {
 		units: {

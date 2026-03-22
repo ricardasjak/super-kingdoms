@@ -14,6 +14,14 @@ describe("processKingdomTick", () => {
 			probes: 0,
 			landQueue: [],
 			researchPts: 0,
+			research: {
+				pop: { pts: 0, perc: 0 },
+				power: { pts: 0, perc: 0 },
+				mil: { pts: 0, perc: 0 },
+				money: { pts: 0, perc: 0 },
+				fdc: { pts: 0, perc: 0 },
+				warp: { pts: 0, perc: 0 },
+			},
 		};
 		const buildings = {
 			res: 0,
@@ -100,6 +108,14 @@ describe("processKingdomTick", () => {
 			probes: 0,
 			landQueue: [50],
 			researchPts: 0,
+			research: {
+				pop: { pts: 0, perc: 0 },
+				power: { pts: 0, perc: 0 },
+				mil: { pts: 0, perc: 0 },
+				money: { pts: 0, perc: 0 },
+				fdc: { pts: 0, perc: 0 },
+				warp: { pts: 0, perc: 0 },
+			},
 		};
 		const buildings = {
 			res: 5,
@@ -190,6 +206,14 @@ describe("processKingdomTick", () => {
 			landQueue: [],
 			autoBuild: true,
 			researchPts: 0,
+			research: {
+				pop: { pts: 0, perc: 0 },
+				power: { pts: 0, perc: 0 },
+				mil: { pts: 0, perc: 0 },
+				money: { pts: 0, perc: 0 },
+				fdc: { pts: 0, perc: 0 },
+				warp: { pts: 0, perc: 0 },
+			},
 		};
 		const buildings = {
 			res: 0,
@@ -236,7 +260,21 @@ describe("processKingdomTick", () => {
 			hgl: 0,
 			ht: 0,
 			sci: 0,
-			queue: { sol: [], tr: [], dr: [], ft: [], tf: [], lt: [], ld: [], lf: [], f74: [], t: [], hgl: [], ht: [], sci: [] },
+			queue: {
+				sol: [],
+				tr: [],
+				dr: [],
+				ft: [],
+				tf: [],
+				lt: [],
+				ld: [],
+				lf: [],
+				f74: [],
+				t: [],
+				hgl: [],
+				ht: [],
+				sci: [],
+			},
 		};
 
 		const { updatedKingdom, updatedBuildings } = processKingdomTick(
@@ -263,6 +301,14 @@ describe("processKingdomTick", () => {
 			probes: 0,
 			landQueue: [],
 			researchPts: 500,
+			research: {
+				pop: { pts: 200000, perc: 0 },
+				power: { pts: 15, perc: 0 },
+				mil: { pts: 0, perc: 0 },
+				money: { pts: 0, perc: 0 },
+				fdc: { pts: 0, perc: 0 },
+				warp: { pts: 0, perc: 0 },
+			},
 		};
 		const buildings = {
 			res: 0,
@@ -299,20 +345,20 @@ describe("processKingdomTick", () => {
 			hgl: 0,
 			ht: 0,
 			sci: 1000,
-			queue: { 
-				sol: [0, 0, 0], 
-				tr: [0, 0, 0], 
-				dr: [0, 0, 0], 
-				ft: [0, 0, 0], 
-				tf: [0, 0, 0], 
-				lt: [0, 0, 0], 
-				ld: [0, 0, 0], 
-				lf: [0, 0, 0], 
-				f74: [0, 0, 0], 
-				t: [0, 0, 0], 
-				hgl: [0, 0, 0], 
-				ht: [0, 0, 0], 
-				sci: [40, 0, 0] 
+			queue: {
+				sol: [0, 0, 0],
+				tr: [0, 0, 0],
+				dr: [0, 0, 0],
+				ft: [0, 0, 0],
+				tf: [0, 0, 0],
+				lt: [0, 0, 0],
+				ld: [0, 0, 0],
+				lf: [0, 0, 0],
+				f74: [0, 0, 0],
+				t: [0, 0, 0],
+				hgl: [0, 0, 0],
+				ht: [0, 0, 0],
+				sci: [40, 0, 0],
 			},
 		};
 
@@ -325,5 +371,11 @@ describe("processKingdomTick", () => {
 		expect(updatedKingdom.researchPts).toBe(1500); // 500 existing + 1000 scientists
 		expect(updatedMilitary?.sci).toBe(1040); // 1000 + 40 from queue
 		expect(updatedMilitary?.queue.sci).toEqual([0, 0]); // Queue progresses
+
+		// Test perc max bonus bounds
+		expect(updatedKingdom.research?.pop.perc).toBe(20); // Hits 20 max bonus easily
+
+		// Test perc ratio algorithm
+		expect(updatedKingdom.research?.power.perc).toBe(24); // Math.floor( 50 * 15 / 31 ) = 24
 	});
 });

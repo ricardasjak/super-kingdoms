@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: <it's ok> */
 import { mutation, query } from "./_generated/server";
 
 export const runResearchMigration = mutation({
@@ -7,7 +8,7 @@ export const runResearchMigration = mutation({
 		let count = 0;
 		for (const record of records) {
 			const oldRes = record.research as any;
-			
+
 			const mapField = (field: any) => {
 				if (typeof field === "number") return { pts: field, perc: 0 };
 				if (field && typeof field === "object") return field;
@@ -35,5 +36,5 @@ export const dumpKingdoms = query({
 	args: {},
 	handler: async (ctx) => {
 		return await ctx.db.query("kingdoms").collect();
-	}
+	},
 });

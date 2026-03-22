@@ -750,3 +750,67 @@ export const saveSpyReport = mutation({
 		});
 	},
 });
+
+export const assignResearchPoints = mutation({
+	args: {
+		pop: v.number(),
+		power: v.number(),
+		mil: v.number(),
+		money: v.number(),
+		fdc: v.number(),
+		warp: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		const totalPoints =
+			args.pop + args.power + args.mil + args.money + args.fdc + args.warp;
+
+		if (totalPoints > kingdom.researchPts) {
+			throw new Error("Not enough research points");
+		}
+		if (
+			args.pop < 0 ||
+			args.power < 0 ||
+			args.mil < 0 ||
+			args.money < 0 ||
+			args.fdc < 0 ||
+			args.warp < 0
+		) {
+			throw new Error("Invalid negative points");
+		}
+
+		if (totalPoints === 0) return { success: true };
+
+		const newResearch = { ...kingdom.research };
+		const keys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
+
+		for (const key of keys) {
+			if (args[key] > 0) {
+				const currentPts = newResearch[key].pts;
+				const newPts = currentPts + args[key];
+				const required = GAME_PARAMS.research.required(key, kingdom.land);
+				const maxBonus = GAME_PARAMS.research.bonuses[key];
+				let perc = 0;
+				if (required > 0) {
+					perc = Math.min(Math.floor((maxBonus * newPts) / required), maxBonus);
+				}
+				newResearch[key] = { pts: newPts, perc };
+			}
+		}
+
+		await ctx.db.patch(kingdom._id, {
+			researchPts: kingdom.researchPts - totalPoints,
+			research: newResearch,
+		});
+
+		return { success: true };
+	},
+});

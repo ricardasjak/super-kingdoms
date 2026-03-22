@@ -103,6 +103,7 @@ export const processBatch = internalMutation({
 					land: updatedKingdom.land,
 					landQueue: updatedKingdom.landQueue,
 					researchPts: updatedKingdom.researchPts,
+					research: updatedKingdom.research,
 				};
 
 				if (updatedBuildings) {

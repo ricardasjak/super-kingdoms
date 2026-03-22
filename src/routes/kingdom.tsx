@@ -76,6 +76,9 @@ function KingdomLayoutContent() {
 								<Link to="/kingdom/military">Military</Link>
 							</li>
 							<li>
+								<Link to="/kingdom/research">Research</Link>
+							</li>
+							<li>
 								<Link to="/kingdom/reports">Reports</Link>
 							</li>
 						</ul>

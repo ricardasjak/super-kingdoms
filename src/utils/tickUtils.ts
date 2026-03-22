@@ -46,6 +46,14 @@ export function processKingdomTick(
 		autoExplore?: boolean;
 		autoBuild?: boolean;
 		researchPts: number;
+		research: {
+			pop: { pts: number; perc: number };
+			power: { pts: number; perc: number };
+			mil: { pts: number; perc: number };
+			money: { pts: number; perc: number };
+			fdc: { pts: number; perc: number };
+			warp: { pts: number; perc: number };
+		};
 	},
 	buildings: {
 		res: number;
@@ -135,6 +143,7 @@ export function processKingdomTick(
 		moneyIncome: Math.round(moneyIncome),
 		powerIncome: Math.round(powerIncome),
 		researchPts: kingdom.researchPts + military.sci,
+		research: { ...kingdom.research },
 		land: kingdom.land,
 		landQueue: [...kingdom.landQueue],
 	};
@@ -145,6 +154,18 @@ export function processKingdomTick(
 		newKingdom.land += completedLand;
 		newKingdom.landQueue = newKingdom.landQueue.slice(1);
 		kingdomChanged = true;
+	}
+
+	const researchKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
+	for (const key of researchKeys) {
+		const pts = newKingdom.research[key].pts;
+		const required = GAME_PARAMS.research.required(key, newKingdom.land);
+		const maxBonus = GAME_PARAMS.research.bonuses[key];
+		let perc = 0;
+		if (required > 0) {
+			perc = Math.min(Math.floor((maxBonus * pts) / required), maxBonus);
+		}
+		newKingdom.research[key] = { pts, perc };
 	}
 
 	const newBuildings = { ...buildings };
@@ -205,7 +226,9 @@ export function processKingdomTick(
 
 				if (totalDeficiency > 0) {
 					const rawToBuild = Math.min(maxToBuild, totalDeficiency);
-					const numChunks = Math.floor(rawToBuild / GAME_PARAMS.buildings.duration);
+					const numChunks = Math.floor(
+						rawToBuild / GAME_PARAMS.buildings.duration,
+					);
 
 					if (numChunks > 0) {
 						const toBuild = {
@@ -222,7 +245,7 @@ export function processKingdomTick(
 						let remainingChunks = numChunks;
 
 						while (remainingChunks > 0) {
-							let selectedKey: typeof keys[number] | null = null;
+							let selectedKey: (typeof keys)[number] | null = null;
 							let minTargetPct = Infinity;
 
 							for (const key of keys) {
