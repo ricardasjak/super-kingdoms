@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { GAME_PARAMS } from "../constants/game-params";
 import { calculateNw } from "../utils/nwUtils";
 
@@ -250,6 +251,15 @@ export function SpyReportSOK({
 	);
 }
 
+type Research = {
+	pop: { pts: number; perc: number };
+	power: { pts: number; perc: number };
+	mil: { pts: number; perc: number };
+	money: { pts: number; perc: number };
+	fdc: { pts: number; perc: number };
+	warp: { pts: number; perc: number };
+};
+
 export function SpyReportSoE({
 	kdName,
 	moneyIncome,
@@ -259,6 +269,7 @@ export function SpyReportSoE({
 	popChange,
 	barracksUsage,
 	barracksCap,
+	research,
 }: {
 	kdName: string;
 	moneyIncome: number;
@@ -268,8 +279,18 @@ export function SpyReportSoE({
 	popChange: number;
 	barracksUsage: number;
 	barracksCap: number;
+	research?: Research;
 }) {
 	const probeProduction = pfCount * 1;
+	const researchKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
+	const researchLabels: Record<(typeof researchKeys)[number], string> = {
+		pop: "Population Bonus",
+		power: "Power Bonus",
+		mil: "Military Bonus",
+		money: "Money Bonus",
+		fdc: "FDC Level",
+		warp: "Warp Drive Level",
+	};
 	return (
 		<article style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
 			<header>
@@ -298,6 +319,26 @@ export function SpyReportSoE({
 				<span>
 					{barracksUsage.toLocaleString()} / {barracksCap.toLocaleString()}
 				</span>
+				{research && researchKeys.some((key) => research[key].pts > 0) && (
+					<Fragment>
+						<hr
+							style={{
+								gridColumn: "1 / -1",
+								margin: "0.4rem 0",
+							}}
+						/>
+						{researchKeys.map((key) => {
+							const bonus = research[key].perc;
+							if (bonus === 0) return null;
+							return (
+								<Fragment key={key}>
+									<span>{researchLabels[key]}:</span>
+									<span>+{bonus}%</span>
+								</Fragment>
+							);
+						})}
+					</Fragment>
+				)}
 			</div>
 		</article>
 	);

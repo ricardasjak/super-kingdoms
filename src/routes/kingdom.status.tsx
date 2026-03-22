@@ -102,6 +102,7 @@ function KingdomStatusPage() {
 						popChange={myKingdom.popChange}
 						barracksUsage={raxUsage}
 						barracksCap={raxCapacity}
+						research={myKingdom.research}
 					/>
 					<SpyReportSOK
 						kdName={myKingdom.kdName}
