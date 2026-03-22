@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
 
@@ -64,27 +65,6 @@ function getUnitCost(key: keyof typeof UNITS, tcCount: number, land: number) {
 
 function roundToDuration(value: number, duration: number) {
 	return Math.floor(value / duration) * duration;
-}
-
-function QueueTooltip({
-	count,
-	queueArray,
-}: {
-	count: number;
-	queueArray: number[];
-}) {
-	if (count <= 0 || !queueArray) return <span>-</span>;
-
-	const queueString = queueArray.filter((x) => x > 0).join(", ");
-
-	return (
-		<span
-			data-tooltip={`Training queue: ${queueString}`}
-			style={{ cursor: "help" }}
-		>
-			+{count}
-		</span>
-	);
 }
 
 function KingdomMilitaryPage() {
@@ -375,7 +355,20 @@ function KingdomMilitaryPage() {
 								</tr>
 							</thead>
 							<tbody>
-								{UNIT_KEYS.map((key) => {
+								{UNIT_KEYS.filter((key) => {
+									const techInfo =
+										GAME_PARAMS.militaryTechTree[
+											key as keyof typeof GAME_PARAMS.militaryTechTree
+										];
+									if (!techInfo) return true;
+									const researchData = (
+										myKingdom.research as Record<
+											string,
+											{ pts: number; perc: number }
+										>
+									)[key];
+									return (researchData?.perc ?? 0) >= 100;
+								}).map((key) => {
 									const queueCount = (
 										military.queue[key as keyof typeof military.queue] || []
 									).reduce((a: number, b: number) => a + b, 0);
@@ -436,14 +429,15 @@ function KingdomMilitaryPage() {
 											<td>{unitCount.toLocaleString()}</td>
 											<td>
 												{queueCount > 0 ? (
-													<QueueTooltip
-														count={queueCount}
-														queueArray={
-															military.queue[
-																key as keyof typeof military.queue
-															] || []
-														}
-													/>
+													<Tooltip
+														content={`Training queue: ${military.queue[
+															key as keyof typeof military.queue
+														]
+															?.filter((x) => x > 0)
+															.join(", ")}`}
+													>
+														+{queueCount}
+													</Tooltip>
 												) : (
 													"-"
 												)}

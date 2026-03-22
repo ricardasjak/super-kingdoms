@@ -21,6 +21,14 @@ describe("processKingdomTick", () => {
 				money: { pts: 0, perc: 0 },
 				fdc: { pts: 0, perc: 0 },
 				warp: { pts: 0, perc: 0 },
+				dr: { pts: 0, perc: 0 },
+				ft: { pts: 0, perc: 0 },
+				tf: { pts: 0, perc: 0 },
+				ld: { pts: 0, perc: 0 },
+				lf: { pts: 0, perc: 0 },
+				f74: { pts: 0, perc: 0 },
+				hgl: { pts: 0, perc: 0 },
+				ht: { pts: 0, perc: 0 },
 			},
 		};
 		const buildings = {
@@ -115,6 +123,14 @@ describe("processKingdomTick", () => {
 				money: { pts: 0, perc: 0 },
 				fdc: { pts: 0, perc: 0 },
 				warp: { pts: 0, perc: 0 },
+				dr: { pts: 0, perc: 0 },
+				ft: { pts: 0, perc: 0 },
+				tf: { pts: 0, perc: 0 },
+				ld: { pts: 0, perc: 0 },
+				lf: { pts: 0, perc: 0 },
+				f74: { pts: 0, perc: 0 },
+				hgl: { pts: 0, perc: 0 },
+				ht: { pts: 0, perc: 0 },
 			},
 		};
 		const buildings = {
@@ -213,6 +229,14 @@ describe("processKingdomTick", () => {
 				money: { pts: 0, perc: 0 },
 				fdc: { pts: 0, perc: 0 },
 				warp: { pts: 0, perc: 0 },
+				dr: { pts: 0, perc: 0 },
+				ft: { pts: 0, perc: 0 },
+				tf: { pts: 0, perc: 0 },
+				ld: { pts: 0, perc: 0 },
+				lf: { pts: 0, perc: 0 },
+				f74: { pts: 0, perc: 0 },
+				hgl: { pts: 0, perc: 0 },
+				ht: { pts: 0, perc: 0 },
 			},
 		};
 		const buildings = {
@@ -308,6 +332,14 @@ describe("processKingdomTick", () => {
 				money: { pts: 0, perc: 0 },
 				fdc: { pts: 0, perc: 0 },
 				warp: { pts: 0, perc: 0 },
+				dr: { pts: 0, perc: 0 },
+				ft: { pts: 0, perc: 0 },
+				tf: { pts: 0, perc: 0 },
+				ld: { pts: 0, perc: 0 },
+				lf: { pts: 0, perc: 0 },
+				f74: { pts: 0, perc: 0 },
+				hgl: { pts: 0, perc: 0 },
+				ht: { pts: 0, perc: 0 },
 			},
 		};
 		const buildings = {

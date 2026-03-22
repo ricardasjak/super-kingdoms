@@ -54,6 +54,14 @@ export function processKingdomTick(
 			money: { pts: number; perc: number };
 			fdc: { pts: number; perc: number };
 			warp: { pts: number; perc: number };
+			dr?: { pts: number; perc: number };
+			ft?: { pts: number; perc: number };
+			tf?: { pts: number; perc: number };
+			ld?: { pts: number; perc: number };
+			lf?: { pts: number; perc: number };
+			f74?: { pts: number; perc: number };
+			hgl?: { pts: number; perc: number };
+			ht?: { pts: number; perc: number };
 		};
 	},
 	buildings: {
@@ -351,30 +359,90 @@ export function processKingdomTick(
 			if (newKingdom.researchPts <= 0) break;
 
 			const researchKey = key as keyof typeof newKingdom.research;
-			const currentPts = newKingdom.research[researchKey].pts;
-			const required = GAME_PARAMS.research.required(
-				researchKey as keyof typeof GAME_PARAMS.research.weights,
-				newKingdom.land,
-			);
+			const currentPts = newKingdom.research[researchKey]?.pts ?? 0;
+
+			let required = 0;
+			const techInfo =
+				GAME_PARAMS.militaryTechTree[
+					researchKey as keyof typeof GAME_PARAMS.militaryTechTree
+				];
+			if (techInfo) {
+				// Prerequisite check for military research
+				if (techInfo.requires) {
+					const prerequisite =
+						newKingdom.research[
+							techInfo.requires as keyof typeof newKingdom.research
+						];
+					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue; // Skip if prerequisite not completed
+				}
+				required = techInfo.requirePoints;
+			} else {
+				// Standard bonus research
+				required = GAME_PARAMS.research.required(
+					researchKey as keyof typeof GAME_PARAMS.research.weights,
+					newKingdom.land,
+				);
+			}
+
 			const needed = Math.max(0, required - currentPts);
 
 			if (needed > 0) {
 				const toAssign = Math.min(newKingdom.researchPts, needed);
-				newKingdom.research[researchKey].pts += toAssign;
+				const existing = newKingdom.research[researchKey] || {
+					pts: 0,
+					perc: 0,
+				};
+				newKingdom.research[researchKey] = {
+					...existing,
+					pts: existing.pts + toAssign,
+				};
 				newKingdom.researchPts -= toAssign;
 			}
 		}
 	}
 
 	// Recalculate Research Percentages
-	const researchKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
-	for (const key of researchKeys) {
+	const standardResearchKeys = [
+		"pop",
+		"power",
+		"mil",
+		"money",
+		"fdc",
+		"warp",
+	] as const;
+	for (const key of standardResearchKeys) {
 		const pts = newKingdom.research[key].pts;
 		const required = GAME_PARAMS.research.required(key, newKingdom.land);
 		const maxBonus = GAME_PARAMS.research.bonuses[key];
 		let perc = 0;
 		if (required > 0) {
 			perc = Math.min(Math.floor((maxBonus * pts) / required), maxBonus);
+		}
+		newKingdom.research[key] = { pts, perc };
+	}
+
+	const militaryResearchKeys = [
+		"dr",
+		"ft",
+		"tf",
+		"ld",
+		"lf",
+		"f74",
+		"hgl",
+		"ht",
+	] as const;
+	for (const key of militaryResearchKeys) {
+		const pts = newKingdom.research[key]?.pts ?? 0;
+		const techInfo =
+			GAME_PARAMS.militaryTechTree[
+				key as keyof typeof GAME_PARAMS.militaryTechTree
+			];
+		if (!techInfo) continue;
+
+		const required = techInfo.requirePoints;
+		let perc = 0;
+		if (required > 0) {
+			perc = Math.min(Math.floor((pts / required) * 100), 100);
 		}
 		newKingdom.research[key] = { pts, perc };
 	}

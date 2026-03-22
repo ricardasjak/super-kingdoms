@@ -25,6 +25,36 @@ export const RACE_TYPES = [
 	"Shadow",
 ] as const;
 
+const MILITARY_UNITS = {
+	sol: { cost: 150, power: 0.7, housing: 1, off: 1, def: 1 },
+	sci: { cost: 1000, power: 0.7, housing: 1, off: 0, def: 0 },
+	tr: { cost: 350, power: 0.7, housing: 1, off: 4, def: 0 },
+	dr: { cost: 450, power: 0.7, housing: 1, off: 5, def: 0 },
+	ft: { cost: 550, power: 0.7, housing: 1, off: 6, def: 0 },
+	tf: {
+		cost: 1500,
+		power: 1.4,
+		housing: 1,
+		off: 12,
+		def: 0,
+		requiresBuilding: "asb",
+	},
+	lt: { cost: 375, power: 0.7, housing: 1, off: 0, def: 4 },
+	ld: { cost: 500, power: 0.7, housing: 1, off: 0, def: 5 },
+	lf: { cost: 625, power: 0.7, housing: 1, off: 0, def: 6 },
+	f74: {
+		cost: 975,
+		power: 1.4,
+		housing: 1,
+		off: 0,
+		def: 8,
+		requiresBuilding: "ach",
+	},
+	t: { cost: 1750, power: 1.4, housing: 2, off: 9, def: 9 },
+	hgl: { cost: 1000, power: 0.7, housing: 1, off: 6, def: 6 },
+	ht: { cost: 2250, power: 1.4, housing: 2, off: 12, def: 12 },
+} as const;
+
 export const RESEARCH_WEIGHTS = {
 	pop: 0.00475,
 	power: 0.00311,
@@ -42,6 +72,32 @@ export const RESEARCH_BONUS = {
 	fdc: 25,
 	warp: 20,
 } as const;
+
+const MILITARY_TECH_TREE: Partial<
+	Record<
+		keyof typeof MILITARY_UNITS,
+		{ requirePoints: number; requires?: keyof typeof MILITARY_UNITS }
+	>
+> = {
+	// sol: { requirePoints: 0 },
+	// sci: { requirePoints: 0 },
+
+	// tr: { requirePoints: 0 },
+	dr: { requirePoints: 60_000 },
+	ft: { requirePoints: 120_000, requires: "dr" },
+	tf: { requirePoints: 480_000, requires: "ft" },
+
+	// lt: { requirePoints: 0 },
+	ld: { requirePoints: 72_000 },
+	lf: { requirePoints: 150_000, requires: "ld" },
+	f74: { requirePoints: 600_000, requires: "lf" },
+
+	// t: { requirePoints: 0 },
+	hgl: { requirePoints: 100_000 },
+	ht: { requirePoints: 200_000, requires: "hgl" },
+};
+
+// type MilitaryResearch = Partial<Record<keyof typeof MILITARY_TECH_TREE, number>>;
 
 export const GAME_PARAMS = {
 	roundLength: 480,
@@ -85,35 +141,7 @@ export const GAME_PARAMS = {
 		duration: 24,
 		soldierDuration: 16,
 		soldiersLimit: 0.1,
-		units: {
-			sol: { cost: 150, power: 0.7, housing: 1, off: 1, def: 1 },
-			sci: { cost: 1000, power: 0.7, housing: 1, off: 0, def: 0 },
-			tr: { cost: 350, power: 0.7, housing: 1, off: 4, def: 0 },
-			dr: { cost: 450, power: 0.7, housing: 1, off: 5, def: 0 },
-			ft: { cost: 550, power: 0.7, housing: 1, off: 6, def: 0 },
-			tf: {
-				cost: 1500,
-				power: 1.4,
-				housing: 1,
-				off: 12,
-				def: 0,
-				requiresBuilding: "asb",
-			},
-			lt: { cost: 375, power: 0.7, housing: 1, off: 0, def: 4 },
-			ld: { cost: 500, power: 0.7, housing: 1, off: 0, def: 5 },
-			lf: { cost: 625, power: 0.7, housing: 1, off: 0, def: 6 },
-			f74: {
-				cost: 975,
-				power: 1.4,
-				housing: 1,
-				off: 0,
-				def: 8,
-				requiresBuilding: "ach",
-			},
-			t: { cost: 1750, power: 1.4, housing: 2, off: 9, def: 9 },
-			hgl: { cost: 1000, power: 0.7, housing: 1, off: 6, def: 6 },
-			ht: { cost: 2250, power: 1.4, housing: 2, off: 12, def: 12 },
-		},
+		units: MILITARY_UNITS,
 		calculateMaxDefPotential: (military: Record<string, number>) => {
 			const units = GAME_PARAMS.military.units;
 			let total = 0;
@@ -145,9 +173,13 @@ export const GAME_PARAMS = {
 			return total;
 		},
 	},
+	militaryTechTree: MILITARY_TECH_TREE,
 	research: {
 		weights: RESEARCH_WEIGHTS,
 		bonuses: RESEARCH_BONUS,
+		/**
+		 * calculates land based research required points
+		 */
 		required: (property: keyof typeof RESEARCH_WEIGHTS, land: number) =>
 			Math.round(land * land * RESEARCH_WEIGHTS[property]),
 	},

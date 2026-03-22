@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { Tooltip } from "../../src/components/Tooltip";
 import { GAME_PARAMS } from "../../src/constants/game-params";
 import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
 
@@ -24,10 +25,19 @@ function KingdomResearchPage() {
 		money: "",
 		fdc: "",
 		warp: "",
+		dr: "",
+		ft: "",
+		tf: "",
+		ld: "",
+		lf: "",
+		f74: "",
+		hgl: "",
+		ht: "",
 	});
 	const [isAssigning, setIsAssigning] = useState(false);
 	const [hireAmount, setHireAmount] = useState("");
 	const [isHiring, setIsHiring] = useState(false);
+	const [showLockedTech, setShowLockedTech] = useState(false);
 
 	if (myKingdom === undefined) {
 		return (
@@ -55,7 +65,7 @@ function KingdomResearchPage() {
 		);
 	}
 
-	const researchTopics = [
+	const standardResearchTopics = [
 		{ key: "pop", label: "Population Bonus", data: research.pop },
 		{ key: "power", label: "Power Bonus", data: research.power },
 		{ key: "mil", label: "Military Strength", data: research.mil },
@@ -63,6 +73,19 @@ function KingdomResearchPage() {
 		{ key: "fdc", label: "Frequency Decryption", data: research.fdc },
 		{ key: "warp", label: "Warp Drive", data: research.warp },
 	] as const;
+
+	const militaryTechTopics = [
+		{ key: "dr", label: "Dragoons", data: research.dr },
+		{ key: "ft", label: "Fighters", data: research.ft },
+		{ key: "tf", label: "Tactical Fighters", data: research.tf },
+		{ key: "ld", label: "Laser Dragoons", data: research.ld },
+		{ key: "lf", label: "Laser Fighters", data: research.lf },
+		{ key: "f74", label: "Interceptor Drones", data: research.f74 },
+		{ key: "hgl", label: "High Guard Lancers", data: research.hgl },
+		{ key: "ht", label: "Hover Tanks", data: research.ht },
+	] as const;
+
+	const militaryTechTree = GAME_PARAMS.militaryTechTree;
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -78,10 +101,17 @@ function KingdomResearchPage() {
 	);
 
 	const handleMaxClick = (key: string) => {
-		const required = GAME_PARAMS.research.required(
-			key as keyof typeof GAME_PARAMS.research.weights,
-			myKingdom.land,
-		);
+		const techInfo = militaryTechTree[key as keyof typeof militaryTechTree];
+		let required = 0;
+		if (techInfo) {
+			required = techInfo.requirePoints;
+		} else {
+			required = GAME_PARAMS.research.required(
+				key as keyof typeof GAME_PARAMS.research.weights,
+				myKingdom.land,
+			);
+		}
+
 		const currentPts =
 			myKingdom.research[key as keyof typeof myKingdom.research]?.pts || 0;
 		const needed = Math.max(0, required - currentPts);
@@ -108,6 +138,14 @@ function KingdomResearchPage() {
 				money: "",
 				fdc: "",
 				warp: "",
+				dr: "",
+				ft: "",
+				tf: "",
+				ld: "",
+				lf: "",
+				f74: "",
+				hgl: "",
+				ht: "",
 				[key]: assignable.toString(),
 			};
 		});
@@ -150,6 +188,14 @@ function KingdomResearchPage() {
 				money: parseInt(assignQueue.money, 10) || 0,
 				fdc: parseInt(assignQueue.fdc, 10) || 0,
 				warp: parseInt(assignQueue.warp, 10) || 0,
+				dr: parseInt(assignQueue.dr, 10) || 0,
+				ft: parseInt(assignQueue.ft, 10) || 0,
+				tf: parseInt(assignQueue.tf, 10) || 0,
+				ld: parseInt(assignQueue.ld, 10) || 0,
+				lf: parseInt(assignQueue.lf, 10) || 0,
+				f74: parseInt(assignQueue.f74, 10) || 0,
+				hgl: parseInt(assignQueue.hgl, 10) || 0,
+				ht: parseInt(assignQueue.ht, 10) || 0,
 			});
 			setAssignQueue({
 				pop: "",
@@ -158,6 +204,14 @@ function KingdomResearchPage() {
 				money: "",
 				fdc: "",
 				warp: "",
+				dr: "",
+				ft: "",
+				tf: "",
+				ld: "",
+				lf: "",
+				f74: "",
+				hgl: "",
+				ht: "",
 			});
 			showMessage("Research points successfully assigned!", "success");
 		} catch (error) {
@@ -325,6 +379,10 @@ function KingdomResearchPage() {
 						As your kingdom grows, you have to spend more research points to
 						keep up
 					</p>
+					<hgroup>
+						<h4>Standard Research</h4>
+						<p>Land based scaling research topics</p>
+					</hgroup>
 					<figure>
 						<table className="striped">
 							<thead>
@@ -340,17 +398,17 @@ function KingdomResearchPage() {
 								</tr>
 							</thead>
 							<tbody>
-								{researchTopics.map(({ key, label, data }) => (
+								{standardResearchTopics.map(({ key, label, data }) => (
 									<tr key={key}>
 										<td>{label}</td>
-										<td>{data.perc}%</td>
+										<td>{data?.perc ?? 0}%</td>
 										<td>
 											{(() => {
 												const required = GAME_PARAMS.research.required(
 													key,
 													myKingdom.land,
 												);
-												const current = data.pts;
+												const current = data?.pts ?? 0;
 												const delta = current - required;
 												const isSurplus = delta >= 0;
 												return (
@@ -369,7 +427,7 @@ function KingdomResearchPage() {
 												);
 											})()}
 										</td>
-										<td style={{ textAlign: "center" }}>
+										<td align="center">
 											<div
 												style={{
 													display: "flex",
@@ -401,15 +459,13 @@ function KingdomResearchPage() {
 										<td>
 											<button
 												type="button"
+												className="outline"
 												onClick={() => handleMaxClick(key)}
 												disabled={isAssigning || myKingdom.researchPts <= 0}
 												style={{
 													padding: "0.25rem 0.5rem",
 													fontSize: "0.875rem",
-													cursor:
-														isAssigning || myKingdom.researchPts <= 0
-															? "not-allowed"
-															: "pointer",
+													width: "100%",
 												}}
 											>
 												Max
@@ -423,11 +479,215 @@ function KingdomResearchPage() {
 												onChange={handleInputChange}
 												min="0"
 												disabled={isAssigning}
-												style={{ minWidth: "120px" }}
+												style={{ minWidth: "100px", marginBottom: 0 }}
 											/>
 										</td>
 									</tr>
 								))}
+							</tbody>
+						</table>
+					</figure>
+
+					<hgroup
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "center",
+						}}
+					>
+						<div>
+							<h4>Military Technology</h4>
+							<p>Fixed required points to unlock units</p>
+						</div>
+						<div
+							style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
+						>
+							<label
+								htmlFor="showLockedTech"
+								style={{
+									marginBottom: 0,
+									fontSize: "0.85rem",
+									color: "var(--pico-muted-color)",
+								}}
+							>
+								Show locked tech
+							</label>
+							<input
+								type="checkbox"
+								id="showLockedTech"
+								name="showLockedTech"
+								role="switch"
+								aria-checked={showLockedTech}
+								checked={showLockedTech}
+								onChange={(e) => setShowLockedTech(e.target.checked)}
+								style={{ margin: 0 }}
+							/>
+						</div>
+					</hgroup>
+					<figure>
+						<table className="striped">
+							<thead>
+								<tr>
+									<th scope="col">Unit Tech</th>
+									<th scope="col">Progress</th>
+									<th scope="col">Requires</th>
+									<th scope="col">Auto / Priority</th>
+									<th scope="col">Max</th>
+									<th scope="col">Assign</th>
+								</tr>
+							</thead>
+							<tbody>
+								{militaryTechTopics
+									.filter(({ key }) => {
+										if (showLockedTech) return true;
+										const techInfo =
+											militaryTechTree[key as keyof typeof militaryTechTree];
+										const prerequisite = techInfo?.requires;
+										if (!prerequisite) return true;
+										return (
+											(myKingdom.research[
+												prerequisite as keyof typeof myKingdom.research
+											]?.perc ?? 0) >= 100
+										);
+									})
+									.map(({ key, label, data }) => {
+										const techInfo =
+											militaryTechTree[key as keyof typeof militaryTechTree];
+										const prerequisite = techInfo?.requires;
+										const prerequisiteMet = prerequisite
+											? (myKingdom.research[
+													prerequisite as keyof typeof myKingdom.research
+												]?.perc ?? 0) >= 100
+											: true;
+
+										return (
+											<tr
+												key={key}
+												style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
+											>
+												<td>
+													<div
+														style={{
+															display: "flex",
+															alignItems: "center",
+															gap: "0.5rem",
+														}}
+													>
+														{label}
+														{(() => {
+															const unitStats =
+																GAME_PARAMS.military.units[
+																	key as keyof typeof GAME_PARAMS.military.units
+																];
+															return (
+																<Tooltip
+																	content={`Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Base Cost: $${unitStats?.cost.toLocaleString()}`}
+																	position="right"
+																	isButton
+																>
+																	ⓘ
+																</Tooltip>
+															);
+														})()}
+													</div>
+													{!prerequisiteMet && (
+														<div style={{ fontSize: "0.75rem", color: "red" }}>
+															Locked: Needs{" "}
+															{militaryTechTopics.find(
+																(t) => t.key === prerequisite,
+															)?.label || prerequisite}
+														</div>
+													)}
+												</td>
+												<td>
+													<progress
+														value={data?.perc ?? 0}
+														max="100"
+														style={{ marginBottom: 0 }}
+													></progress>
+													<small>{data?.perc ?? 0}%</small>
+												</td>
+												<td>
+													<small>
+														{(data?.pts ?? 0).toLocaleString()} /{" "}
+														{(techInfo?.requirePoints ?? 0).toLocaleString()}
+													</small>
+												</td>
+												<td align="center">
+													<div
+														style={{
+															display: "flex",
+															alignItems: "center",
+															justifyContent: "center",
+															gap: "0.5rem",
+														}}
+													>
+														<input
+															type="checkbox"
+															checked={(
+																myKingdom.researchAutoAssign || []
+															).includes(key)}
+															onChange={() => handleAutoToggle(key)}
+															style={{ margin: 0 }}
+															disabled={!prerequisiteMet}
+														/>
+														{(() => {
+															const index = (
+																myKingdom.researchAutoAssign || []
+															).indexOf(key);
+															return index !== -1 ? (
+																<span style={{ fontWeight: "bold" }}>
+																	#{index + 1}
+																</span>
+															) : null;
+														})()}
+													</div>
+												</td>
+												<td>
+													<button
+														type="button"
+														className="outline"
+														onClick={() => handleMaxClick(key)}
+														disabled={
+															isAssigning ||
+															myKingdom.researchPts <= 0 ||
+															!prerequisiteMet ||
+															(data?.perc ?? 0) >= 100
+														}
+														style={{
+															padding: "0.25rem 0.5rem",
+															fontSize: "0.875rem",
+															width: "100%",
+														}}
+													>
+														{(data?.perc ?? 0) >= 100 ? "Done" : "Max"}
+													</button>
+												</td>
+												<td>
+													<input
+														type="number"
+														name={key}
+														value={assignQueue[key as keyof typeof assignQueue]}
+														onChange={handleInputChange}
+														min="0"
+														disabled={
+															isAssigning ||
+															!prerequisiteMet ||
+															(data?.perc ?? 0) >= 100
+														}
+														style={{ minWidth: "100px", marginBottom: 0 }}
+														placeholder={
+															!prerequisiteMet
+																? "Locked"
+																: (data?.perc ?? 0) >= 100
+																	? "Done"
+																	: "0"
+														}
+													/>
+												</td>
+											</tr>
+										);
+									})}
 							</tbody>
 						</table>
 					</figure>

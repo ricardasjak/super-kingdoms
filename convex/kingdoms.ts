@@ -7,6 +7,7 @@ import {
 } from "../src/constants/game-params";
 import { calculateNw } from "../src/utils/nwUtils";
 import { internal } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 
 const STARTING_VALUES = {
@@ -59,6 +60,14 @@ const STARTING_VALUES = {
 		money: { pts: 0, perc: 0 },
 		fdc: { pts: 0, perc: 0 },
 		warp: { pts: 0, perc: 0 },
+		dr: { pts: 0, perc: 0 },
+		ft: { pts: 0, perc: 0 },
+		tf: { pts: 0, perc: 0 },
+		ld: { pts: 0, perc: 0 },
+		lf: { pts: 0, perc: 0 },
+		f74: { pts: 0, perc: 0 },
+		hgl: { pts: 0, perc: 0 },
+		ht: { pts: 0, perc: 0 },
 	},
 	researchAutoAssign: [] as string[],
 };
@@ -453,6 +462,20 @@ export const trainMilitary = mutation({
 			}
 			if (unit.value > 0) {
 				hasValidUnit = true;
+
+				const techRequirement =
+					GAME_PARAMS.militaryTechTree[
+						unit.key as keyof typeof GAME_PARAMS.militaryTechTree
+					];
+				if (techRequirement) {
+					const research =
+						kingdom.research[unit.key as keyof typeof kingdom.research];
+					if (!research || research.perc < 100) {
+						throw new Error(
+							`Cannot train ${unit.key}. Research must be 100% complete.`,
+						);
+					}
+				}
 			}
 			totalCost += unit.value * unit.cost;
 		}
@@ -645,11 +668,25 @@ export const migrateKingdomsBatch = internalMutation({
 		let patchCount = 0;
 		await Promise.all(
 			results.page.map(async (kingdom) => {
-				const patch: Record<string, number> = {};
+				const patch: Partial<Doc<"kingdoms">> = {};
 
 				// Handle missing probes field from before it was introduced
 				if (kingdom.probes === undefined) {
 					patch.probes = 0;
+				}
+
+				if (!kingdom.research.dr) {
+					patch.research = {
+						...kingdom.research,
+						dr: { pts: 0, perc: 0 },
+						ft: { pts: 0, perc: 0 },
+						tf: { pts: 0, perc: 0 },
+						ld: { pts: 0, perc: 0 },
+						lf: { pts: 0, perc: 0 },
+						f74: { pts: 0, perc: 0 },
+						hgl: { pts: 0, perc: 0 },
+						ht: { pts: 0, perc: 0 },
+					};
 				}
 
 				if (Object.keys(patch).length > 0) {
@@ -760,6 +797,14 @@ export const assignResearchPoints = mutation({
 		money: v.number(),
 		fdc: v.number(),
 		warp: v.number(),
+		dr: v.number(),
+		ft: v.number(),
+		tf: v.number(),
+		ld: v.number(),
+		lf: v.number(),
+		f74: v.number(),
+		hgl: v.number(),
+		ht: v.number(),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
@@ -771,29 +816,51 @@ export const assignResearchPoints = mutation({
 			.unique();
 		if (!kingdom) throw new Error("Kingdom not found");
 
-		const totalPoints =
-			args.pop + args.power + args.mil + args.money + args.fdc + args.warp;
+		const researchKeys = [
+			"pop",
+			"power",
+			"mil",
+			"money",
+			"fdc",
+			"warp",
+			"dr",
+			"ft",
+			"tf",
+			"ld",
+			"lf",
+			"f74",
+			"hgl",
+			"ht",
+		] as const;
+
+		let totalPoints = 0;
+		for (const key of researchKeys) {
+			totalPoints += args[key];
+		}
 
 		if (totalPoints > kingdom.researchPts) {
 			throw new Error("Not enough research points");
 		}
-		if (
-			args.pop < 0 ||
-			args.power < 0 ||
-			args.mil < 0 ||
-			args.money < 0 ||
-			args.fdc < 0 ||
-			args.warp < 0
-		) {
-			throw new Error("Invalid negative points");
+
+		for (const key of researchKeys) {
+			if (args[key] < 0) {
+				throw new Error("Invalid negative points");
+			}
 		}
 
 		if (totalPoints === 0) return { success: true };
 
 		const newResearch = { ...kingdom.research };
-		const keys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
+		const standardKeys = [
+			"pop",
+			"power",
+			"mil",
+			"money",
+			"fdc",
+			"warp",
+		] as const;
 
-		for (const key of keys) {
+		for (const key of standardKeys) {
 			if (args[key] > 0) {
 				const currentPts = newResearch[key].pts;
 				const newPts = currentPts + args[key];
@@ -802,6 +869,45 @@ export const assignResearchPoints = mutation({
 				let perc = 0;
 				if (required > 0) {
 					perc = Math.min(Math.floor((maxBonus * newPts) / required), maxBonus);
+				}
+				newResearch[key] = { pts: newPts, perc };
+			}
+		}
+
+		const militaryKeys = [
+			"dr",
+			"ft",
+			"tf",
+			"ld",
+			"lf",
+			"f74",
+			"hgl",
+			"ht",
+		] as const;
+		for (const key of militaryKeys) {
+			if (args[key] > 0) {
+				const techInfo =
+					GAME_PARAMS.militaryTechTree[
+						key as keyof typeof GAME_PARAMS.militaryTechTree
+					];
+				if (!techInfo) continue;
+
+				if (techInfo.requires) {
+					const prerequisite =
+						newResearch[techInfo.requires as keyof typeof newResearch];
+					if (!prerequisite || (prerequisite.perc ?? 0) < 100) {
+						throw new Error(
+							`Cannot research ${key}. Must complete ${techInfo.requires} first.`,
+						);
+					}
+				}
+
+				const currentPts = newResearch[key]?.pts ?? 0;
+				const newPts = currentPts + args[key];
+				const required = techInfo.requirePoints;
+				let perc = 0;
+				if (required > 0) {
+					perc = Math.min(Math.floor((newPts / required) * 100), 100);
 				}
 				newResearch[key] = { pts: newPts, perc };
 			}
