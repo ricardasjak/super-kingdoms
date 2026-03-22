@@ -835,3 +835,78 @@ export const saveResearchAutoAssign = mutation({
 		});
 	},
 });
+
+export const buyScientists = mutation({
+	args: {
+		amount: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		const amount = Math.floor(args.amount);
+		if (amount <= 0) {
+			throw new Error("Amount must be greater than zero.");
+		}
+
+		const costPerSci = GAME_PARAMS.military.units.sci.cost;
+		const totalCost = amount * costPerSci;
+
+		if (kingdom.money < totalCost) {
+			throw new Error("Not enough money to buy scientists.");
+		}
+
+		if (kingdom.military.sol < amount) {
+			throw new Error("Not enough soldiers to convert to scientists.");
+		}
+
+		const updatedQueue = calculateMilitaryQueue(
+			kingdom.military.queue,
+			{
+				sol: 0,
+				tr: 0,
+				dr: 0,
+				ft: 0,
+				tf: 0,
+				lt: 0,
+				ld: 0,
+				lf: 0,
+				f74: 0,
+				t: 0,
+				hgl: 0,
+				ht: 0,
+				sci: amount,
+			},
+			GAME_PARAMS.military.duration,
+		);
+
+		const updatedMilitary = {
+			...kingdom.military,
+			sol: kingdom.military.sol - amount,
+			queue: updatedQueue,
+		};
+
+		const nw = calculateNw({
+			military: updatedMilitary,
+			buildings: kingdom.buildings,
+			land: kingdom.land,
+			population: kingdom.population,
+			money: kingdom.money - totalCost,
+			probes: kingdom.probes,
+		});
+
+		await ctx.db.patch(kingdom._id, {
+			money: kingdom.money - totalCost,
+			military: updatedMilitary,
+			nw,
+		});
+
+		return { success: true };
+	},
+});

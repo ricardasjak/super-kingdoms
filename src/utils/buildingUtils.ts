@@ -93,6 +93,7 @@ export function calculateMilitaryQueue(
 		t: number;
 		hgl: number;
 		ht: number;
+		sci: number;
 	},
 	ticks = 24,
 ): MilitaryQueue {

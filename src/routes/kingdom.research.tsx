@@ -14,6 +14,7 @@ function KingdomResearchPage() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const assignPoints = useMutation(api.kingdoms.assignResearchPoints);
 	const saveAutoAssign = useMutation(api.kingdoms.saveResearchAutoAssign);
+	const hireScientists = useMutation(api.kingdoms.buyScientists);
 	const { showMessage } = useKingdomMessage();
 
 	const [assignQueue, setAssignQueue] = useState({
@@ -25,6 +26,8 @@ function KingdomResearchPage() {
 		warp: "",
 	});
 	const [isAssigning, setIsAssigning] = useState(false);
+	const [hireAmount, setHireAmount] = useState("");
+	const [isHiring, setIsHiring] = useState(false);
 
 	if (myKingdom === undefined) {
 		return (
@@ -168,6 +171,42 @@ function KingdomResearchPage() {
 		}
 	};
 
+	const handleHireScientists = async (e: React.FormEvent) => {
+		e.preventDefault();
+		const amount = parseInt(hireAmount, 10);
+		if (Number.isNaN(amount) || amount <= 0) {
+			showMessage("Please enter a valid amount of scientists.", "warning");
+			return;
+		}
+
+		if (myKingdom.money < amount * 1000) {
+			showMessage("Not enough money to buy scientists.", "error");
+			return;
+		}
+		if (myKingdom.military.sol < amount) {
+			showMessage("Not enough soldiers to convert to scientists.", "error");
+			return;
+		}
+
+		setIsHiring(true);
+		try {
+			await hireScientists({ amount });
+			setHireAmount("");
+			showMessage(
+				`Successfully hired ${amount.toLocaleString()} scientists!`,
+				"success",
+			);
+		} catch (error) {
+			console.error(error);
+			showMessage(
+				error instanceof Error ? error.message : "Failed to hire scientists.",
+				"error",
+			);
+		} finally {
+			setIsHiring(false);
+		}
+	};
+
 	return (
 		<main className="container">
 			<article>
@@ -177,6 +216,95 @@ function KingdomResearchPage() {
 						<p>Current research topics and progress</p>
 					</hgroup>
 				</header>
+
+				<article style={{ marginBottom: "2rem" }}>
+					<form
+						onSubmit={handleHireScientists}
+						className="grid"
+						style={{ alignItems: "center", marginBottom: 0 }}
+					>
+						<div>
+							<hgroup style={{ marginBottom: 0 }}>
+								<h6 style={{ marginBottom: 0 }}>Hire Scientists</h6>
+								<small style={{ fontSize: "0.75rem" }}>
+									1 sol + $1.000 = 1 sci (1 pt/tick)
+								</small>
+							</hgroup>
+						</div>
+						<div style={{ textAlign: "center" }}>
+							<small
+								style={{
+									color: "var(--pico-muted-color)",
+									fontSize: "0.85rem",
+								}}
+							>
+								Soldiers:{" "}
+								<strong>{myKingdom.military.sol.toLocaleString()}</strong> |{" "}
+								Money: <strong>${myKingdom.money.toLocaleString()}</strong> |{" "}
+								Scientists:{" "}
+								<strong>{myKingdom.military.sci.toLocaleString()}</strong>
+							</small>
+						</div>
+						<div
+							style={{
+								display: "flex",
+								gap: "0.5rem",
+								alignItems: "center",
+								justifyContent: "flex-end",
+							}}
+						>
+							<button
+								type="button"
+								className="secondary outline"
+								style={{
+									padding: "0.4rem 0.8rem",
+									width: "auto",
+									fontSize: "0.9rem",
+									marginBottom: 0,
+								}}
+								disabled={isHiring}
+								onClick={() => {
+									const maxByMoney = Math.floor(myKingdom.money / 1000);
+									const maxBySoldiers = myKingdom.military.sol;
+									const rawMax = Math.min(maxByMoney, maxBySoldiers);
+									const duration = GAME_PARAMS.military.duration;
+									const cleanMax = Math.floor(rawMax / duration) * duration;
+									setHireAmount(cleanMax.toString());
+								}}
+							>
+								Max
+							</button>
+							<input
+								type="number"
+								value={hireAmount}
+								onChange={(e) => setHireAmount(e.target.value)}
+								min="0"
+								placeholder="Amount"
+								style={{
+									marginBottom: 0,
+									maxWidth: "150px",
+									fontSize: "1rem",
+								}}
+							/>
+							<button
+								type="submit"
+								className="outline"
+								disabled={
+									isHiring || !hireAmount || parseInt(hireAmount, 10) <= 0
+								}
+								style={{
+									width: "auto",
+									marginBottom: 0,
+									padding: "0.4rem 1rem",
+									fontSize: "1rem",
+								}}
+							>
+								{isHiring ? "..." : "Hire"}
+							</button>
+						</div>
+					</form>
+				</article>
+
 				<form onSubmit={handleAssign}>
 					<p>
 						<strong>Available Research Points:</strong>{" "}
@@ -194,7 +322,8 @@ function KingdomResearchPage() {
 						{myKingdom.military.sci.toLocaleString()} / tick
 					</p>
 					<p>
-						As your kingdom grows, you have to spend more research points to keep up
+						As your kingdom grows, you have to spend more research points to
+						keep up
 					</p>
 					<figure>
 						<table className="striped">
@@ -251,9 +380,9 @@ function KingdomResearchPage() {
 											>
 												<input
 													type="checkbox"
-													checked={(myKingdom.researchAutoAssign || []).includes(
-														key,
-													)}
+													checked={(
+														myKingdom.researchAutoAssign || []
+													).includes(key)}
 													onChange={() => handleAutoToggle(key)}
 													style={{ margin: 0 }}
 												/>
