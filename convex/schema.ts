@@ -94,6 +94,7 @@ const schema = defineSchema({
 			fdc: v.object({ pts: v.number(), perc: v.number() }),
 			warp: v.object({ pts: v.number(), perc: v.number() }),
 		}),
+		researchAutoAssign: v.array(v.string()),
 	}).index("by_userId", ["userId"]),
 	spyReports: defineTable({
 		userId: v.string(),

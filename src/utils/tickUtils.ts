@@ -46,6 +46,7 @@ export function processKingdomTick(
 		autoExplore?: boolean;
 		autoBuild?: boolean;
 		researchPts: number;
+		researchAutoAssign?: string[];
 		research: {
 			pop: { pts: number; perc: number };
 			power: { pts: number; perc: number };
@@ -154,18 +155,6 @@ export function processKingdomTick(
 		newKingdom.land += completedLand;
 		newKingdom.landQueue = newKingdom.landQueue.slice(1);
 		kingdomChanged = true;
-	}
-
-	const researchKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
-	for (const key of researchKeys) {
-		const pts = newKingdom.research[key].pts;
-		const required = GAME_PARAMS.research.required(key, newKingdom.land);
-		const maxBonus = GAME_PARAMS.research.bonuses[key];
-		let perc = 0;
-		if (required > 0) {
-			perc = Math.min(Math.floor((maxBonus * pts) / required), maxBonus);
-		}
-		newKingdom.research[key] = { pts, perc };
 	}
 
 	const newBuildings = { ...buildings };
@@ -353,6 +342,41 @@ export function processKingdomTick(
 			newMilitary.queue[key] = newMilitary.queue[key].slice(1);
 		}
 		militaryChanged = true;
+	}
+
+	// Auto Assign Research Points
+	const autoAssign = kingdom.researchAutoAssign || [];
+	if (autoAssign.length > 0 && newKingdom.researchPts > 0) {
+		for (const key of autoAssign) {
+			if (newKingdom.researchPts <= 0) break;
+
+			const researchKey = key as keyof typeof newKingdom.research;
+			const currentPts = newKingdom.research[researchKey].pts;
+			const required = GAME_PARAMS.research.required(
+				researchKey as keyof typeof GAME_PARAMS.research.weights,
+				newKingdom.land,
+			);
+			const needed = Math.max(0, required - currentPts);
+
+			if (needed > 0) {
+				const toAssign = Math.min(newKingdom.researchPts, needed);
+				newKingdom.research[researchKey].pts += toAssign;
+				newKingdom.researchPts -= toAssign;
+			}
+		}
+	}
+
+	// Recalculate Research Percentages
+	const researchKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
+	for (const key of researchKeys) {
+		const pts = newKingdom.research[key].pts;
+		const required = GAME_PARAMS.research.required(key, newKingdom.land);
+		const maxBonus = GAME_PARAMS.research.bonuses[key];
+		let perc = 0;
+		if (required > 0) {
+			perc = Math.min(Math.floor((maxBonus * pts) / required), maxBonus);
+		}
+		newKingdom.research[key] = { pts, perc };
 	}
 
 	return {

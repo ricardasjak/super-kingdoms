@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <it's ok> */
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 
 export const runResearchMigration = mutation({
 	args: {},
@@ -31,10 +31,19 @@ export const runResearchMigration = mutation({
 		return `Migrated ${count} records in kingdoms`;
 	},
 });
-
-export const dumpKingdoms = query({
+export const backfillResearchAutoAssign = mutation({
 	args: {},
 	handler: async (ctx) => {
-		return await ctx.db.query("kingdoms").collect();
+		const records = await ctx.db.query("kingdoms").collect();
+		let count = 0;
+		for (const record of records) {
+			if (record.researchAutoAssign === undefined) {
+				await ctx.db.patch(record._id, {
+					researchAutoAssign: [],
+				});
+				count++;
+			}
+		}
+		return `Backfilled ${count} records with researchAutoAssign`;
 	},
 });

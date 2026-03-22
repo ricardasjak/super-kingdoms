@@ -60,6 +60,7 @@ const STARTING_VALUES = {
 		fdc: { pts: 0, perc: 0 },
 		warp: { pts: 0, perc: 0 },
 	},
+	researchAutoAssign: [] as string[],
 };
 
 export const getMyKingdom = query({
@@ -812,5 +813,25 @@ export const assignResearchPoints = mutation({
 		});
 
 		return { success: true };
+	},
+});
+
+export const saveResearchAutoAssign = mutation({
+	args: {
+		priority: v.array(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		await ctx.db.patch(kingdom._id, {
+			researchAutoAssign: args.priority,
+		});
 	},
 });

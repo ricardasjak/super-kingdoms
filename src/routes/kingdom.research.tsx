@@ -13,6 +13,7 @@ function KingdomResearchPage() {
 	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const assignPoints = useMutation(api.kingdoms.assignResearchPoints);
+	const saveAutoAssign = useMutation(api.kingdoms.saveResearchAutoAssign);
 	const { showMessage } = useKingdomMessage();
 
 	const [assignQueue, setAssignQueue] = useState({
@@ -109,6 +110,22 @@ function KingdomResearchPage() {
 		});
 	};
 
+	const handleAutoToggle = async (key: string) => {
+		const currentAuto = myKingdom.researchAutoAssign || [];
+		let newPriority = [...currentAuto];
+		if (newPriority.includes(key)) {
+			newPriority = newPriority.filter((k) => k !== key);
+		} else {
+			newPriority.push(key);
+		}
+		try {
+			await saveAutoAssign({ priority: newPriority });
+		} catch (error) {
+			console.error(error);
+			showMessage("Failed to update auto-assign priority.", "error");
+		}
+	};
+
 	const handleAssign = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -186,6 +203,9 @@ function KingdomResearchPage() {
 									<th scope="col">Research Area</th>
 									<th scope="col">Bonus (%)</th>
 									<th scope="col">Points Balance</th>
+									<th scope="col" style={{ textAlign: "center" }}>
+										Auto / Priority
+									</th>
 									<th scope="col">Max</th>
 									<th scope="col">Assign</th>
 								</tr>
@@ -219,6 +239,35 @@ function KingdomResearchPage() {
 													</span>
 												);
 											})()}
+										</td>
+										<td style={{ textAlign: "center" }}>
+											<div
+												style={{
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													gap: "0.5rem",
+												}}
+											>
+												<input
+													type="checkbox"
+													checked={(myKingdom.researchAutoAssign || []).includes(
+														key,
+													)}
+													onChange={() => handleAutoToggle(key)}
+													style={{ margin: 0 }}
+												/>
+												{(() => {
+													const index = (
+														myKingdom.researchAutoAssign || []
+													).indexOf(key);
+													return index !== -1 ? (
+														<span style={{ fontWeight: "bold" }}>
+															#{index + 1}
+														</span>
+													) : null;
+												})()}
+											</div>
 										</td>
 										<td>
 											<button
