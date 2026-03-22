@@ -175,4 +175,77 @@ describe("processKingdomTick", () => {
 		expect(updatedBuildings?.plants).toBe(0);
 		expect(updatedBuildings?.queue.plants).toEqual([]);
 	});
+
+	it("should prioritize auto-building smaller target percentages first", () => {
+		const kingdom = {
+			population: 0,
+			land: 40,
+			money: 100000,
+			power: 0,
+			moneyIncome: 0,
+			powerIncome: 0,
+			probes: 0,
+			landQueue: [],
+			autoBuild: true,
+		};
+		const buildings = {
+			res: 0,
+			plants: 0,
+			rax: 0,
+			sm: 0,
+			pf: 0,
+			tc: 0,
+			asb: 0,
+			ach: 0,
+			rubble: 0,
+			target: {
+				res: 40,
+				plants: 30,
+				rax: 20,
+				sm: 10,
+				pf: 0,
+				tc: 0,
+				asb: 0,
+				ach: 0,
+			},
+			queue: {
+				res: [],
+				plants: [],
+				rax: [],
+				sm: [],
+				pf: [],
+				tc: [],
+				asb: [],
+				ach: [],
+			},
+		};
+		const military = {
+			sol: 0,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			hgl: 0,
+			ht: 0,
+			sci: 0,
+			queue: { sol: [], tr: [], dr: [], ft: [], tf: [], lt: [], ld: [], lf: [], f74: [], t: [], hgl: [], ht: [], sci: [] },
+		};
+
+		const { updatedKingdom, updatedBuildings } = processKingdomTick(
+			kingdom,
+			buildings,
+			military,
+		);
+
+		expect(updatedBuildings?.queue.sm).toEqual(Array(16).fill(1));
+		expect(updatedBuildings?.queue.rax).toEqual(Array(16).fill(1));
+		expect(updatedBuildings?.queue.plants).toEqual(Array(16).fill(0));
+		expect(updatedBuildings?.queue.res).toEqual(Array(16).fill(0));
+		expect(updatedKingdom.money).toBeLessThan(100000);
+	});
 });

@@ -203,11 +203,9 @@ export function processKingdomTick(
 
 				if (totalDeficiency > 0) {
 					const rawToBuild = Math.min(maxToBuild, totalDeficiency);
-					const totalWillBuild =
-						Math.floor(rawToBuild / GAME_PARAMS.buildings.duration) *
-						GAME_PARAMS.buildings.duration;
+					const numChunks = Math.floor(rawToBuild / GAME_PARAMS.buildings.duration);
 
-					if (totalWillBuild > 0) {
+					if (numChunks > 0) {
 						const toBuild = {
 							res: 0,
 							plants: 0,
@@ -218,25 +216,28 @@ export function processKingdomTick(
 							asb: 0,
 							ach: 0,
 						};
-						let remainingToBuild = totalWillBuild;
 
-						for (const key of keys) {
-							if (deficiencies[key] > 0) {
-								const proportion = Math.floor(
-									(deficiencies[key] / totalDeficiency) * totalWillBuild,
-								);
-								toBuild[key] = proportion;
-								remainingToBuild -= proportion;
-							}
-						}
+						let remainingChunks = numChunks;
 
-						while (remainingToBuild > 0) {
+						while (remainingChunks > 0) {
+							let selectedKey: typeof keys[number] | null = null;
+							let minTargetPct = Infinity;
+
 							for (const key of keys) {
-								if (remainingToBuild > 0 && deficiencies[key] > toBuild[key]) {
-									toBuild[key]++;
-									remainingToBuild--;
+								const currentDef = deficiencies[key] - toBuild[key];
+								if (currentDef > 0) {
+									const targetPct = buildings.target[key] || 0;
+									if (targetPct < minTargetPct) {
+										minTargetPct = targetPct;
+										selectedKey = key;
+									}
 								}
 							}
+
+							if (!selectedKey) break;
+
+							toBuild[selectedKey] += GAME_PARAMS.buildings.duration;
+							remainingChunks--;
 						}
 
 						let actualBuiltSum = 0;
