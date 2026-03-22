@@ -173,15 +173,19 @@ function KingdomResearchPage() {
 						>
 							{(myKingdom.researchPts - requestSum).toLocaleString()}
 						</span>{" "}
-						/ {myKingdom.researchPts.toLocaleString()}
+						| <strong>Points Produced:</strong>{" "}
+						{myKingdom.military.sci.toLocaleString()} / tick
+					</p>
+					<p>
+						As your kingdom grows, you have to spend more research points to keep up
 					</p>
 					<figure>
 						<table className="striped">
 							<thead>
 								<tr>
-									<th scope="col">Discipline</th>
+									<th scope="col">Research Area</th>
 									<th scope="col">Bonus (%)</th>
-									<th scope="col">Collected/Required</th>
+									<th scope="col">Points Balance</th>
 									<th scope="col">Max</th>
 									<th scope="col">Assign</th>
 								</tr>
@@ -192,10 +196,29 @@ function KingdomResearchPage() {
 										<td>{label}</td>
 										<td>{data.perc}%</td>
 										<td>
-											{data.pts.toLocaleString()} /{" "}
-											{GAME_PARAMS.research
-												.required(key, myKingdom.land)
-												.toLocaleString()}
+											{(() => {
+												const required = GAME_PARAMS.research.required(
+													key,
+													myKingdom.land,
+												);
+												const current = data.pts;
+												const delta = current - required;
+												const isSurplus = delta >= 0;
+												return (
+													<span>
+														<small
+															style={{
+																color: isSurplus
+																	? "var(--pico-ins-color)"
+																	: "var(--pico-del-color)",
+															}}
+														>
+															{isSurplus ? "+" : ""}
+															{delta.toLocaleString()}
+														</small>
+													</span>
+												);
+											})()}
 										</td>
 										<td>
 											<button
