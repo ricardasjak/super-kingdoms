@@ -51,6 +51,15 @@ const STARTING_VALUES = {
 			sci: [],
 		},
 	},
+	researchPts: 0,
+	research: {
+		pop: { pts: 0, perc: 0 },
+		power: { pts: 0, perc: 0 },
+		mil: { pts: 0, perc: 0 },
+		money: { pts: 0, perc: 0 },
+		fdc: { pts: 0, perc: 0 },
+		warp: { pts: 0, perc: 0 },
+	},
 };
 
 export const getMyKingdom = query({

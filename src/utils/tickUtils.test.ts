@@ -13,6 +13,7 @@ describe("processKingdomTick", () => {
 			powerIncome: 0,
 			probes: 0,
 			landQueue: [],
+			researchPts: 0,
 		};
 		const buildings = {
 			res: 0,
@@ -98,6 +99,7 @@ describe("processKingdomTick", () => {
 			powerIncome: 0,
 			probes: 0,
 			landQueue: [50],
+			researchPts: 0,
 		};
 		const buildings = {
 			res: 5,
@@ -187,6 +189,7 @@ describe("processKingdomTick", () => {
 			probes: 0,
 			landQueue: [],
 			autoBuild: true,
+			researchPts: 0,
 		};
 		const buildings = {
 			res: 0,
@@ -247,5 +250,80 @@ describe("processKingdomTick", () => {
 		expect(updatedBuildings?.queue.plants).toEqual(Array(16).fill(0));
 		expect(updatedBuildings?.queue.res).toEqual(Array(16).fill(0));
 		expect(updatedKingdom.money).toBeLessThan(100000);
+	});
+
+	it("should increment researchPts by active scientists and update queue properly", () => {
+		const kingdom = {
+			population: 0,
+			land: 100,
+			money: 100000,
+			power: 10000,
+			moneyIncome: 0,
+			powerIncome: 0,
+			probes: 0,
+			landQueue: [],
+			researchPts: 500,
+		};
+		const buildings = {
+			res: 0,
+			plants: 0,
+			rax: 100,
+			sm: 0,
+			pf: 0,
+			tc: 0,
+			asb: 0,
+			ach: 0,
+			rubble: 0,
+			queue: {
+				res: [],
+				plants: [],
+				rax: [],
+				sm: [],
+				pf: [],
+				tc: [],
+				asb: [],
+				ach: [],
+			},
+		};
+		const military = {
+			sol: 0,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			hgl: 0,
+			ht: 0,
+			sci: 1000,
+			queue: { 
+				sol: [0, 0, 0], 
+				tr: [0, 0, 0], 
+				dr: [0, 0, 0], 
+				ft: [0, 0, 0], 
+				tf: [0, 0, 0], 
+				lt: [0, 0, 0], 
+				ld: [0, 0, 0], 
+				lf: [0, 0, 0], 
+				f74: [0, 0, 0], 
+				t: [0, 0, 0], 
+				hgl: [0, 0, 0], 
+				ht: [0, 0, 0], 
+				sci: [40, 0, 0] 
+			},
+		};
+
+		const { updatedKingdom, updatedMilitary } = processKingdomTick(
+			kingdom,
+			buildings,
+			military,
+		);
+
+		expect(updatedKingdom.researchPts).toBe(1500); // 500 existing + 1000 scientists
+		expect(updatedMilitary?.sci).toBe(1040); // 1000 + 40 from queue
+		expect(updatedMilitary?.queue.sci).toEqual([0, 0]); // Queue progresses
 	});
 });

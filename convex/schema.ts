@@ -85,6 +85,15 @@ const schema = defineSchema({
 				ach: v.array(v.number()),
 			}),
 		}),
+		researchPts: v.number(),
+		research: v.object({
+			pop: v.object({ pts: v.number(), perc: v.number() }),
+			power: v.object({ pts: v.number(), perc: v.number() }),
+			mil: v.object({ pts: v.number(), perc: v.number() }),
+			money: v.object({ pts: v.number(), perc: v.number() }),
+			fdc: v.object({ pts: v.number(), perc: v.number() }),
+			warp: v.object({ pts: v.number(), perc: v.number() }),
+		}),
 	}).index("by_userId", ["userId"]),
 	spyReports: defineTable({
 		userId: v.string(),

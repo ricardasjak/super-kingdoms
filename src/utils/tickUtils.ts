@@ -45,6 +45,7 @@ export function processKingdomTick(
 		landQueue: number[];
 		autoExplore?: boolean;
 		autoBuild?: boolean;
+		researchPts: number;
 	},
 	buildings: {
 		res: number;
@@ -133,6 +134,7 @@ export function processKingdomTick(
 		probes: kingdom.probes + buildings.pf,
 		moneyIncome: Math.round(moneyIncome),
 		powerIncome: Math.round(powerIncome),
+		researchPts: kingdom.researchPts + military.sci,
 		land: kingdom.land,
 		landQueue: [...kingdom.landQueue],
 	};
