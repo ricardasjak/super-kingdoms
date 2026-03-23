@@ -141,6 +141,20 @@ function KingdomBuildingsPage() {
 		);
 	}
 
+	const isBuildingUnlocked = (buildingKey: string) => {
+		for (const [unitKey, techInfo] of Object.entries(
+			GAME_PARAMS.militaryTechTree,
+		)) {
+			if (techInfo.building === buildingKey) {
+				const research = (
+					myKingdom.research as Record<string, { pts: number; perc: number }>
+				)[unitKey];
+				return (research?.perc ?? 0) >= 100;
+			}
+		}
+		return true; // No requirement means unlocked
+	};
+
 	const freeLand = calculateFreeLand(
 		myKingdom.land,
 		buildings,
@@ -594,100 +608,108 @@ function KingdomBuildingsPage() {
 										/>
 									</td>
 								</tr>
-								<tr>
-									<td>Air Support Bays</td>
-									<td>{actualPercent(buildings.asb)}</td>
-									<td>{buildings.asb}</td>
-									<td>
-										<QueueTooltip
-											count={queuedCounts.asb}
-											queueArray={buildings.queue?.asb || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && (
+								{isBuildingUnlocked("asb") && (
+									<tr>
+										<td>Air Support Bays</td>
+										<td>{actualPercent(buildings.asb)}</td>
+										<td>{buildings.asb}</td>
+										<td>
+											<QueueTooltip
+												count={queuedCounts.asb}
+												queueArray={buildings.queue?.asb || []}
+											/>
+										</td>
+										{myKingdom.autoBuild && (
+											<td>
+												<input
+													type="number"
+													name="asb"
+													value={targetQueue.asb}
+													onChange={handleTargetChange}
+													min="0"
+													max="100"
+												/>
+											</td>
+										)}
+										<td>
+											<button
+												type="button"
+												className="outline"
+												onClick={() => handleMaxClick("asb")}
+												disabled={maxBuildings <= 0}
+												style={{
+													padding: "0.25rem 0.5rem",
+													fontSize: "0.875rem",
+													width: "100%",
+												}}
+											>
+												{maxBuildings.toLocaleString()}
+											</button>
+										</td>
 										<td>
 											<input
 												type="number"
 												name="asb"
-												value={targetQueue.asb}
-												onChange={handleTargetChange}
+												value={buildQueue.asb}
+												onChange={handleInputChange}
 												min="0"
-												max="100"
+												disabled={isBuilding}
+												style={{ marginBottom: 0 }}
 											/>
 										</td>
-									)}
-									<td>
-										<button
-											type="button"
-											onClick={() => handleMaxClick("asb")}
-											disabled={maxBuildings <= 0}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
-											}}
-										>
-											{maxBuildings.toLocaleString()}
-										</button>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="asb"
-											value={buildQueue.asb}
-											onChange={handleInputChange}
-											min="0"
-											disabled={isBuilding}
-										/>
-									</td>
-								</tr>
-								<tr>
-									<td>Aegis Control Hubs</td>
-									<td>{actualPercent(buildings.ach)}</td>
-									<td>{buildings.ach}</td>
-									<td>
-										<QueueTooltip
-											count={queuedCounts.ach}
-											queueArray={buildings.queue?.ach || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && (
+									</tr>
+								)}
+								{isBuildingUnlocked("ach") && (
+									<tr>
+										<td>Aegis Control Hubs</td>
+										<td>{actualPercent(buildings.ach)}</td>
+										<td>{buildings.ach}</td>
+										<td>
+											<QueueTooltip
+												count={queuedCounts.ach}
+												queueArray={buildings.queue?.ach || []}
+											/>
+										</td>
+										{myKingdom.autoBuild && (
+											<td>
+												<input
+													type="number"
+													name="ach"
+													value={targetQueue.ach}
+													onChange={handleTargetChange}
+													min="0"
+													max="100"
+												/>
+											</td>
+										)}
+										<td>
+											<button
+												type="button"
+												className="outline"
+												onClick={() => handleMaxClick("ach")}
+												disabled={maxBuildings <= 0}
+												style={{
+													padding: "0.25rem 0.5rem",
+													fontSize: "0.875rem",
+													width: "100%",
+												}}
+											>
+												{maxBuildings.toLocaleString()}
+											</button>
+										</td>
 										<td>
 											<input
 												type="number"
 												name="ach"
-												value={targetQueue.ach}
-												onChange={handleTargetChange}
+												value={buildQueue.ach}
+												onChange={handleInputChange}
 												min="0"
-												max="100"
+												disabled={isBuilding}
+												style={{ marginBottom: 0 }}
 											/>
 										</td>
-									)}
-									<td>
-										<button
-											type="button"
-											onClick={() => handleMaxClick("ach")}
-											disabled={maxBuildings <= 0}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
-											}}
-										>
-											{maxBuildings.toLocaleString()}
-										</button>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="ach"
-											value={buildQueue.ach}
-											onChange={handleInputChange}
-											min="0"
-											disabled={isBuilding}
-										/>
-									</td>
-								</tr>
+									</tr>
+								)}
 								<tr>
 									<td>Rubble</td>
 									<td>{actualPercent(buildings.rubble)}</td>

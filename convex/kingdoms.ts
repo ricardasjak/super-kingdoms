@@ -348,6 +348,23 @@ export const buildBuildings = mutation({
 			throw new Error("Not enough free land");
 		}
 
+		// Research validation for special buildings
+		for (const [unitKey, techInfo] of Object.entries(GAME_PARAMS.militaryTechTree)) {
+			if (techInfo.building) {
+				const buildingKey = techInfo.building as keyof typeof args;
+				if (args[buildingKey] > 0) {
+					const research = (
+						kingdom.research as Record<string, { pts: number; perc: number }>
+					)[unitKey];
+					if (!research || research.perc < 100) {
+						throw new Error(
+							`Cannot build ${buildingKey}. Research for ${unitKey} must be 100% complete.`,
+						);
+					}
+				}
+			}
+		}
+
 		const buildingCost = GAME_PARAMS.buildings.cost(kingdom.land);
 		const totalCost = requestSum * buildingCost;
 

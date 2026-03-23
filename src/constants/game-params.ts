@@ -76,7 +76,7 @@ export const RESEARCH_BONUS = {
 const MILITARY_TECH_TREE: Partial<
 	Record<
 		keyof typeof MILITARY_UNITS,
-		{ requirePoints: number; requires?: keyof typeof MILITARY_UNITS }
+		{ requirePoints: number; requires?: keyof typeof MILITARY_UNITS; building?: string }
 	>
 > = {
 	// sol: { requirePoints: 0 },
@@ -85,12 +85,12 @@ const MILITARY_TECH_TREE: Partial<
 	// tr: { requirePoints: 0 },
 	dr: { requirePoints: 60_000 },
 	ft: { requirePoints: 120_000, requires: "dr" },
-	tf: { requirePoints: 480_000, requires: "ft" },
+	tf: { requirePoints: 480_000, requires: "ft", building: "asb" },
 
 	// lt: { requirePoints: 0 },
 	ld: { requirePoints: 72_000 },
 	lf: { requirePoints: 150_000, requires: "ld" },
-	f74: { requirePoints: 600_000, requires: "lf" },
+	f74: { requirePoints: 600_000, requires: "lf", building: "ach" },
 
 	// t: { requirePoints: 0 },
 	hgl: { requirePoints: 100_000 },
