@@ -136,8 +136,11 @@ export function processKingdomTick(
 	const raxCapacity = buildings.rax * GAME_PARAMS.buildings.raxCapacity;
 	const raxSurplus = Math.max(0, raxUsage - raxCapacity);
 
-	const maxPopulation =
-		buildings.res * GAME_PARAMS.buildings.resCapacity - raxSurplus;
+	const popBonus = (kingdom.research.pop?.perc ?? 0) / 100;
+	const resCapacityBoosted =
+		GAME_PARAMS.buildings.resCapacity * (1 + popBonus);
+
+	const maxPopulation = buildings.res * resCapacityBoosted - raxSurplus;
 	let populationChange = 0;
 	if (kingdom.population < maxPopulation) {
 		populationChange = Math.ceil(
