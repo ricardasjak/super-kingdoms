@@ -62,6 +62,8 @@ export function processKingdomTick(
 			f74?: { pts: number; perc: number };
 			hgl?: { pts: number; perc: number };
 			ht?: { pts: number; perc: number };
+			fusion?: { pts: number; perc: number };
+			core?: { pts: number; perc: number };
 		};
 	},
 	buildings: {
@@ -104,8 +106,21 @@ export function processKingdomTick(
 		kingdom.population * GAME_PARAMS.power.consumption.population +
 		military.sci * GAME_PARAMS.power.consumption.scientists +
 		military.sol * GAME_PARAMS.power.consumption.soldiers;
+	const powerBonus = (kingdom.research.power?.perc ?? 0) / 100;
+	const fusionBonus =
+		(kingdom.research.fusion?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.fusion?.bonus ?? 0) / 100
+			: 0;
+	const coreBonus =
+		(kingdom.research.core?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.core?.bonus ?? 0) / 100
+			: 0;
+
 	const powerIncome =
-		buildings.plants * GAME_PARAMS.buildings.plantProduction - powerConsumption;
+		buildings.plants *
+			GAME_PARAMS.buildings.plantProduction *
+			(1 + powerBonus + fusionBonus + coreBonus) -
+		powerConsumption;
 
 	const raxUsage =
 		military.sol +
