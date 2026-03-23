@@ -33,6 +33,9 @@ function KingdomResearchPage() {
 		f74: "",
 		hgl: "",
 		ht: "",
+		fusion: "",
+		core: "",
+		armor: "",
 	});
 	const [isAssigning, setIsAssigning] = useState(false);
 	const [hireAmount, setHireAmount] = useState("");
@@ -74,7 +77,7 @@ function KingdomResearchPage() {
 		{ key: "warp", label: "Warp Drive", data: research.warp },
 	] as const;
 
-	const militaryTechTopics = [
+	const techTopics = [
 		{ key: "dr", label: "Dragoons", data: research.dr },
 		{ key: "ft", label: "Fighters", data: research.ft },
 		{ key: "tf", label: "Tactical Fighters", data: research.tf },
@@ -83,9 +86,12 @@ function KingdomResearchPage() {
 		{ key: "f74", label: "Interceptor Drones", data: research.f74 },
 		{ key: "hgl", label: "High Guard Lancers", data: research.hgl },
 		{ key: "ht", label: "Hover Tanks", data: research.ht },
+		{ key: "fusion", label: "Fusion Technology", data: research.fusion },
+		{ key: "core", label: "Energy Core", data: research.core },
+		{ key: "armor", label: "Probe Armor", data: research.armor },
 	] as const;
 
-	const militaryTechTree = GAME_PARAMS.militaryTechTree;
+	const techTree = GAME_PARAMS.militaryTechTree;
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -101,7 +107,7 @@ function KingdomResearchPage() {
 	);
 
 	const handleMaxClick = (key: string) => {
-		const techInfo = militaryTechTree[key as keyof typeof militaryTechTree];
+		const techInfo = techTree[key as keyof typeof techTree];
 		let required = 0;
 		if (techInfo) {
 			required = techInfo.requirePoints;
@@ -113,7 +119,7 @@ function KingdomResearchPage() {
 		}
 
 		const currentPts =
-			myKingdom.research[key as keyof typeof myKingdom.research]?.pts || 0;
+			((myKingdom.research as any)[key] as { pts: number })?.pts || 0;
 		const needed = Math.max(0, required - currentPts);
 
 		if (needed <= 0) return;
@@ -126,7 +132,7 @@ function KingdomResearchPage() {
 
 			// If we have enough points to satisfy 'needed' plus whatever is typed in others
 			if (myKingdom.researchPts >= needed + otherPoints) {
-				return { ...prev, [key]: needed.toString() };
+				return { ...prev, [key]: Math.floor(needed).toString() };
 			}
 
 			// Not enough points for everything: clear others and prioritize this discipline
@@ -146,6 +152,9 @@ function KingdomResearchPage() {
 				f74: "",
 				hgl: "",
 				ht: "",
+				fusion: "",
+				core: "",
+				armor: "",
 				[key]: assignable.toString(),
 			};
 		});
@@ -196,6 +205,9 @@ function KingdomResearchPage() {
 				f74: parseInt(assignQueue.f74, 10) || 0,
 				hgl: parseInt(assignQueue.hgl, 10) || 0,
 				ht: parseInt(assignQueue.ht, 10) || 0,
+				fusion: parseInt(assignQueue.fusion, 10) || 0,
+				core: parseInt(assignQueue.core, 10) || 0,
+				armor: parseInt(assignQueue.armor, 10) || 0,
 			});
 			setAssignQueue({
 				pop: "",
@@ -212,6 +224,9 @@ function KingdomResearchPage() {
 				f74: "",
 				hgl: "",
 				ht: "",
+				fusion: "",
+				core: "",
+				armor: "",
 			});
 			showMessage("Research points successfully assigned!", "success");
 		} catch (error) {
@@ -398,9 +413,30 @@ function KingdomResearchPage() {
 								</tr>
 							</thead>
 							<tbody>
-								{standardResearchTopics.map(({ key, label, data }) => (
-									<tr key={key}>
-										<td>{label}</td>
+								{standardResearchTopics.map(({ key, label, data }) => {
+									const prerequisiteKey = (GAME_PARAMS.researchPrerequisites as any)[
+										key
+									];
+									const prerequisiteMet = prerequisiteKey
+										? ((myKingdom.research as any)[prerequisiteKey]?.perc ?? 0) >=
+											100
+										: true;
+
+									return (
+										<tr
+											key={key}
+											style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
+										>
+											<td>
+												{label}
+												{!prerequisiteMet && (
+													<div style={{ fontSize: "0.75rem", color: "red" }}>
+														Locked: Needs{" "}
+														{techTopics.find((t) => t.key === prerequisiteKey)
+															?.label || prerequisiteKey}
+													</div>
+												)}
+											</td>
 										<td>{data?.perc ?? 0}%</td>
 										<td>
 											{(() => {
@@ -436,14 +472,15 @@ function KingdomResearchPage() {
 													gap: "0.5rem",
 												}}
 											>
-												<input
-													type="checkbox"
-													checked={(
-														myKingdom.researchAutoAssign || []
-													).includes(key)}
-													onChange={() => handleAutoToggle(key)}
-													style={{ margin: 0 }}
-												/>
+													<input
+														type="checkbox"
+														checked={(
+															myKingdom.researchAutoAssign || []
+														).includes(key)}
+														onChange={() => handleAutoToggle(key)}
+														style={{ margin: 0 }}
+														disabled={!prerequisiteMet}
+													/>
 												{(() => {
 													const index = (
 														myKingdom.researchAutoAssign || []
@@ -457,11 +494,15 @@ function KingdomResearchPage() {
 											</div>
 										</td>
 										<td>
-											<button
-												type="button"
-												className="outline"
-												onClick={() => handleMaxClick(key)}
-												disabled={isAssigning || myKingdom.researchPts <= 0}
+												<button
+													type="button"
+													className="outline"
+													onClick={() => handleMaxClick(key)}
+													disabled={
+														isAssigning ||
+														myKingdom.researchPts <= 0 ||
+														!prerequisiteMet
+													}
 												style={{
 													padding: "0.25rem 0.5rem",
 													fontSize: "0.875rem",
@@ -483,7 +524,8 @@ function KingdomResearchPage() {
 											/>
 										</td>
 									</tr>
-								))}
+								);
+							})}
 							</tbody>
 						</table>
 					</figure>
@@ -496,8 +538,8 @@ function KingdomResearchPage() {
 						}}
 					>
 						<div>
-							<h4>Military Technology</h4>
-							<p>Fixed required points to unlock units</p>
+							<h4>Technical Research</h4>
+							<p>Fixed required points for advanced technology</p>
 						</div>
 						<div
 							style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
@@ -528,7 +570,7 @@ function KingdomResearchPage() {
 						<table className="striped">
 							<thead>
 								<tr>
-									<th scope="col">Unit Tech</th>
+									<th scope="col">Technology</th>
 									<th scope="col">Progress</th>
 									<th scope="col">Requires</th>
 									<th scope="col">Auto / Priority</th>
@@ -537,27 +579,22 @@ function KingdomResearchPage() {
 								</tr>
 							</thead>
 							<tbody>
-								{militaryTechTopics
+								{techTopics
 									.filter(({ key }) => {
 										if (showLockedTech) return true;
-										const techInfo =
-											militaryTechTree[key as keyof typeof militaryTechTree];
+										const techInfo = techTree[key as keyof typeof techTree];
+										if (!techInfo) return true;
 										const prerequisite = techInfo?.requires;
 										if (!prerequisite) return true;
 										return (
-											(myKingdom.research[
-												prerequisite as keyof typeof myKingdom.research
-											]?.perc ?? 0) >= 100
+											((myKingdom.research as any)[prerequisite]?.perc ?? 0) >= 100
 										);
 									})
 									.map(({ key, label, data }) => {
-										const techInfo =
-											militaryTechTree[key as keyof typeof militaryTechTree];
+										const techInfo = techTree[key as keyof typeof techTree];
 										const prerequisite = techInfo?.requires;
 										const prerequisiteMet = prerequisite
-											? (myKingdom.research[
-													prerequisite as keyof typeof myKingdom.research
-												]?.perc ?? 0) >= 100
+											? ((myKingdom.research as any)[prerequisite]?.perc ?? 0) >= 100
 											: true;
 
 										return (
@@ -579,6 +616,7 @@ function KingdomResearchPage() {
 																GAME_PARAMS.military.units[
 																	key as keyof typeof GAME_PARAMS.military.units
 																];
+															if (!unitStats) return null;
 															return (
 																<Tooltip
 																	content={`Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Base Cost: $${unitStats?.cost.toLocaleString()}`}
@@ -593,9 +631,8 @@ function KingdomResearchPage() {
 													{!prerequisiteMet && (
 														<div style={{ fontSize: "0.75rem", color: "red" }}>
 															Locked: Needs{" "}
-															{militaryTechTopics.find(
-																(t) => t.key === prerequisite,
-															)?.label || prerequisite}
+															{techTopics.find((t) => t.key === prerequisite)
+																?.label || prerequisite}
 														</div>
 													)}
 												</td>

@@ -145,11 +145,11 @@ function KingdomBuildingsPage() {
 		for (const [unitKey, techInfo] of Object.entries(
 			GAME_PARAMS.militaryTechTree,
 		)) {
-			if (techInfo.building === buildingKey) {
-				const research = (
+			if (techInfo && techInfo.building === buildingKey) {
+				const researchData = (
 					myKingdom.research as Record<string, { pts: number; perc: number }>
 				)[unitKey];
-				return (research?.perc ?? 0) >= 100;
+				return (researchData?.perc ?? 0) >= 100;
 			}
 		}
 		return true; // No requirement means unlocked

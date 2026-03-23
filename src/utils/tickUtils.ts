@@ -369,15 +369,23 @@ export function processKingdomTick(
 			if (techInfo) {
 				// Prerequisite check for military research
 				if (techInfo.requires) {
-					const prerequisite =
-						newKingdom.research[
-							techInfo.requires as keyof typeof newKingdom.research
-						];
+					const prerequisite = (
+						newKingdom.research as Record<string, { pts: number; perc: number }>
+					)[techInfo.requires];
 					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue; // Skip if prerequisite not completed
 				}
 				required = techInfo.requirePoints;
 			} else {
 				// Standard bonus research
+				const prerequisiteKey = (GAME_PARAMS.researchPrerequisites as any)[
+					researchKey
+				];
+				if (prerequisiteKey) {
+					const prerequisite = (
+						newKingdom.research as Record<string, { pts: number; perc: number }>
+					)[prerequisiteKey];
+					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue; // Skip if prerequisite not completed
+				}
 				required = GAME_PARAMS.research.required(
 					researchKey as keyof typeof GAME_PARAMS.research.weights,
 					newKingdom.land,
@@ -421,7 +429,7 @@ export function processKingdomTick(
 		newKingdom.research[key] = { pts, perc };
 	}
 
-	const militaryResearchKeys = [
+	const techResearchKeys = [
 		"dr",
 		"ft",
 		"tf",
@@ -430,9 +438,16 @@ export function processKingdomTick(
 		"f74",
 		"hgl",
 		"ht",
+		"fusion",
+		"core",
+		"warp",
+		"armor",
 	] as const;
-	for (const key of militaryResearchKeys) {
-		const pts = newKingdom.research[key]?.pts ?? 0;
+	for (const key of techResearchKeys) {
+		const researchData = (
+			newKingdom.research as Record<string, { pts: number; perc: number }>
+		)[key];
+		const pts = researchData?.pts ?? 0;
 		const techInfo =
 			GAME_PARAMS.militaryTechTree[
 				key as keyof typeof GAME_PARAMS.militaryTechTree
@@ -444,7 +459,7 @@ export function processKingdomTick(
 		if (required > 0) {
 			perc = Math.min(Math.floor((pts / required) * 100), 100);
 		}
-		newKingdom.research[key] = { pts, perc };
+		(newKingdom.research as any)[key] = { pts, perc };
 	}
 
 	return {

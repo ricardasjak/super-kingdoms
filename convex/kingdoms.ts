@@ -350,13 +350,13 @@ export const buildBuildings = mutation({
 
 		// Research validation for special buildings
 		for (const [unitKey, techInfo] of Object.entries(GAME_PARAMS.militaryTechTree)) {
-			if (techInfo.building) {
+			if (techInfo && techInfo.building) {
 				const buildingKey = techInfo.building as keyof typeof args;
 				if (args[buildingKey] > 0) {
-					const research = (
+					const researchData = (
 						kingdom.research as Record<string, { pts: number; perc: number }>
 					)[unitKey];
-					if (!research || research.perc < 100) {
+					if (!researchData || researchData.perc < 100) {
 						throw new Error(
 							`Cannot build ${buildingKey}. Research for ${unitKey} must be 100% complete.`,
 						);
@@ -822,6 +822,9 @@ export const assignResearchPoints = mutation({
 		f74: v.number(),
 		hgl: v.number(),
 		ht: v.number(),
+		fusion: v.number(),
+		core: v.number(),
+		armor: v.number(),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
@@ -839,7 +842,6 @@ export const assignResearchPoints = mutation({
 			"mil",
 			"money",
 			"fdc",
-			"warp",
 			"dr",
 			"ft",
 			"tf",
@@ -848,6 +850,10 @@ export const assignResearchPoints = mutation({
 			"f74",
 			"hgl",
 			"ht",
+			"fusion",
+			"core",
+			"warp",
+			"armor",
 		] as const;
 
 		let totalPoints = 0;
@@ -868,17 +874,19 @@ export const assignResearchPoints = mutation({
 		if (totalPoints === 0) return { success: true };
 
 		const newResearch = { ...kingdom.research };
-		const standardKeys = [
-			"pop",
-			"power",
-			"mil",
-			"money",
-			"fdc",
-			"warp",
-		] as const;
+		const standardKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
 
 		for (const key of standardKeys) {
 			if (args[key] > 0) {
+				const prerequisite = (GAME_PARAMS.researchPrerequisites as any)[key];
+				if (prerequisite) {
+					const preData = (newResearch as any)[prerequisite];
+					if (!preData || (preData.perc ?? 0) < 100) {
+						throw new Error(
+							`Cannot research ${key}. Must complete ${prerequisite} first.`,
+						);
+					}
+				}
 				const currentPts = newResearch[key].pts;
 				const newPts = currentPts + args[key];
 				const required = GAME_PARAMS.research.required(key, kingdom.land);
@@ -891,7 +899,7 @@ export const assignResearchPoints = mutation({
 			}
 		}
 
-		const militaryKeys = [
+		const techKeys = [
 			"dr",
 			"ft",
 			"tf",
@@ -900,8 +908,12 @@ export const assignResearchPoints = mutation({
 			"f74",
 			"hgl",
 			"ht",
+			"fusion",
+			"core",
+			"warp",
+			"armor",
 		] as const;
-		for (const key of militaryKeys) {
+		for (const key of techKeys) {
 			if (args[key] > 0) {
 				const techInfo =
 					GAME_PARAMS.militaryTechTree[

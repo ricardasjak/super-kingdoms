@@ -73,31 +73,30 @@ export const RESEARCH_BONUS = {
 	warp: 20,
 } as const;
 
-const MILITARY_TECH_TREE: Partial<
-	Record<
-		keyof typeof MILITARY_UNITS,
-		{ requirePoints: number; requires?: keyof typeof MILITARY_UNITS; building?: string }
-	>
+export const RESEARCH_PREREQUISITES: Partial<
+	Record<keyof typeof RESEARCH_WEIGHTS, string>
 > = {
-	// sol: { requirePoints: 0 },
-	// sci: { requirePoints: 0 },
+	warp: "core",
+};
 
-	// tr: { requirePoints: 0 },
+const RESEARCH_TECH_TREE: Partial<
+	Record<string, { requirePoints: number; requires?: string; building?: string }>
+> = {
 	dr: { requirePoints: 60_000 },
 	ft: { requirePoints: 120_000, requires: "dr" },
 	tf: { requirePoints: 480_000, requires: "ft", building: "asb" },
 
-	// lt: { requirePoints: 0 },
 	ld: { requirePoints: 72_000 },
 	lf: { requirePoints: 150_000, requires: "ld" },
 	f74: { requirePoints: 600_000, requires: "lf", building: "ach" },
 
-	// t: { requirePoints: 0 },
 	hgl: { requirePoints: 100_000 },
 	ht: { requirePoints: 200_000, requires: "hgl" },
-};
 
-// type MilitaryResearch = Partial<Record<keyof typeof MILITARY_TECH_TREE, number>>;
+	fusion: { requirePoints: 30_000 },
+	core: { requirePoints: 50_000, requires: "fusion" },
+	armor: { requirePoints: 92_000 },
+};
 
 export const GAME_PARAMS = {
 	roundLength: 480,
@@ -173,7 +172,8 @@ export const GAME_PARAMS = {
 			return total;
 		},
 	},
-	militaryTechTree: MILITARY_TECH_TREE,
+	militaryTechTree: RESEARCH_TECH_TREE,
+	researchPrerequisites: RESEARCH_PREREQUISITES,
 	research: {
 		weights: RESEARCH_WEIGHTS,
 		bonuses: RESEARCH_BONUS,
