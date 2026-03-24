@@ -10,6 +10,11 @@ export const Route = createFileRoute("/kingdom/research")({
 	component: KingdomResearchPage,
 });
 
+interface ResearchDisc {
+	pts: number;
+	perc: number;
+}
+
 function KingdomResearchPage() {
 	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
@@ -119,7 +124,8 @@ function KingdomResearchPage() {
 		}
 
 		const currentPts =
-			((myKingdom.research as any)[key] as { pts: number })?.pts || 0;
+			(myKingdom.research as Record<string, ResearchDisc | undefined>)[key]
+				?.pts || 0;
 		const needed = Math.max(0, required - currentPts);
 
 		if (needed <= 0) return;
@@ -447,11 +453,15 @@ function KingdomResearchPage() {
 							<tbody>
 								{standardResearchTopics.map(({ key, label, data }) => {
 									const prerequisiteKey = (
-										GAME_PARAMS.researchPrerequisites as any
+										GAME_PARAMS.researchPrerequisites as Record<string, string>
 									)[key];
 									const prerequisiteMet = prerequisiteKey
-										? ((myKingdom.research as any)[prerequisiteKey]?.perc ??
-												0) >= 100
+										? ((
+												myKingdom.research as Record<
+													string,
+													ResearchDisc | undefined
+												>
+											)[prerequisiteKey]?.perc ?? 0) >= 100
 										: true;
 
 									return (
@@ -619,16 +629,18 @@ function KingdomResearchPage() {
 										const prerequisite = techInfo?.requires;
 										if (!prerequisite) return true;
 										return (
-											((myKingdom.research as any)[prerequisite]?.perc ?? 0) >=
-											100
+											((myKingdom.research as Record<string, ResearchDisc>)[
+												prerequisite
+											]?.perc ?? 0) >= 100
 										);
 									})
 									.map(({ key, label, data }) => {
 										const techInfo = techTree[key as keyof typeof techTree];
 										const prerequisite = techInfo?.requires;
 										const prerequisiteMet = prerequisite
-											? ((myKingdom.research as any)[prerequisite]?.perc ??
-													0) >= 100
+											? ((myKingdom.research as Record<string, ResearchDisc>)[
+													prerequisite
+												]?.perc ?? 0) >= 100
 											: true;
 
 										return (
@@ -659,7 +671,9 @@ function KingdomResearchPage() {
 																const discountedCost = Math.floor(
 																	(unitStats.cost * (100 - tcDiscount)) / 100,
 																);
-																const solCost = (unitStats as any).sol;
+																const solCost = (
+																	unitStats as typeof GAME_PARAMS.military.units.tr
+																).sol;
 																const tooltipContent = `Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Cost: $${discountedCost.toLocaleString()}${
 																	solCost > 0 ? ` | Soldiers: ${solCost}` : ""
 																}`;

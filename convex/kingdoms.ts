@@ -925,9 +925,13 @@ export const assignResearchPoints = mutation({
 
 		for (const key of standardKeys) {
 			if (args[key] > 0) {
-				const prerequisite = (GAME_PARAMS.researchPrerequisites as any)[key];
+				const prerequisite = (
+					GAME_PARAMS.researchPrerequisites as Record<string, string>
+				)[key];
 				if (prerequisite) {
-					const preData = (newResearch as any)[prerequisite];
+					const preData = (
+						newResearch as Record<string, { pts: number; perc: number }>
+					)[prerequisite];
 					if (!preData || (preData.perc ?? 0) < 100) {
 						throw new Error(
 							`Cannot research ${key}. Must complete ${prerequisite} first.`,

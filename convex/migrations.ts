@@ -7,11 +7,17 @@ export const runResearchMigration = mutation({
 		const records = await ctx.db.query("kingdoms").collect();
 		let count = 0;
 		for (const record of records) {
-			const oldRes = record.research as any;
+			const oldRes = record.research as Record<string, unknown>;
 
-			const mapField = (field: any) => {
+			const mapField = (field: unknown) => {
 				if (typeof field === "number") return { pts: field, perc: 0 };
-				if (field && typeof field === "object") return field;
+				if (
+					field &&
+					typeof field === "object" &&
+					"pts" in field &&
+					"perc" in field
+				)
+					return field as { pts: number; perc: number };
 				return { pts: 0, perc: 0 };
 			};
 
@@ -32,7 +38,10 @@ export const runResearchMigration = mutation({
 					hgl: mapField(oldRes?.hgl),
 					ht: mapField(oldRes?.ht),
 				},
-				researchPts: oldRes?.researchPts ?? record.researchPts ?? 0,
+				researchPts:
+					(oldRes?.researchPts as number | undefined) ??
+					record.researchPts ??
+					0,
 			});
 			count++;
 		}

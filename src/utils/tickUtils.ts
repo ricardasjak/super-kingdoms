@@ -397,9 +397,9 @@ export function processKingdomTick(
 				required = techInfo.requirePoints;
 			} else {
 				// Standard bonus research
-				const prerequisiteKey = (GAME_PARAMS.researchPrerequisites as any)[
-					researchKey
-				];
+				const prerequisiteKey = (
+					GAME_PARAMS.researchPrerequisites as Record<string, string>
+				)[researchKey];
 				if (prerequisiteKey) {
 					const prerequisite = (
 						newKingdom.research as Record<string, { pts: number; perc: number }>
@@ -479,7 +479,9 @@ export function processKingdomTick(
 		if (required > 0) {
 			perc = Math.min(Math.floor((pts / required) * 100), 100);
 		}
-		(newKingdom.research as any)[key] = { pts, perc };
+		(newKingdom.research as Record<string, { pts: number; perc: number }>)[
+			key
+		] = { pts, perc };
 	}
 
 	return {

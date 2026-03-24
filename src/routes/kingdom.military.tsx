@@ -175,7 +175,7 @@ function KingdomMilitaryPage() {
 	}, 0);
 
 	const soldiersUsed = UNIT_KEYS.reduce((sum, key) => {
-		const unitSolCost = (UNITS[key] as any).sol || 0;
+		const unitSolCost = (UNITS[key] as (typeof UNITS)["tr"]).sol || 0;
 		return sum + (parseInt(trainQueue[key], 10) || 0) * unitSolCost;
 	}, 0);
 
@@ -375,7 +375,8 @@ function KingdomMilitaryPage() {
 									] as number;
 									const unitCost = getUnitCost(key, tcCount, land);
 									const maxByMoney = Math.floor(myKingdom.money / unitCost);
-									const unitSolCost = (UNITS[key] as any).sol || 0;
+									const unitSolCost =
+										(UNITS[key] as (typeof UNITS)["tr"]).sol || 0;
 									const maxBySoldiers =
 										unitSolCost > 0
 											? Math.floor(currentSoldiers / unitSolCost)
