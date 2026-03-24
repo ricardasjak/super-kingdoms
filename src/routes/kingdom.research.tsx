@@ -616,16 +616,37 @@ function KingdomResearchPage() {
 																GAME_PARAMS.military.units[
 																	key as keyof typeof GAME_PARAMS.military.units
 																];
-															if (!unitStats) return null;
-															return (
-																<Tooltip
-																	content={`Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Base Cost: $${unitStats?.cost.toLocaleString()}`}
-																	position="right"
-																	isButton
-																>
-																	ⓘ
-																</Tooltip>
-															);
+															if (unitStats) {
+																return (
+																	<Tooltip
+																		content={`Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Base Cost: $${unitStats?.cost.toLocaleString()}`}
+																		position="right"
+																		isButton
+																	>
+																		ⓘ
+																	</Tooltip>
+																);
+															}
+
+															const techInfo =
+																GAME_PARAMS.militaryTechTree[
+																	key as keyof typeof GAME_PARAMS.militaryTechTree
+																];
+															if (techInfo?.bonus) {
+																let content = `Unlocks ${techInfo.bonus}% better power plants`;
+																if (key === "core") content += " and Warp Drive";
+																return (
+																	<Tooltip
+																		content={content}
+																		position="right"
+																		isButton
+																	>
+																		ⓘ
+																	</Tooltip>
+																);
+															}
+
+															return null;
 														})()}
 													</div>
 													{!prerequisiteMet && (
