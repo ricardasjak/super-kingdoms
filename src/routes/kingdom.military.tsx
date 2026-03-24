@@ -119,7 +119,7 @@ function KingdomMilitaryPage() {
 		GAME_PARAMS.military.soldierDuration,
 	);
 
-	const UNITS_WITHOUT_SOLDIER_COST = ["tf", "f74"];
+
 
 	const handleTrainSoldiers = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -177,8 +177,8 @@ function KingdomMilitaryPage() {
 	}, 0);
 
 	const soldiersUsed = UNIT_KEYS.reduce((sum, key) => {
-		if (UNITS_WITHOUT_SOLDIER_COST.includes(key)) return sum;
-		return sum + (parseInt(trainQueue[key], 10) || 0);
+		const unitSolCost = (UNITS[key] as any).sol || 0;
+		return sum + (parseInt(trainQueue[key], 10) || 0) * unitSolCost;
 	}, 0);
 
 	const handleTrain = async (e: React.FormEvent) => {
@@ -377,10 +377,9 @@ function KingdomMilitaryPage() {
 									] as number;
 									const unitCost = getUnitCost(key, tcCount, land);
 									const maxByMoney = Math.floor(myKingdom.money / unitCost);
-									const needsSoldiers =
-										!UNITS_WITHOUT_SOLDIER_COST.includes(key);
-									const maxBySoldiers = needsSoldiers
-										? currentSoldiers
+									const unitSolCost = (UNITS[key] as any).sol || 0;
+									const maxBySoldiers = unitSolCost > 0
+										? Math.floor(currentSoldiers / unitSolCost)
 										: Infinity;
 									const tfHousingLimit =
 										key === "tf"
@@ -442,7 +441,14 @@ function KingdomMilitaryPage() {
 													"-"
 												)}
 											</td>
-											<td>${unitCost}</td>
+											<td>
+												${unitCost}
+												{unitSolCost > 0 && (
+													<span style={{ fontSize: "0.8rem", display: "block" }}>
+														+ {unitSolCost} sol
+													</span>
+												)}
+											</td>
 											<td>
 												<button
 													type="button"

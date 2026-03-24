@@ -296,7 +296,7 @@ function KingdomResearchPage() {
 							<hgroup style={{ marginBottom: 0 }}>
 								<h6 style={{ marginBottom: 0 }}>Hire Scientists</h6>
 								<small style={{ fontSize: "0.75rem" }}>
-									1 sol + $1.000 = 1 sci (1 pt/tick)
+									{GAME_PARAMS.military.units.sci.sol} sol + ${GAME_PARAMS.military.units.sci.cost.toLocaleString()} = 1 sci (1 pt/tick)
 								</small>
 							</hgroup>
 						</div>
@@ -617,9 +617,21 @@ function KingdomResearchPage() {
 																	key as keyof typeof GAME_PARAMS.military.units
 																];
 															if (unitStats) {
+																const tcDiscount =
+																	GAME_PARAMS.military.calculateTcDiscount(
+																		myKingdom.buildings.tc || 0,
+																		myKingdom.land,
+																	);
+																const discountedCost = Math.floor(
+																	(unitStats.cost * (100 - tcDiscount)) / 100,
+																);
+																const solCost = (unitStats as any).sol;
+																const tooltipContent = `Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Cost: $${discountedCost.toLocaleString()}${
+																	solCost > 0 ? ` | Soldiers: ${solCost}` : ""
+																}`;
 																return (
 																	<Tooltip
-																		content={`Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Base Cost: $${unitStats?.cost.toLocaleString()}`}
+																		content={tooltipContent}
 																		position="right"
 																		isButton
 																	>

@@ -26,33 +26,35 @@ export const RACE_TYPES = [
 ] as const;
 
 const MILITARY_UNITS = {
-	sol: { cost: 150, power: 0.7, housing: 1, off: 1, def: 1 },
-	sci: { cost: 1000, power: 0.7, housing: 1, off: 0, def: 0 },
-	tr: { cost: 350, power: 0.7, housing: 1, off: 4, def: 0 },
-	dr: { cost: 450, power: 0.7, housing: 1, off: 5, def: 0 },
-	ft: { cost: 550, power: 0.7, housing: 1, off: 6, def: 0 },
+	sol: { cost: 150, sol: 0, power: 0.7, housing: 1, off: 1, def: 1 },
+	sci: { cost: 1000, sol: 1, power: 0.7, housing: 1, off: 0, def: 0 },
+	tr: { cost: 350, sol: 1, power: 0.7, housing: 1, off: 4, def: 0 },
+	dr: { cost: 450, sol: 1, power: 0.7, housing: 1, off: 5, def: 0 },
+	ft: { cost: 550, sol: 1, power: 0.7, housing: 1, off: 6, def: 0 },
 	tf: {
 		cost: 1500,
+		sol: 0,
 		power: 1.4,
 		housing: 1,
 		off: 12,
 		def: 0,
 		requiresBuilding: "asb",
 	},
-	lt: { cost: 375, power: 0.7, housing: 1, off: 0, def: 4 },
-	ld: { cost: 500, power: 0.7, housing: 1, off: 0, def: 5 },
-	lf: { cost: 625, power: 0.7, housing: 1, off: 0, def: 6 },
+	lt: { cost: 375, sol: 1, power: 0.7, housing: 1, off: 0, def: 4 },
+	ld: { cost: 500, sol: 1, power: 0.7, housing: 1, off: 0, def: 5 },
+	lf: { cost: 625, sol: 1, power: 0.7, housing: 1, off: 0, def: 6 },
 	f74: {
 		cost: 975,
+		sol: 0,
 		power: 1.4,
 		housing: 1,
 		off: 0,
 		def: 8,
 		requiresBuilding: "ach",
 	},
-	t: { cost: 1750, power: 1.4, housing: 2, off: 9, def: 9 },
-	hgl: { cost: 1000, power: 0.7, housing: 1, off: 6, def: 6 },
-	ht: { cost: 2250, power: 1.4, housing: 2, off: 12, def: 12 },
+	t: { cost: 1750, sol: 1, power: 1.4, housing: 2, off: 9, def: 9 },
+	hgl: { cost: 1000, sol: 1, power: 0.7, housing: 1, off: 6, def: 6 },
+	ht: { cost: 2250, sol: 1, power: 1.4, housing: 2, off: 12, def: 12 },
 } as const;
 
 export const RESEARCH_WEIGHTS = {

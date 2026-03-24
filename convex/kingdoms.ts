@@ -428,56 +428,70 @@ export const trainMilitary = mutation({
 			Math.floor((baseCost * (100 - tcDiscount)) / 100);
 
 		const trainableUnits = [
-			{ key: "sol", value: args.sol, cost: units.sol.cost },
-			{ key: "tr", value: args.tr, cost: getDiscountedCost(units.tr.cost) },
-			{ key: "dr", value: args.dr, cost: getDiscountedCost(units.dr.cost) },
-			{ key: "ft", value: args.ft, cost: getDiscountedCost(units.ft.cost) },
+			{ key: "sol", value: args.sol, cost: units.sol.cost, sol: units.sol.sol },
+			{ key: "tr", value: args.tr, cost: getDiscountedCost(units.tr.cost), sol: units.tr.sol },
+			{ key: "dr", value: args.dr, cost: getDiscountedCost(units.dr.cost), sol: units.dr.sol },
+			{ key: "ft", value: args.ft, cost: getDiscountedCost(units.ft.cost), sol: units.ft.sol },
 			{
 				key: "tf",
 				value: args.tf,
 				cost: getDiscountedCost(units.tf.cost),
+				sol: units.tf.sol,
 			},
 			{
 				key: "lt",
 				value: args.lt,
 				cost: getDiscountedCost(units.lt.cost),
+				sol: units.lt.sol,
 			},
 			{
 				key: "ld",
 				value: args.ld,
 				cost: getDiscountedCost(units.ld.cost),
+				sol: units.ld.sol,
 			},
 			{
 				key: "lf",
 				value: args.lf,
 				cost: getDiscountedCost(units.lf.cost),
+				sol: units.lf.sol,
 			},
 			{
 				key: "f74",
 				value: args.f74,
 				cost: getDiscountedCost(units.f74.cost),
+				sol: units.f74.sol,
 			},
-			{ key: "t", value: args.t, cost: getDiscountedCost(units.t.cost) },
+			{ key: "t", value: args.t, cost: getDiscountedCost(units.t.cost), sol: units.t.sol },
 			{
 				key: "hgl",
 				value: args.hgl,
 				cost: getDiscountedCost(units.hgl.cost),
+				sol: units.hgl.sol,
 			},
 			{
 				key: "ht",
 				value: args.ht,
 				cost: getDiscountedCost(units.ht.cost),
+				sol: units.ht.sol,
+			},
+			{
+				key: "sci",
+				value: args.sci,
+				cost: getDiscountedCost(units.sci.cost),
+				sol: units.sci.sol,
 			},
 		];
 
 		for (const unit of trainableUnits) {
 			if (unit.key === "sol" && unit.value < 0) {
-				soldiersToDeduct = -unit.value;
+				soldiersToDeduct += -unit.value;
 				unit.value = 0;
 			} else if (unit.value < 0) {
 				throw new Error("Invalid request: negative unit counts");
 			}
 			if (unit.value > 0) {
+				soldiersToDeduct += unit.value * (unit.sol || 0);
 				hasValidUnit = true;
 
 				const techRequirement =
@@ -503,6 +517,10 @@ export const trainMilitary = mutation({
 
 		if (kingdom.money < totalCost) {
 			throw new Error("Not enough money");
+		}
+
+		if (kingdom.military.sol < soldiersToDeduct) {
+			throw new Error("Not enough soldiers");
 		}
 
 		const tfHousingLimit =
@@ -997,7 +1015,8 @@ export const buyScientists = mutation({
 			throw new Error("Not enough money to buy scientists.");
 		}
 
-		if (kingdom.military.sol < amount) {
+		const soldiersRequired = amount * (GAME_PARAMS.military.units.sci.sol || 0);
+		if (kingdom.military.sol < soldiersRequired) {
 			throw new Error("Not enough soldiers to convert to scientists.");
 		}
 
@@ -1023,7 +1042,7 @@ export const buyScientists = mutation({
 
 		const updatedMilitary = {
 			...kingdom.military,
-			sol: kingdom.military.sol - amount,
+			sol: kingdom.military.sol - soldiersRequired,
 			queue: updatedQueue,
 		};
 
