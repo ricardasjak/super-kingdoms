@@ -270,10 +270,14 @@ export function SpyReportSoE({
 	barracksUsage,
 	barracksCap,
 	research,
+	power,
+	probes,
 }: {
 	kdName: string;
 	moneyIncome: number;
 	powerIncome: number;
+	power: number;
+	probes: number;
 	pfCount: number;
 	population: number;
 	popChange: number;
@@ -282,14 +286,14 @@ export function SpyReportSoE({
 	research?: Research;
 }) {
 	const probeProduction = pfCount * 1;
-	const researchKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
+	const researchKeys = ["pop", "power", "mil", "money", "warp", "fdc"] as const;
 	const researchLabels: Record<(typeof researchKeys)[number], string> = {
 		pop: "Population Bonus",
 		power: "Power Bonus",
 		mil: "Military Bonus",
 		money: "Money Bonus",
-		fdc: "FDC Level",
-		warp: "Warp Drive Level",
+		fdc: "FDC",
+		warp: "Warp Drive",
 	};
 	return (
 		<article style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
@@ -305,11 +309,25 @@ export function SpyReportSoE({
 			>
 				<span>Net Income:</span>
 				<span>${moneyIncome.toLocaleString()}</span>
-				<span>Net Power:</span>
-				<span>{powerIncome.toLocaleString()}</span>
+				<span>Power:</span>
+				<span>
+					{power.toLocaleString()} (
+					<span
+						style={{
+							color: powerIncome < 0 ? "var(--pico-del-color)" : "inherit",
+						}}
+					>
+						{powerIncome >= 0
+							? `+${powerIncome.toLocaleString()}`
+							: powerIncome.toLocaleString()}
+					</span>
+					)
+				</span>
 
-				<span>Probes production:</span>
-				<span>{probeProduction.toLocaleString()}</span>
+				<span>Probes:</span>
+				<span>
+					{probes.toLocaleString()} (+{probeProduction.toLocaleString()})
+				</span>
 				<span>Population:</span>
 				<span>
 					{population.toLocaleString()} (
@@ -317,7 +335,19 @@ export function SpyReportSoE({
 				</span>
 				<span>Barracks:</span>
 				<span>
-					{barracksUsage.toLocaleString()} / {barracksCap.toLocaleString()}
+					{barracksUsage.toLocaleString()} / {barracksCap.toLocaleString()}{" "}
+					{barracksCap > 0 && (
+						<span
+							style={{
+								color:
+									barracksUsage > barracksCap
+										? "var(--pico-del-color)"
+										: "inherit",
+							}}
+						>
+							({((barracksUsage / barracksCap) * 100).toFixed(0)}%)
+						</span>
+					)}
 				</span>
 				{research && researchKeys.some((key) => research[key].pts > 0) && (
 					<Fragment>

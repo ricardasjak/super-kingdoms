@@ -491,11 +491,7 @@ describe("processKingdomTick", () => {
 			},
 		};
 
-		const { updatedKingdom } = processKingdomTick(
-			kingdom,
-			buildings,
-			military,
-		);
+		const { updatedKingdom } = processKingdomTick(kingdom, buildings, military);
 
 		// Base income: 5 * 140 + 1000 * 2 = 700 + 2000 = 2700
 		// Bonus: 25% (as defined in GAME_PARAMS.research.bonuses.money)

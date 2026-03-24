@@ -119,8 +119,6 @@ function KingdomMilitaryPage() {
 		GAME_PARAMS.military.soldierDuration,
 	);
 
-
-
 	const handleTrainSoldiers = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -378,9 +376,10 @@ function KingdomMilitaryPage() {
 									const unitCost = getUnitCost(key, tcCount, land);
 									const maxByMoney = Math.floor(myKingdom.money / unitCost);
 									const unitSolCost = (UNITS[key] as any).sol || 0;
-									const maxBySoldiers = unitSolCost > 0
-										? Math.floor(currentSoldiers / unitSolCost)
-										: Infinity;
+									const maxBySoldiers =
+										unitSolCost > 0
+											? Math.floor(currentSoldiers / unitSolCost)
+											: Infinity;
 									const tfHousingLimit =
 										key === "tf"
 											? Math.max(
@@ -444,7 +443,9 @@ function KingdomMilitaryPage() {
 											<td>
 												${unitCost}
 												{unitSolCost > 0 && (
-													<span style={{ fontSize: "0.8rem", display: "block" }}>
+													<span
+														style={{ fontSize: "0.8rem", display: "block" }}
+													>
 														+ {unitSolCost} sol
 													</span>
 												)}

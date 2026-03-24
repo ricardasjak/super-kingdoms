@@ -100,10 +100,11 @@ export function processKingdomTick(
 	military: MilitaryUnits,
 ) {
 	const moneyBonus = (kingdom.research.money?.perc ?? 0) / 100;
-	const moneyIncome =
+	const moneyIncome = Math.round(
 		(buildings.sm * GAME_PARAMS.income.sm +
 			kingdom.population * GAME_PARAMS.income.population) *
-		(1 + moneyBonus);
+			(1 + moneyBonus),
+	);
 	const powerConsumption =
 		kingdom.population * GAME_PARAMS.power.consumption.population +
 		military.sci * GAME_PARAMS.power.consumption.scientists +
@@ -139,8 +140,7 @@ export function processKingdomTick(
 	const raxSurplus = Math.max(0, raxUsage - raxCapacity);
 
 	const popBonus = (kingdom.research.pop?.perc ?? 0) / 100;
-	const resCapacityBoosted =
-		GAME_PARAMS.buildings.resCapacity * (1 + popBonus);
+	const resCapacityBoosted = GAME_PARAMS.buildings.resCapacity * (1 + popBonus);
 
 	const maxPopulation = buildings.res * resCapacityBoosted - raxSurplus;
 	let populationChange = 0;
@@ -169,7 +169,7 @@ export function processKingdomTick(
 			Math.max(0, Math.round(kingdom.power + powerIncome)),
 		),
 		probes: kingdom.probes + buildings.pf,
-		moneyIncome: Math.round(moneyIncome),
+		moneyIncome: moneyIncome,
 		powerIncome: Math.round(powerIncome),
 		researchPts: kingdom.researchPts + military.sci,
 		research: { ...kingdom.research },

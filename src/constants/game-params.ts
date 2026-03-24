@@ -82,7 +82,15 @@ export const RESEARCH_PREREQUISITES: Partial<
 };
 
 const RESEARCH_TECH_TREE: Partial<
-	Record<string, { requirePoints: number; requires?: string; building?: string, bonus?: number }>
+	Record<
+		string,
+		{
+			requirePoints: number;
+			requires?: string;
+			building?: string;
+			bonus?: number;
+		}
+	>
 > = {
 	dr: { requirePoints: 60_000 },
 	ft: { requirePoints: 120_000, requires: "dr" },
@@ -97,7 +105,7 @@ const RESEARCH_TECH_TREE: Partial<
 
 	fusion: { requirePoints: 30_000, bonus: 50 },
 	core: { requirePoints: 50_000, requires: "fusion", bonus: 20 },
-	armor: { requirePoints: 92_000},
+	armor: { requirePoints: 92_000 },
 };
 
 export const GAME_PARAMS = {

@@ -349,8 +349,10 @@ export const buildBuildings = mutation({
 		}
 
 		// Research validation for special buildings
-		for (const [unitKey, techInfo] of Object.entries(GAME_PARAMS.militaryTechTree)) {
-			if (techInfo && techInfo.building) {
+		for (const [unitKey, techInfo] of Object.entries(
+			GAME_PARAMS.militaryTechTree,
+		)) {
+			if (techInfo?.building) {
 				const buildingKey = techInfo.building as keyof typeof args;
 				if (args[buildingKey] > 0) {
 					const researchData = (
@@ -429,9 +431,24 @@ export const trainMilitary = mutation({
 
 		const trainableUnits = [
 			{ key: "sol", value: args.sol, cost: units.sol.cost, sol: units.sol.sol },
-			{ key: "tr", value: args.tr, cost: getDiscountedCost(units.tr.cost), sol: units.tr.sol },
-			{ key: "dr", value: args.dr, cost: getDiscountedCost(units.dr.cost), sol: units.dr.sol },
-			{ key: "ft", value: args.ft, cost: getDiscountedCost(units.ft.cost), sol: units.ft.sol },
+			{
+				key: "tr",
+				value: args.tr,
+				cost: getDiscountedCost(units.tr.cost),
+				sol: units.tr.sol,
+			},
+			{
+				key: "dr",
+				value: args.dr,
+				cost: getDiscountedCost(units.dr.cost),
+				sol: units.dr.sol,
+			},
+			{
+				key: "ft",
+				value: args.ft,
+				cost: getDiscountedCost(units.ft.cost),
+				sol: units.ft.sol,
+			},
 			{
 				key: "tf",
 				value: args.tf,
@@ -462,7 +479,12 @@ export const trainMilitary = mutation({
 				cost: getDiscountedCost(units.f74.cost),
 				sol: units.f74.sol,
 			},
-			{ key: "t", value: args.t, cost: getDiscountedCost(units.t.cost), sol: units.t.sol },
+			{
+				key: "t",
+				value: args.t,
+				cost: getDiscountedCost(units.t.cost),
+				sol: units.t.sol,
+			},
 			{
 				key: "hgl",
 				value: args.hgl,
@@ -892,7 +914,14 @@ export const assignResearchPoints = mutation({
 		if (totalPoints === 0) return { success: true };
 
 		const newResearch = { ...kingdom.research };
-		const standardKeys = ["pop", "power", "mil", "money", "fdc", "warp"] as const;
+		const standardKeys = [
+			"pop",
+			"power",
+			"mil",
+			"money",
+			"fdc",
+			"warp",
+		] as const;
 
 		for (const key of standardKeys) {
 			if (args[key] > 0) {

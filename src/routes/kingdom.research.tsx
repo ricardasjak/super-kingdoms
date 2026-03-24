@@ -69,12 +69,12 @@ function KingdomResearchPage() {
 	}
 
 	const standardResearchTopics = [
-		{ key: "pop", label: "Population Bonus", data: research.pop },
-		{ key: "power", label: "Power Bonus", data: research.power },
 		{ key: "mil", label: "Military Strength", data: research.mil },
 		{ key: "money", label: "Money", data: research.money },
-		{ key: "fdc", label: "Frequency Decryption", data: research.fdc },
+		{ key: "pop", label: "Population Bonus", data: research.pop },
+		{ key: "power", label: "Power Bonus", data: research.power },
 		{ key: "warp", label: "Warp Drive", data: research.warp },
+		{ key: "fdc", label: "Frequency Decryption", data: research.fdc },
 	] as const;
 
 	const techTopics = [
@@ -296,23 +296,55 @@ function KingdomResearchPage() {
 							<hgroup style={{ marginBottom: 0 }}>
 								<h6 style={{ marginBottom: 0 }}>Hire Scientists</h6>
 								<small style={{ fontSize: "0.75rem" }}>
-									{GAME_PARAMS.military.units.sci.sol} sol + ${GAME_PARAMS.military.units.sci.cost.toLocaleString()} = 1 sci (1 pt/tick)
+									{GAME_PARAMS.military.units.sci.sol} sol + $
+									{GAME_PARAMS.military.units.sci.cost.toLocaleString()} = 1 sci
+									(1 pt/tick)
 								</small>
 							</hgroup>
 						</div>
 						<div style={{ textAlign: "center" }}>
-							<small
-								style={{
-									color: "var(--pico-muted-color)",
-									fontSize: "0.85rem",
-								}}
-							>
-								Soldiers:{" "}
-								<strong>{myKingdom.military.sol.toLocaleString()}</strong> |{" "}
-								Money: <strong>${myKingdom.money.toLocaleString()}</strong> |{" "}
-								Scientists:{" "}
-								<strong>{myKingdom.military.sci.toLocaleString()}</strong>
-							</small>
+							{(() => {
+								const autoAssign = myKingdom.researchAutoAssign || [];
+								const sumWeights = autoAssign.reduce((sum, key) => {
+									const weight =
+										(GAME_PARAMS.research.weights as Record<string, number>)[
+											key
+										] || 0;
+									return sum + weight;
+								}, 0);
+								const scientists = myKingdom.military.sci;
+								const landCoverage =
+									sumWeights > 0 ? Math.sqrt(scientists / sumWeights) : 0;
+								const showSpare = landCoverage < myKingdom.land * 0.02;
+
+								return (
+									<>
+										<h6 style={{ marginBottom: 0 }}>
+											Scientists: {scientists.toLocaleString()}
+										</h6>
+										<small
+											style={{
+												color: "var(--pico-muted-color)",
+												fontSize: "0.85rem",
+											}}
+										>
+											{sumWeights > 0 ? (
+												showSpare ? (
+													<div>
+														Covers up to{" "}
+														<strong>
+															{Math.floor(landCoverage).toLocaleString()}
+														</strong>{" "}
+														land / tick
+													</div>
+												) : null
+											) : (
+												"No auto-priority topics selected"
+											)}
+										</small>
+									</>
+								);
+							})()}
 						</div>
 						<div
 							style={{
@@ -414,12 +446,12 @@ function KingdomResearchPage() {
 							</thead>
 							<tbody>
 								{standardResearchTopics.map(({ key, label, data }) => {
-									const prerequisiteKey = (GAME_PARAMS.researchPrerequisites as any)[
-										key
-									];
+									const prerequisiteKey = (
+										GAME_PARAMS.researchPrerequisites as any
+									)[key];
 									const prerequisiteMet = prerequisiteKey
-										? ((myKingdom.research as any)[prerequisiteKey]?.perc ?? 0) >=
-											100
+										? ((myKingdom.research as any)[prerequisiteKey]?.perc ??
+												0) >= 100
 										: true;
 
 									return (
@@ -437,41 +469,41 @@ function KingdomResearchPage() {
 													</div>
 												)}
 											</td>
-										<td>{data?.perc ?? 0}%</td>
-										<td>
-											{(() => {
-												const required = GAME_PARAMS.research.required(
-													key,
-													myKingdom.land,
-												);
-												const current = data?.pts ?? 0;
-												const delta = current - required;
-												const isSurplus = delta >= 0;
-												return (
-													<span>
-														<small
-															style={{
-																color: isSurplus
-																	? "var(--pico-ins-color)"
-																	: "var(--pico-del-color)",
-															}}
-														>
-															{isSurplus ? "+" : ""}
-															{delta.toLocaleString()}
-														</small>
-													</span>
-												);
-											})()}
-										</td>
-										<td align="center">
-											<div
-												style={{
-													display: "flex",
-													alignItems: "center",
-													justifyContent: "center",
-													gap: "0.5rem",
-												}}
-											>
+											<td>{data?.perc ?? 0}%</td>
+											<td>
+												{(() => {
+													const required = GAME_PARAMS.research.required(
+														key,
+														myKingdom.land,
+													);
+													const current = data?.pts ?? 0;
+													const delta = current - required;
+													const isSurplus = delta >= 0;
+													return (
+														<span>
+															<small
+																style={{
+																	color: isSurplus
+																		? "var(--pico-ins-color)"
+																		: "var(--pico-del-color)",
+																}}
+															>
+																{isSurplus ? "+" : ""}
+																{delta.toLocaleString()}
+															</small>
+														</span>
+													);
+												})()}
+											</td>
+											<td align="center">
+												<div
+													style={{
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "center",
+														gap: "0.5rem",
+													}}
+												>
 													<input
 														type="checkbox"
 														checked={(
@@ -481,19 +513,19 @@ function KingdomResearchPage() {
 														style={{ margin: 0 }}
 														disabled={!prerequisiteMet}
 													/>
-												{(() => {
-													const index = (
-														myKingdom.researchAutoAssign || []
-													).indexOf(key);
-													return index !== -1 ? (
-														<span style={{ fontWeight: "bold" }}>
-															#{index + 1}
-														</span>
-													) : null;
-												})()}
-											</div>
-										</td>
-										<td>
+													{(() => {
+														const index = (
+															myKingdom.researchAutoAssign || []
+														).indexOf(key);
+														return index !== -1 ? (
+															<span style={{ fontWeight: "bold" }}>
+																#{index + 1}
+															</span>
+														) : null;
+													})()}
+												</div>
+											</td>
+											<td>
 												<button
 													type="button"
 													className="outline"
@@ -503,29 +535,29 @@ function KingdomResearchPage() {
 														myKingdom.researchPts <= 0 ||
 														!prerequisiteMet
 													}
-												style={{
-													padding: "0.25rem 0.5rem",
-													fontSize: "0.875rem",
-													width: "100%",
-												}}
-											>
-												Max
-											</button>
-										</td>
-										<td>
-											<input
-												type="number"
-												name={key}
-												value={assignQueue[key as keyof typeof assignQueue]}
-												onChange={handleInputChange}
-												min="0"
-												disabled={isAssigning}
-												style={{ minWidth: "100px", marginBottom: 0 }}
-											/>
-										</td>
-									</tr>
-								);
-							})}
+													style={{
+														padding: "0.25rem 0.5rem",
+														fontSize: "0.875rem",
+														width: "100%",
+													}}
+												>
+													Max
+												</button>
+											</td>
+											<td>
+												<input
+													type="number"
+													name={key}
+													value={assignQueue[key as keyof typeof assignQueue]}
+													onChange={handleInputChange}
+													min="0"
+													disabled={isAssigning}
+													style={{ minWidth: "100px", marginBottom: 0 }}
+												/>
+											</td>
+										</tr>
+									);
+								})}
 							</tbody>
 						</table>
 					</figure>
@@ -587,14 +619,16 @@ function KingdomResearchPage() {
 										const prerequisite = techInfo?.requires;
 										if (!prerequisite) return true;
 										return (
-											((myKingdom.research as any)[prerequisite]?.perc ?? 0) >= 100
+											((myKingdom.research as any)[prerequisite]?.perc ?? 0) >=
+											100
 										);
 									})
 									.map(({ key, label, data }) => {
 										const techInfo = techTree[key as keyof typeof techTree];
 										const prerequisite = techInfo?.requires;
 										const prerequisiteMet = prerequisite
-											? ((myKingdom.research as any)[prerequisite]?.perc ?? 0) >= 100
+											? ((myKingdom.research as any)[prerequisite]?.perc ??
+													0) >= 100
 											: true;
 
 										return (
@@ -646,7 +680,8 @@ function KingdomResearchPage() {
 																];
 															if (techInfo?.bonus) {
 																let content = `Unlocks ${techInfo.bonus}% better power plants`;
-																if (key === "core") content += " and Warp Drive";
+																if (key === "core")
+																	content += " and Warp Drive";
 																return (
 																	<Tooltip
 																		content={content}
