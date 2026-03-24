@@ -99,9 +99,11 @@ export function processKingdomTick(
 	},
 	military: MilitaryUnits,
 ) {
+	const moneyBonus = (kingdom.research.money?.perc ?? 0) / 100;
 	const moneyIncome =
-		buildings.sm * GAME_PARAMS.income.sm +
-		kingdom.population * GAME_PARAMS.income.population;
+		(buildings.sm * GAME_PARAMS.income.sm +
+			kingdom.population * GAME_PARAMS.income.population) *
+		(1 + moneyBonus);
 	const powerConsumption =
 		kingdom.population * GAME_PARAMS.power.consumption.population +
 		military.sci * GAME_PARAMS.power.consumption.scientists +

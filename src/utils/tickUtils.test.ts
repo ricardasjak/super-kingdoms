@@ -410,4 +410,97 @@ describe("processKingdomTick", () => {
 		// Test perc ratio algorithm
 		expect(updatedKingdom.research?.power.perc).toBe(24); // Math.floor( 50 * 15 / 31 ) = 24
 	});
+
+	it("should apply money bonus to income", () => {
+		const kingdom = {
+			population: 1000,
+			land: 200,
+			money: 5000,
+			power: 1000,
+			moneyIncome: 0,
+			powerIncome: 0,
+			probes: 0,
+			landQueue: [],
+			researchPts: 0,
+			research: {
+				pop: { pts: 0, perc: 0 },
+				power: { pts: 0, perc: 0 },
+				mil: { pts: 0, perc: 0 },
+				money: { pts: 1000, perc: 25 }, // Assume already has bonus
+				fdc: { pts: 0, perc: 0 },
+				warp: { pts: 0, perc: 0 },
+				dr: { pts: 0, perc: 0 },
+				ft: { pts: 0, perc: 0 },
+				tf: { pts: 0, perc: 0 },
+				ld: { pts: 0, perc: 0 },
+				lf: { pts: 0, perc: 0 },
+				f74: { pts: 0, perc: 0 },
+				hgl: { pts: 0, perc: 0 },
+				ht: { pts: 0, perc: 0 },
+			},
+		};
+		const buildings = {
+			res: 0,
+			sm: 5,
+			plants: 10,
+			rax: 0,
+			pf: 0,
+			tc: 0,
+			asb: 0,
+			ach: 0,
+			rubble: 0,
+			queue: {
+				res: [],
+				sm: [],
+				plants: [],
+				rax: [],
+				pf: [],
+				tc: [],
+				asb: [],
+				ach: [],
+			},
+		};
+		const military = {
+			sol: 100,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			hgl: 0,
+			ht: 0,
+			sci: 100,
+			queue: {
+				sol: [],
+				tr: [],
+				dr: [],
+				ft: [],
+				tf: [],
+				lt: [],
+				ld: [],
+				lf: [],
+				f74: [],
+				t: [],
+				hgl: [],
+				ht: [],
+				sci: [],
+			},
+		};
+
+		const { updatedKingdom } = processKingdomTick(
+			kingdom,
+			buildings,
+			military,
+		);
+
+		// Base income: 5 * 140 + 1000 * 2 = 700 + 2000 = 2700
+		// Bonus: 25% (as defined in GAME_PARAMS.research.bonuses.money)
+		// Total: 2700 * 1.25 = 3375
+		expect(updatedKingdom.moneyIncome).toBe(3375);
+		expect(updatedKingdom.research?.money.perc).toBe(25);
+	});
 });
