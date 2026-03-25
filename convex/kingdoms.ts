@@ -723,6 +723,58 @@ export const exploreLand = mutation({
 	},
 });
 
+export const razeBuildings = mutation({
+	args: {
+		res: v.number(),
+		plants: v.number(),
+		rax: v.number(),
+		sm: v.number(),
+		pf: v.number(),
+		tc: v.number(),
+		asb: v.number(),
+		ach: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		const currentBuildings = kingdom.buildings;
+		const buildingCost = GAME_PARAMS.buildings.cost(kingdom.land);
+		let refund = 0;
+		const updatedBuildings = { ...currentBuildings };
+
+		for (const [key, count] of Object.entries(args)) {
+			if (typeof count !== "number" || count <= 0) continue;
+
+			type BuildingKey = Exclude<
+				keyof typeof currentBuildings,
+				"queue" | "target"
+			>;
+			const bldKey = key as BuildingKey;
+			const currentCount = currentBuildings[bldKey] as number;
+
+			if (count > currentCount) {
+				throw new Error(`Cannot raze ${count} ${key}. Have ${currentCount}.`);
+			}
+
+			(updatedBuildings[bldKey] as number) = currentCount - count;
+			refund += Math.floor((count * buildingCost) / 2);
+		}
+
+		await ctx.db.patch(kingdom._id, {
+			money: kingdom.money + refund,
+			buildings: updatedBuildings,
+		});
+	},
+});
+
 export const toggleAutoExplore = mutation({
 	args: {
 		autoExplore: v.boolean(),

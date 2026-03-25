@@ -17,11 +17,13 @@ export const Route = createFileRoute("/kingdom/buildings")({
 function QueueTooltip({
 	count,
 	queueArray,
+	isRazeMode,
 }: {
 	count: number;
 	queueArray: number[];
+	isRazeMode?: boolean;
 }) {
-	if (count <= 0 || !queueArray) return <span>-</span>;
+	if (isRazeMode || count <= 0 || !queueArray) return <span>-</span>;
 
 	// Create a comma-separated list of the array values
 	const queueString = queueArray.join(" ");
@@ -36,9 +38,10 @@ function KingdomBuildingsPage() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const buildings = myKingdom?.buildings;
 	const buildBuildings = useMutation(api.kingdoms.buildBuildings);
+	const razeBuildings = useMutation(api.kingdoms.razeBuildings);
 	const saveAutoBuildSettings = useMutation(api.kingdoms.saveAutoBuildSettings);
 
-	const [buildQueue, setBuildQueue] = useState({
+	const INITIAL_BUILD_QUEUE = {
 		res: "",
 		sm: "",
 		plants: "",
@@ -47,7 +50,9 @@ function KingdomBuildingsPage() {
 		tc: "",
 		asb: "",
 		ach: "",
-	});
+	};
+
+	const [buildQueue, setBuildQueue] = useState(INITIAL_BUILD_QUEUE);
 	const [targetQueue, setTargetQueue] = useState({
 		res: "",
 		plants: "",
@@ -60,6 +65,7 @@ function KingdomBuildingsPage() {
 	});
 	const [targetInitialized, setTargetInitialized] = useState(false);
 	const [isBuilding, setIsBuilding] = useState(false);
+	const [isRazeMode, setIsRazeMode] = useState(false);
 	const { showMessage } = useKingdomMessage();
 
 	useEffect(() => {
@@ -86,7 +92,7 @@ function KingdomBuildingsPage() {
 					buildings.asb +
 					buildings.ach;
 
-				if (total > 0) {
+				if (total > 0 && myKingdom?.land) {
 					setTargetQueue({
 						res: Math.round((buildings.res / myKingdom.land) * 100).toString(),
 						plants: Math.round(
@@ -219,6 +225,7 @@ function KingdomBuildingsPage() {
 
 	const buildingCost = GAME_PARAMS.buildings.cost(myKingdom.land);
 	const totalCost = requestSum * buildingCost;
+	const refundAmount = requestSum * Math.floor(buildingCost / 2);
 
 	const actualPercent = (count: number) => {
 		if (!myKingdom.land) return "0.0%";
@@ -282,67 +289,77 @@ function KingdomBuildingsPage() {
 	);
 
 	const handleMaxClick = (key: string) => {
-		if (maxBuildingsRounded <= 0) return;
+		const bldKey = key as keyof Omit<
+			typeof buildings,
+			"queue" | "target" | "rubble"
+		>;
+		const targetMax = isRazeMode
+			? (buildings[bldKey] as number)
+			: maxBuildingsRounded;
+		if (targetMax <= 0) return;
 		setBuildQueue({
-			res: "",
-			sm: "",
-			plants: "",
-			rax: "",
-			pf: "",
-			tc: "",
-			asb: "",
-			ach: "",
-			[key]: maxBuildingsRounded.toString(),
+			...INITIAL_BUILD_QUEUE,
+			[key]: targetMax.toString(),
 		});
 	};
 
-	const handleBuild = async (e: React.FormEvent) => {
+	const handleBuildOrRaze = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (requestSum > freeLand) {
-			showMessage("Not enough free land!", "error");
-			return;
-		}
 		if (requestSum <= 0) {
 			showMessage(
-				"Please enter a valid amount of buildings to construct.",
+				`Please enter a valid amount of buildings to ${
+					isRazeMode ? "raze" : "construct"
+				}.`,
 				"error",
 			);
-			return;
-		}
-		if (myKingdom.money < totalCost) {
-			showMessage("Not enough money!", "error");
 			return;
 		}
 
 		setIsBuilding(true);
 		try {
-			await buildBuildings({
-				res: parseInt(buildQueue.res, 10) || 0,
-				plants: parseInt(buildQueue.plants, 10) || 0,
-				rax: parseInt(buildQueue.rax, 10) || 0,
-				sm: parseInt(buildQueue.sm, 10) || 0,
-				pf: parseInt(buildQueue.pf, 10) || 0,
-				tc: parseInt(buildQueue.tc, 10) || 0,
-				asb: parseInt(buildQueue.asb, 10) || 0,
-				ach: parseInt(buildQueue.ach, 10) || 0,
-			});
-			setBuildQueue({
-				res: "",
-				sm: "",
-				plants: "",
-				rax: "",
-				pf: "",
-				tc: "",
-				asb: "",
-				ach: "",
-			});
-			showMessage("Buildings successfully queued for construction!", "success");
+			if (isRazeMode) {
+				await razeBuildings({
+					res: parseInt(buildQueue.res, 10) || 0,
+					plants: parseInt(buildQueue.plants, 10) || 0,
+					rax: parseInt(buildQueue.rax, 10) || 0,
+					sm: parseInt(buildQueue.sm, 10) || 0,
+					pf: parseInt(buildQueue.pf, 10) || 0,
+					tc: parseInt(buildQueue.tc, 10) || 0,
+					asb: parseInt(buildQueue.asb, 10) || 0,
+					ach: parseInt(buildQueue.ach, 10) || 0,
+				});
+				showMessage("Buildings successfully razed!", "success");
+			} else {
+				if (requestSum > freeLand) {
+					throw new Error("Not enough free land!");
+				}
+				if (myKingdom.money < totalCost) {
+					throw new Error("Not enough money!");
+				}
+
+				await buildBuildings({
+					res: parseInt(buildQueue.res, 10) || 0,
+					plants: parseInt(buildQueue.plants, 10) || 0,
+					rax: parseInt(buildQueue.rax, 10) || 0,
+					sm: parseInt(buildQueue.sm, 10) || 0,
+					pf: parseInt(buildQueue.pf, 10) || 0,
+					tc: parseInt(buildQueue.tc, 10) || 0,
+					asb: parseInt(buildQueue.asb, 10) || 0,
+					ach: parseInt(buildQueue.ach, 10) || 0,
+				});
+				showMessage(
+					"Buildings successfully queued for construction!",
+					"success",
+				);
+			}
+			setBuildQueue(INITIAL_BUILD_QUEUE);
 		} catch (error) {
 			console.error(error);
-			const errorMessage =
-				error instanceof Error ? error.message : "Failed to build";
-			showMessage(errorMessage, "error");
+			showMessage(
+				error instanceof Error ? error.message : "Action failed",
+				"error",
+			);
 		} finally {
 			setIsBuilding(false);
 		}
@@ -358,21 +375,29 @@ function KingdomBuildingsPage() {
 					</hgroup>
 				</header>
 
-				<form onSubmit={handleBuild}>
+				<form onSubmit={handleBuildOrRaze}>
 					<figure>
 						<table className="striped">
 							<thead>
 								<tr>
-									<th scope="col">Building Type</th>
+									<th scope="col" style={{ width: "25%" }}>
+										Building Type
+									</th>
 									<th scope="col">Actual %</th>
 									<th scope="col">Count</th>
 									<th scope="col">In Queue</th>
-									{myKingdom.autoBuild && <th scope="col">Target %</th>}
-									<th scope="col">Max</th>
-									<th scope="col">Build</th>
+									{myKingdom.autoBuild && !isRazeMode && (
+										<th scope="col">Target %</th>
+									)}
+									{!isRazeMode && <th scope="col">Cost</th>}
+									<th scope="col">{isRazeMode ? "All" : "Max"}</th>
+									<th scope="col" style={{ width: "160px" }}>
+										{isRazeMode ? "Raze" : "Build"}
+									</th>
 								</tr>
 							</thead>
 							<tbody>
+								{/* Residences */}
 								<tr>
 									<td>
 										Residences{" "}
@@ -386,11 +411,12 @@ function KingdomBuildingsPage() {
 									<td>{buildings.res}</td>
 									<td>
 										<QueueTooltip
+											isRazeMode={isRazeMode}
 											count={queuedCounts.res}
 											queueArray={buildings.queue?.res || []}
 										/>
 									</td>
-									{myKingdom.autoBuild && (
+									{myKingdom.autoBuild && !isRazeMode && (
 										<td>
 											<input
 												type="number"
@@ -402,18 +428,35 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
 											onClick={() => handleMaxClick("res")}
-											disabled={maxBuildings <= 0}
+											disabled={
+												isRazeMode
+													? buildings.res <= 0
+													: maxBuildingsRounded <= 0
+											}
 											style={{
 												padding: "0.25rem 0.5rem",
 												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+												width: "100%",
+												cursor: (
+													isRazeMode
+														? buildings.res <= 0
+														: maxBuildingsRounded <= 0
+												)
+													? "not-allowed"
+													: "pointer",
+												backgroundColor: isRazeMode ? "#d81b60" : "",
+												borderColor: isRazeMode ? "#d81b60" : "",
 											}}
 										>
-											{maxBuildings.toLocaleString()}
+											{(isRazeMode
+												? buildings.res
+												: maxBuildingsRounded
+											).toLocaleString()}
 										</button>
 									</td>
 									<td>
@@ -423,10 +466,13 @@ function KingdomBuildingsPage() {
 											value={buildQueue.res}
 											onChange={handleInputChange}
 											min="0"
+											max={isRazeMode ? buildings.res : undefined}
 											disabled={isBuilding}
+											style={{ marginBottom: 0 }}
 										/>
 									</td>
 								</tr>
+								{/* Star Mines */}
 								<tr>
 									<td>
 										Star Mines{" "}
@@ -440,11 +486,12 @@ function KingdomBuildingsPage() {
 									<td>{buildings.sm}</td>
 									<td>
 										<QueueTooltip
+											isRazeMode={isRazeMode}
 											count={queuedCounts.sm}
 											queueArray={buildings.queue?.sm || []}
 										/>
 									</td>
-									{myKingdom.autoBuild && (
+									{myKingdom.autoBuild && !isRazeMode && (
 										<td>
 											<input
 												type="number"
@@ -456,18 +503,35 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
 											onClick={() => handleMaxClick("sm")}
-											disabled={maxBuildings <= 0}
+											disabled={
+												isRazeMode
+													? buildings.sm <= 0
+													: maxBuildingsRounded <= 0
+											}
 											style={{
 												padding: "0.25rem 0.5rem",
 												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+												width: "100%",
+												cursor: (
+													isRazeMode
+														? buildings.sm <= 0
+														: maxBuildingsRounded <= 0
+												)
+													? "not-allowed"
+													: "pointer",
+												backgroundColor: isRazeMode ? "#d81b60" : "",
+												borderColor: isRazeMode ? "#d81b60" : "",
 											}}
 										>
-											{maxBuildings.toLocaleString()}
+											{(isRazeMode
+												? buildings.sm
+												: maxBuildingsRounded
+											).toLocaleString()}
 										</button>
 									</td>
 									<td>
@@ -477,10 +541,13 @@ function KingdomBuildingsPage() {
 											value={buildQueue.sm}
 											onChange={handleInputChange}
 											min="0"
+											max={isRazeMode ? buildings.sm : undefined}
 											disabled={isBuilding}
+											style={{ marginBottom: 0 }}
 										/>
 									</td>
 								</tr>
+								{/* Power Plants */}
 								<tr>
 									<td>
 										Power Plants{" "}
@@ -494,11 +561,12 @@ function KingdomBuildingsPage() {
 									<td>{buildings.plants}</td>
 									<td>
 										<QueueTooltip
+											isRazeMode={isRazeMode}
 											count={queuedCounts.plants}
 											queueArray={buildings.queue?.plants || []}
 										/>
 									</td>
-									{myKingdom.autoBuild && (
+									{myKingdom.autoBuild && !isRazeMode && (
 										<td>
 											<input
 												type="number"
@@ -510,18 +578,35 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
 											onClick={() => handleMaxClick("plants")}
-											disabled={maxBuildings <= 0}
+											disabled={
+												isRazeMode
+													? buildings.plants <= 0
+													: maxBuildingsRounded <= 0
+											}
 											style={{
 												padding: "0.25rem 0.5rem",
 												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+												width: "100%",
+												cursor: (
+													isRazeMode
+														? buildings.plants <= 0
+														: maxBuildingsRounded <= 0
+												)
+													? "not-allowed"
+													: "pointer",
+												backgroundColor: isRazeMode ? "#d81b60" : "",
+												borderColor: isRazeMode ? "#d81b60" : "",
 											}}
 										>
-											{maxBuildings.toLocaleString()}
+											{(isRazeMode
+												? buildings.plants
+												: maxBuildingsRounded
+											).toLocaleString()}
 										</button>
 									</td>
 									<td>
@@ -531,10 +616,13 @@ function KingdomBuildingsPage() {
 											value={buildQueue.plants}
 											onChange={handleInputChange}
 											min="0"
+											max={isRazeMode ? buildings.plants : undefined}
 											disabled={isBuilding}
+											style={{ marginBottom: 0 }}
 										/>
 									</td>
 								</tr>
+								{/* Barracks */}
 								<tr>
 									<td>
 										Barracks{" "}
@@ -555,11 +643,12 @@ function KingdomBuildingsPage() {
 									<td>{buildings.rax}</td>
 									<td>
 										<QueueTooltip
+											isRazeMode={isRazeMode}
 											count={queuedCounts.rax}
 											queueArray={buildings.queue?.rax || []}
 										/>
 									</td>
-									{myKingdom.autoBuild && (
+									{myKingdom.autoBuild && !isRazeMode && (
 										<td>
 											<input
 												type="number"
@@ -571,18 +660,35 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
 											onClick={() => handleMaxClick("rax")}
-											disabled={maxBuildings <= 0}
+											disabled={
+												isRazeMode
+													? buildings.rax <= 0
+													: maxBuildingsRounded <= 0
+											}
 											style={{
 												padding: "0.25rem 0.5rem",
 												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+												width: "100%",
+												cursor: (
+													isRazeMode
+														? buildings.rax <= 0
+														: maxBuildingsRounded <= 0
+												)
+													? "not-allowed"
+													: "pointer",
+												backgroundColor: isRazeMode ? "#d81b60" : "",
+												borderColor: isRazeMode ? "#d81b60" : "",
 											}}
 										>
-											{maxBuildings.toLocaleString()}
+											{(isRazeMode
+												? buildings.rax
+												: maxBuildingsRounded
+											).toLocaleString()}
 										</button>
 									</td>
 									<td>
@@ -592,10 +698,13 @@ function KingdomBuildingsPage() {
 											value={buildQueue.rax}
 											onChange={handleInputChange}
 											min="0"
+											max={isRazeMode ? buildings.rax : undefined}
 											disabled={isBuilding}
+											style={{ marginBottom: 0 }}
 										/>
 									</td>
 								</tr>
+								{/* Probe Factories */}
 								<tr>
 									<td>
 										Probe Factories{" "}
@@ -605,11 +714,12 @@ function KingdomBuildingsPage() {
 									<td>{buildings.pf}</td>
 									<td>
 										<QueueTooltip
+											isRazeMode={isRazeMode}
 											count={queuedCounts.pf}
 											queueArray={buildings.queue?.pf || []}
 										/>
 									</td>
-									{myKingdom.autoBuild && (
+									{myKingdom.autoBuild && !isRazeMode && (
 										<td>
 											<input
 												type="number"
@@ -621,18 +731,35 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
 											onClick={() => handleMaxClick("pf")}
-											disabled={maxBuildings <= 0}
+											disabled={
+												isRazeMode
+													? buildings.pf <= 0
+													: maxBuildingsRounded <= 0
+											}
 											style={{
 												padding: "0.25rem 0.5rem",
 												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+												width: "100%",
+												cursor: (
+													isRazeMode
+														? buildings.pf <= 0
+														: maxBuildingsRounded <= 0
+												)
+													? "not-allowed"
+													: "pointer",
+												backgroundColor: isRazeMode ? "#d81b60" : "",
+												borderColor: isRazeMode ? "#d81b60" : "",
 											}}
 										>
-											{maxBuildings.toLocaleString()}
+											{(isRazeMode
+												? buildings.pf
+												: maxBuildingsRounded
+											).toLocaleString()}
 										</button>
 									</td>
 									<td>
@@ -642,10 +769,13 @@ function KingdomBuildingsPage() {
 											value={buildQueue.pf}
 											onChange={handleInputChange}
 											min="0"
+											max={isRazeMode ? buildings.pf : undefined}
 											disabled={isBuilding}
+											style={{ marginBottom: 0 }}
 										/>
 									</td>
 								</tr>
+								{/* Training Camps */}
 								<tr>
 									<td>
 										Training Camps{" "}
@@ -661,11 +791,12 @@ function KingdomBuildingsPage() {
 									<td>{buildings.tc}</td>
 									<td>
 										<QueueTooltip
+											isRazeMode={isRazeMode}
 											count={queuedCounts.tc}
 											queueArray={buildings.queue?.tc || []}
 										/>
 									</td>
-									{myKingdom.autoBuild && (
+									{myKingdom.autoBuild && !isRazeMode && (
 										<td>
 											<input
 												type="number"
@@ -677,18 +808,35 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
+									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
 											onClick={() => handleMaxClick("tc")}
-											disabled={maxBuildings <= 0}
+											disabled={
+												isRazeMode
+													? buildings.tc <= 0
+													: maxBuildingsRounded <= 0
+											}
 											style={{
 												padding: "0.25rem 0.5rem",
 												fontSize: "0.875rem",
-												cursor: maxBuildings <= 0 ? "not-allowed" : "pointer",
+												width: "100%",
+												cursor: (
+													isRazeMode
+														? buildings.tc <= 0
+														: maxBuildingsRounded <= 0
+												)
+													? "not-allowed"
+													: "pointer",
+												backgroundColor: isRazeMode ? "#d81b60" : "",
+												borderColor: isRazeMode ? "#d81b60" : "",
 											}}
 										>
-											{maxBuildings.toLocaleString()}
+											{(isRazeMode
+												? buildings.tc
+												: maxBuildingsRounded
+											).toLocaleString()}
 										</button>
 									</td>
 									<td>
@@ -698,10 +846,13 @@ function KingdomBuildingsPage() {
 											value={buildQueue.tc}
 											onChange={handleInputChange}
 											min="0"
+											max={isRazeMode ? buildings.tc : undefined}
 											disabled={isBuilding}
+											style={{ marginBottom: 0 }}
 										/>
 									</td>
 								</tr>
+								{/* Air Support Bays */}
 								{isBuildingUnlocked("asb") && (
 									<tr>
 										<td>
@@ -716,11 +867,12 @@ function KingdomBuildingsPage() {
 										<td>{buildings.asb}</td>
 										<td>
 											<QueueTooltip
+												isRazeMode={isRazeMode}
 												count={queuedCounts.asb}
 												queueArray={buildings.queue?.asb || []}
 											/>
 										</td>
-										{myKingdom.autoBuild && (
+										{myKingdom.autoBuild && !isRazeMode && (
 											<td>
 												<input
 													type="number"
@@ -732,19 +884,29 @@ function KingdomBuildingsPage() {
 												/>
 											</td>
 										)}
+										{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 										<td>
 											<button
 												type="button"
-												className="outline"
 												onClick={() => handleMaxClick("asb")}
-												disabled={maxBuildings <= 0}
+												disabled={
+													isRazeMode
+														? buildings.asb <= 0
+														: maxBuildingsRounded <= 0
+												}
 												style={{
 													padding: "0.25rem 0.5rem",
 													fontSize: "0.875rem",
 													width: "100%",
+													backgroundColor: isRazeMode ? "#d81b60" : "",
+													borderColor: isRazeMode ? "#d81b60" : "",
+													color: isRazeMode ? "white" : "",
 												}}
 											>
-												{maxBuildings.toLocaleString()}
+												{(isRazeMode
+													? buildings.asb
+													: maxBuildingsRounded
+												).toLocaleString()}
 											</button>
 										</td>
 										<td>
@@ -754,12 +916,14 @@ function KingdomBuildingsPage() {
 												value={buildQueue.asb}
 												onChange={handleInputChange}
 												min="0"
+												max={isRazeMode ? buildings.asb : undefined}
 												disabled={isBuilding}
 												style={{ marginBottom: 0 }}
 											/>
 										</td>
 									</tr>
 								)}
+								{/* Aegis Control Hubs */}
 								{isBuildingUnlocked("ach") && (
 									<tr>
 										<td>
@@ -774,11 +938,12 @@ function KingdomBuildingsPage() {
 										<td>{buildings.ach}</td>
 										<td>
 											<QueueTooltip
+												isRazeMode={isRazeMode}
 												count={queuedCounts.ach}
 												queueArray={buildings.queue?.ach || []}
 											/>
 										</td>
-										{myKingdom.autoBuild && (
+										{myKingdom.autoBuild && !isRazeMode && (
 											<td>
 												<input
 													type="number"
@@ -790,19 +955,29 @@ function KingdomBuildingsPage() {
 												/>
 											</td>
 										)}
+										{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 										<td>
 											<button
 												type="button"
-												className="outline"
 												onClick={() => handleMaxClick("ach")}
-												disabled={maxBuildings <= 0}
+												disabled={
+													isRazeMode
+														? buildings.ach <= 0
+														: maxBuildingsRounded <= 0
+												}
 												style={{
 													padding: "0.25rem 0.5rem",
 													fontSize: "0.875rem",
 													width: "100%",
+													backgroundColor: isRazeMode ? "#d81b60" : "",
+													borderColor: isRazeMode ? "#d81b60" : "",
+													color: isRazeMode ? "white" : "",
 												}}
 											>
-												{maxBuildings.toLocaleString()}
+												{(isRazeMode
+													? buildings.ach
+													: maxBuildingsRounded
+												).toLocaleString()}
 											</button>
 										</td>
 										<td>
@@ -812,18 +987,21 @@ function KingdomBuildingsPage() {
 												value={buildQueue.ach}
 												onChange={handleInputChange}
 												min="0"
+												max={isRazeMode ? buildings.ach : undefined}
 												disabled={isBuilding}
 												style={{ marginBottom: 0 }}
 											/>
 										</td>
 									</tr>
 								)}
+								{/* Rubble */}
 								<tr>
 									<td>Rubble</td>
 									<td>{actualPercent(buildings.rubble)}</td>
 									<td>{buildings.rubble}</td>
 									<td>-</td>
-									{myKingdom.autoBuild && <td>-</td>}
+									{myKingdom.autoBuild && !isRazeMode && <td>-</td>}
+									{!isRazeMode && <td>-</td>}
 									<td>-</td>
 									<td>-</td>
 								</tr>
@@ -847,9 +1025,16 @@ function KingdomBuildingsPage() {
 									{myKingdom.money.toLocaleString()}
 								</p>
 								<p>
-									<strong>Total Cost:</strong> {totalCost.toLocaleString()}{" "}
+									<strong>Total {isRazeMode ? "Refund" : "Cost"}:</strong>{" "}
+									{isRazeMode
+										? refundAmount.toLocaleString()
+										: totalCost.toLocaleString()}{" "}
 									<small className="text-muted">
-										({buildingCost.toLocaleString()} per building)
+										(
+										{Math.floor(
+											buildingCost / (isRazeMode ? 2 : 1),
+										).toLocaleString()}{" "}
+										per building)
 									</small>
 								</p>
 							</div>
@@ -858,12 +1043,24 @@ function KingdomBuildingsPage() {
 									type="submit"
 									disabled={
 										isBuilding ||
-										requestSum > freeLand ||
-										requestSum <= 0 ||
-										myKingdom.money < totalCost
+										(isRazeMode
+											? requestSum <= 0
+											: requestSum > freeLand ||
+												requestSum <= 0 ||
+												myKingdom.money < totalCost)
 									}
+									style={{
+										backgroundColor: isRazeMode ? "#d81b60" : "",
+										borderColor: isRazeMode ? "#d81b60" : "",
+									}}
 								>
-									{isBuilding ? "Building..." : "Build"}
+									{isBuilding
+										? isRazeMode
+											? "Razing..."
+											: "Building..."
+										: isRazeMode
+											? "Raze Buildings"
+											: "Build buildings"}
 								</button>
 							</div>
 						</div>
@@ -957,6 +1154,33 @@ function KingdomBuildingsPage() {
 						</button>
 					</div>
 				)}
+			</article>
+
+			<article>
+				<footer
+					style={{
+						marginTop: "4rem",
+						display: "flex",
+						justifyContent: "flex-end",
+					}}
+				>
+					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+						<label htmlFor="raze-mode" style={{ fontSize: "0.9rem" }}>
+							<input
+								type="checkbox"
+								id="raze-mode"
+								role="switch"
+								aria-checked={isRazeMode}
+								checked={isRazeMode}
+								onChange={(e) => {
+									setIsRazeMode(e.target.checked);
+									setBuildQueue(INITIAL_BUILD_QUEUE);
+								}}
+							/>
+							Raze Buildings
+						</label>
+					</div>
+				</footer>
 			</article>
 		</main>
 	);
