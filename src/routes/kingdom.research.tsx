@@ -319,9 +319,8 @@ function KingdomResearchPage() {
 									return sum + weight;
 								}, 0);
 								const scientists = myKingdom.military.sci;
-								const landCoverage =
-									sumWeights > 0 ? Math.sqrt(scientists / sumWeights) : 0;
-								const showSpare = landCoverage < myKingdom.land * 0.02;
+								const pointsFor1PercLand = (myKingdom.land * 1.01) ** 2 * sumWeights - myKingdom.land ** 2 * sumWeights
+								const landCoverage = (scientists / pointsFor1PercLand) * myKingdom.land * 0.01;
 
 								return (
 									<>
@@ -335,15 +334,13 @@ function KingdomResearchPage() {
 											}}
 										>
 											{sumWeights > 0 ? (
-												showSpare ? (
-													<div>
-														Covers up to{" "}
-														<strong>
-															{Math.floor(landCoverage).toLocaleString()}
-														</strong>{" "}
-														land / tick
-													</div>
-												) : null
+												<div>
+													Covers up to{" "}
+													<strong>
+														{Math.floor(landCoverage).toLocaleString()}
+													</strong>{" "}
+													land / tick
+												</div>
 											) : (
 												"No auto-priority topics selected"
 											)}

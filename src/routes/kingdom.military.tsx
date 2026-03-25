@@ -235,7 +235,7 @@ function KingdomMilitaryPage() {
 				}
 
 				await trainMilitary({
-					sol: -soldiersUsed,
+					sol: 0,
 					sci: parseInt(trainQueue.sci, 10) || 0,
 					tr: parseInt(trainQueue.tr, 10) || 0,
 					dr: parseInt(trainQueue.dr, 10) || 0,
