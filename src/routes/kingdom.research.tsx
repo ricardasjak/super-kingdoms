@@ -45,7 +45,7 @@ function KingdomResearchPage() {
 	const [isAssigning, setIsAssigning] = useState(false);
 	const [hireAmount, setHireAmount] = useState("");
 	const [isHiring, setIsHiring] = useState(false);
-	const [showLockedTech, setShowLockedTech] = useState(false);
+	const [showAllTech, setShowAllTech] = useState(false);
 
 	if (myKingdom === undefined) {
 		return (
@@ -570,6 +570,25 @@ function KingdomResearchPage() {
 							</tbody>
 						</table>
 					</figure>
+					<div
+						style={{
+							textAlign: "right",
+							marginBottom: "1.5rem",
+							marginTop: "-0.5rem",
+						}}
+					>
+						<button
+							type="submit"
+							disabled={
+								isAssigning ||
+								requestSum > myKingdom.researchPts ||
+								requestSum <= 0
+							}
+							style={{ width: "auto" }}
+						>
+							{isAssigning ? "Assigning..." : "Assign Points"}
+						</button>
+					</div>
 
 					<hgroup
 						style={{
@@ -586,240 +605,301 @@ function KingdomResearchPage() {
 							style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
 						>
 							<label
-								htmlFor="showLockedTech"
+								htmlFor="showAllTech"
 								style={{
 									marginBottom: 0,
 									fontSize: "0.85rem",
 									color: "var(--pico-muted-color)",
 								}}
 							>
-								Show locked tech
+								Show all tech
 							</label>
 							<input
 								type="checkbox"
-								id="showLockedTech"
-								name="showLockedTech"
+								id="showAllTech"
+								name="showAllTech"
 								role="switch"
-								aria-checked={showLockedTech}
-								checked={showLockedTech}
-								onChange={(e) => setShowLockedTech(e.target.checked)}
+								aria-checked={showAllTech}
+								checked={showAllTech}
+								onChange={(e) => setShowAllTech(e.target.checked)}
 								style={{ margin: 0 }}
 							/>
 						</div>
 					</hgroup>
-					<figure>
-						<table className="striped">
-							<thead>
-								<tr>
-									<th scope="col">Technology</th>
-									<th scope="col">Progress</th>
-									<th scope="col">Requires</th>
-									<th scope="col">Auto / Priority</th>
-									<th scope="col">Max</th>
-									<th scope="col">Assign</th>
-								</tr>
-							</thead>
-							<tbody>
-								{techTopics
-									.filter(({ key }) => {
-										if (showLockedTech) return true;
-										const techInfo = techTree[key as keyof typeof techTree];
-										if (!techInfo) return true;
-										const prerequisite = techInfo?.requires;
-										if (!prerequisite) return true;
-										return (
-											((myKingdom.research as Record<string, ResearchDisc>)[
-												prerequisite
-											]?.perc ?? 0) >= 100
-										);
-									})
-									.map(({ key, label, data }) => {
-										const techInfo = techTree[key as keyof typeof techTree];
-										const prerequisite = techInfo?.requires;
-										const prerequisiteMet = prerequisite
-											? ((myKingdom.research as Record<string, ResearchDisc>)[
-													prerequisite
-												]?.perc ?? 0) >= 100
-											: true;
 
-										return (
-											<tr
-												key={key}
-												style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
-											>
-												<td>
-													<div
-														style={{
-															display: "flex",
-															alignItems: "center",
-															gap: "0.5rem",
-														}}
-													>
-														{label}
-														{(() => {
-															const unitStats =
-																GAME_PARAMS.military.units[
-																	key as keyof typeof GAME_PARAMS.military.units
-																];
-															if (unitStats) {
-																const tcDiscount =
-																	GAME_PARAMS.military.calculateTcDiscount(
-																		myKingdom.buildings.tc || 0,
-																		myKingdom.land,
-																	);
-																const discountedCost = Math.floor(
-																	(unitStats.cost * (100 - tcDiscount)) / 100,
-																);
-																const solCost = (
-																	unitStats as typeof GAME_PARAMS.military.units.tr
-																).sol;
-																const tooltipContent = `Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Cost: $${discountedCost.toLocaleString()}${
-																	solCost > 0 ? ` | Soldiers: ${solCost}` : ""
-																}`;
-																return (
-																	<Tooltip
-																		content={tooltipContent}
-																		position="right"
-																		showIcon
-																	/>
-																);
-															}
+					{(() => {
+						const allTechDone = techTopics.every(
+							(t) => (t.data?.perc ?? 0) >= 100,
+						);
 
-															const techInfo =
-																GAME_PARAMS.militaryTechTree[
-																	key as keyof typeof GAME_PARAMS.militaryTechTree
-																];
-															if (techInfo?.bonus) {
-																let content = `Unlocks ${techInfo.bonus}% better power plants`;
-																if (key === "core")
-																	content += " and Warp Drive";
-																return (
-																	<Tooltip
-																		content={content}
-																		position="right"
-																		showIcon
-																	/>
-																);
-															}
+						if (allTechDone && !showAllTech) {
+							return (
+								<article
+									style={{
+										textAlign: "center",
+										padding: "2rem",
+										backgroundColor: "rgba(0, 255, 100, 0.05)",
+										border: "1px dashed var(--pico-ins-color)",
+									}}
+								>
+									<h5
+										style={{ color: "var(--pico-ins-color)", marginBottom: 0 }}
+									>
+										🌟 All Technical Research Completed! 🌟
+									</h5>
+									<p style={{ marginBottom: 0, opacity: 0.8 }}>
+										Your scientists have unlocked every possible technological
+										breakthrough. Focus your points on scaling standard
+										research.
+									</p>
+								</article>
+							);
+						}
 
-															return null;
-														})()}
-													</div>
-													{!prerequisiteMet && (
-														<div style={{ fontSize: "0.75rem", color: "red" }}>
-															Locked: Needs{" "}
-															{techTopics.find((t) => t.key === prerequisite)
-																?.label || prerequisite}
-														</div>
-													)}
-												</td>
-												<td>
-													<progress
-														value={data?.perc ?? 0}
-														max="100"
-														style={{ marginBottom: 0 }}
-													></progress>
-													<small>{data?.perc ?? 0}%</small>
-												</td>
-												<td>
-													<small>
-														{(data?.pts ?? 0).toLocaleString()} /{" "}
-														{(techInfo?.requirePoints ?? 0).toLocaleString()}
-													</small>
-												</td>
-												<td align="center">
-													<div
-														style={{
-															display: "flex",
-															alignItems: "center",
-															justifyContent: "center",
-															gap: "0.5rem",
-														}}
-													>
-														<input
-															type="checkbox"
-															checked={(
-																myKingdom.researchAutoAssign || []
-															).includes(key)}
-															onChange={() => handleAutoToggle(key)}
-															style={{ margin: 0 }}
-															disabled={!prerequisiteMet}
-														/>
-														{(() => {
-															const index = (
-																myKingdom.researchAutoAssign || []
-															).indexOf(key);
-															return index !== -1 ? (
-																<span style={{ fontWeight: "bold" }}>
-																	#{index + 1}
-																</span>
-															) : null;
-														})()}
-													</div>
-												</td>
-												<td>
-													<button
-														type="button"
-														className="outline"
-														onClick={() => handleMaxClick(key)}
-														disabled={
-															isAssigning ||
-															myKingdom.researchPts <= 0 ||
-															!prerequisiteMet ||
-															(data?.perc ?? 0) >= 100
-														}
-														style={{
-															padding: "0.25rem 0.5rem",
-															fontSize: "0.875rem",
-															width: "100%",
-														}}
-													>
-														{(data?.perc ?? 0) >= 100 ? "Done" : "Max"}
-													</button>
-												</td>
-												<td>
-													<input
-														type="number"
-														name={key}
-														value={assignQueue[key as keyof typeof assignQueue]}
-														onChange={handleInputChange}
-														min="0"
-														disabled={
-															isAssigning ||
-															!prerequisiteMet ||
-															(data?.perc ?? 0) >= 100
-														}
-														style={{ minWidth: "100px", marginBottom: 0 }}
-														placeholder={
-															!prerequisiteMet
-																? "Locked"
-																: (data?.perc ?? 0) >= 100
-																	? "Done"
-																	: "0"
-														}
-													/>
-												</td>
+						return (
+							<>
+								<figure>
+									<table className="striped">
+										<thead>
+											<tr>
+												<th scope="col">Technology</th>
+												<th scope="col">Progress</th>
+												<th scope="col">Requires</th>
+												<th scope="col">Auto / Priority</th>
+												<th scope="col">Max</th>
+												<th scope="col">Assign</th>
 											</tr>
-										);
-									})}
-							</tbody>
-						</table>
-					</figure>
+										</thead>
+										<tbody>
+											{techTopics
+												.filter(({ key, data }) => {
+													if (showAllTech) return true;
 
-					<footer>
-						<div style={{ textAlign: "right" }}>
-							<button
-								type="submit"
-								disabled={
-									isAssigning ||
-									requestSum > myKingdom.researchPts ||
-									requestSum <= 0
-								}
-							>
-								{isAssigning ? "Assigning..." : "Assign Points"}
-							</button>
-						</div>
-					</footer>
+													// Hide completed research
+													if ((data?.perc ?? 0) >= 100) return false;
+
+													// Hide locked research
+													const techInfo =
+														techTree[key as keyof typeof techTree];
+													if (!techInfo) return true;
+
+													const prerequisite = techInfo?.requires;
+													if (!prerequisite) return true;
+
+													return (
+														((
+															myKingdom.research as Record<string, ResearchDisc>
+														)[prerequisite]?.perc ?? 0) >= 100
+													);
+												})
+												.map(({ key, label, data }) => {
+													const techInfo =
+														techTree[key as keyof typeof techTree];
+													const prerequisite = techInfo?.requires;
+													const prerequisiteMet = prerequisite
+														? ((
+																myKingdom.research as Record<
+																	string,
+																	ResearchDisc
+																>
+															)[prerequisite]?.perc ?? 0) >= 100
+														: true;
+
+													return (
+														<tr
+															key={key}
+															style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
+														>
+															<td>
+																<div
+																	style={{
+																		display: "flex",
+																		alignItems: "center",
+																		gap: "0.5rem",
+																	}}
+																>
+																	{label}
+																	{(() => {
+																		const unitStats =
+																			GAME_PARAMS.military.units[
+																				key as keyof typeof GAME_PARAMS.military.units
+																			];
+																		if (unitStats) {
+																			const tcDiscount =
+																				GAME_PARAMS.military.calculateTcDiscount(
+																					myKingdom.buildings.tc || 0,
+																					myKingdom.land,
+																				);
+																			const discountedCost = Math.floor(
+																				(unitStats.cost * (100 - tcDiscount)) /
+																					100,
+																			);
+																			const solCost = (
+																				unitStats as typeof GAME_PARAMS.military.units.tr
+																			).sol;
+																			const tooltipContent = `Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Cost: $${discountedCost.toLocaleString()}${
+																				solCost > 0
+																					? ` | Soldiers: ${solCost}`
+																					: ""
+																			}`;
+																			return (
+																				<Tooltip
+																					content={tooltipContent}
+																					position="right"
+																					showIcon
+																				/>
+																			);
+																		}
+
+																		const techInfo =
+																			GAME_PARAMS.militaryTechTree[
+																				key as keyof typeof GAME_PARAMS.militaryTechTree
+																			];
+																		if (techInfo?.bonus) {
+																			let content = `Unlocks ${techInfo.bonus}% better power plants`;
+																			if (key === "core")
+																				content += " and Warp Drive";
+																			return (
+																				<Tooltip
+																					content={content}
+																					position="right"
+																					showIcon
+																				/>
+																			);
+																		}
+
+																		return null;
+																	})()}
+																</div>
+																{!prerequisiteMet && (
+																	<div
+																		style={{
+																			fontSize: "0.75rem",
+																			color: "red",
+																		}}
+																	>
+																		Locked: Needs{" "}
+																		{techTopics.find(
+																			(t) => t.key === prerequisite,
+																		)?.label || prerequisite}
+																	</div>
+																)}
+															</td>
+															<td>
+																<progress
+																	value={data?.perc ?? 0}
+																	max="100"
+																	style={{ marginBottom: 0 }}
+																></progress>
+																<small>{data?.perc ?? 0}%</small>
+															</td>
+															<td>
+																<small>
+																	{(data?.pts ?? 0).toLocaleString()} /{" "}
+																	{(
+																		techInfo?.requirePoints ?? 0
+																	).toLocaleString()}
+																</small>
+															</td>
+															<td align="center">
+																<div
+																	style={{
+																		display: "flex",
+																		alignItems: "center",
+																		justifyContent: "center",
+																		gap: "0.5rem",
+																	}}
+																>
+																	<input
+																		type="checkbox"
+																		checked={(
+																			myKingdom.researchAutoAssign || []
+																		).includes(key)}
+																		onChange={() => handleAutoToggle(key)}
+																		style={{ margin: 0 }}
+																		disabled={!prerequisiteMet}
+																	/>
+																	{(() => {
+																		const index = (
+																			myKingdom.researchAutoAssign || []
+																		).indexOf(key);
+																		return index !== -1 ? (
+																			<span style={{ fontWeight: "bold" }}>
+																				#{index + 1}
+																			</span>
+																		) : null;
+																	})()}
+																</div>
+															</td>
+															<td>
+																<button
+																	type="button"
+																	className="outline"
+																	onClick={() => handleMaxClick(key)}
+																	disabled={
+																		isAssigning ||
+																		myKingdom.researchPts <= 0 ||
+																		!prerequisiteMet ||
+																		(data?.perc ?? 0) >= 100
+																	}
+																	style={{
+																		padding: "0.25rem 0.5rem",
+																		fontSize: "0.875rem",
+																		width: "100%",
+																	}}
+																>
+																	{(data?.perc ?? 0) >= 100 ? "Done" : "Max"}
+																</button>
+															</td>
+															<td>
+																<input
+																	type="number"
+																	name={key}
+																	value={
+																		assignQueue[key as keyof typeof assignQueue]
+																	}
+																	onChange={handleInputChange}
+																	min="0"
+																	disabled={
+																		isAssigning ||
+																		!prerequisiteMet ||
+																		(data?.perc ?? 0) >= 100
+																	}
+																	style={{ minWidth: "100px", marginBottom: 0 }}
+																	placeholder={
+																		!prerequisiteMet
+																			? "Locked"
+																			: (data?.perc ?? 0) >= 100
+																				? "Done"
+																				: "0"
+																	}
+																/>
+															</td>
+														</tr>
+													);
+												})}
+										</tbody>
+									</table>
+								</figure>
+
+								<footer>
+									<div style={{ textAlign: "right" }}>
+										<button
+											type="submit"
+											disabled={
+												isAssigning ||
+												requestSum > myKingdom.researchPts ||
+												requestSum <= 0
+											}
+											style={{ width: "auto" }}
+										>
+											{isAssigning ? "Assigning..." : "Assign Points"}
+										</button>
+									</div>
+								</footer>
+							</>
+						);
+					})()}
 				</form>
 			</article>
 		</main>
