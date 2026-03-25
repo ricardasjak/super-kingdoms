@@ -24,6 +24,7 @@ const UNIT_KEYS = [
 	"t",
 	"hgl",
 	"ht",
+	"sci",
 ] as const;
 
 const UNIT_LABELS: Record<string, string> = {
@@ -39,6 +40,7 @@ const UNIT_LABELS: Record<string, string> = {
 	t: "Tanks",
 	hgl: "High Guard Lancers",
 	ht: "Hover Tanks",
+	sci: "Scientists",
 };
 
 const INITIAL_TRAIN_QUEUE: Record<string, string> = {
@@ -54,11 +56,12 @@ const INITIAL_TRAIN_QUEUE: Record<string, string> = {
 	t: "",
 	hgl: "",
 	ht: "",
+	sci: "",
 };
 
 function getUnitCost(key: keyof typeof UNITS, tcCount: number, land: number) {
 	const baseCost = UNITS[key].cost;
-	if (key === "sol") return baseCost;
+	if (key === "sol" || key === "sci") return baseCost;
 	const discount = GAME_PARAMS.military.calculateTcDiscount(tcCount, land);
 	return Math.floor((baseCost * (100 - discount)) / 100);
 }
@@ -204,7 +207,7 @@ function KingdomMilitaryPage() {
 		try {
 			await trainMilitary({
 				sol: -soldiersUsed,
-				sci: 0,
+				sci: parseInt(trainQueue.sci, 10) || 0,
 				tr: parseInt(trainQueue.tr, 10) || 0,
 				dr: parseInt(trainQueue.dr, 10) || 0,
 				ft: parseInt(trainQueue.ft, 10) || 0,

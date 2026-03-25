@@ -500,7 +500,7 @@ export const trainMilitary = mutation({
 			{
 				key: "sci",
 				value: args.sci,
-				cost: getDiscountedCost(units.sci.cost),
+				cost: units.sci.cost,
 				sol: units.sci.sol,
 			},
 		];
