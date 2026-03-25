@@ -678,10 +678,8 @@ function KingdomResearchPage() {
 																	<Tooltip
 																		content={tooltipContent}
 																		position="right"
-																		isButton
-																	>
-																		ⓘ
-																	</Tooltip>
+																		showIcon
+																	/>
 																);
 															}
 
@@ -697,10 +695,8 @@ function KingdomResearchPage() {
 																	<Tooltip
 																		content={content}
 																		position="right"
-																		isButton
-																	>
-																		ⓘ
-																	</Tooltip>
+																		showIcon
+																	/>
 																);
 															}
 

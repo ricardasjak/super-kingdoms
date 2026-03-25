@@ -59,6 +59,13 @@ const INITIAL_TRAIN_QUEUE: Record<string, string> = {
 	sci: "",
 };
 
+const getUnitTooltip = (key: string) => {
+	const unit = UNITS[key as keyof typeof UNITS];
+	const nwValue = GAME_PARAMS.nw.units[key as keyof typeof GAME_PARAMS.nw.units];
+	if (!unit) return "";
+	return `⚔️ Offense: ${unit.off} | 🛡️ Defense: ${unit.def} | ⚡ Power usage: ${unit.power} | 💎 NW: ${nwValue}`;
+};
+
 function getUnitCost(key: keyof typeof UNITS, tcCount: number, land: number) {
 	const baseCost = UNITS[key].cost;
 	if (key === "sol" || key === "sci") return baseCost;
@@ -300,7 +307,18 @@ function KingdomMilitaryPage() {
 								</thead>
 								<tbody>
 									<tr>
-										<td>Soldiers</td>
+										<td>
+											<div
+												style={{
+													display: "flex",
+													alignItems: "center",
+													gap: "0.5rem",
+												}}
+											>
+												Soldiers
+												<Tooltip showIcon content={getUnitTooltip("sol")} />
+											</div>
+										</td>
 										<td>{(military.sol as number).toLocaleString()}</td>
 										<td>{soldiersInQueue.toLocaleString()}</td>
 										<td>${getUnitCost("sol", tcCount, land)}</td>
@@ -391,7 +409,18 @@ function KingdomMilitaryPage() {
 							<tbody>
 								{isDisbandMode && (
 									<tr>
-										<td>Soldiers</td>
+										<td>
+											<div
+												style={{
+													display: "flex",
+													alignItems: "center",
+													gap: "0.5rem",
+												}}
+											>
+												Soldiers
+												<Tooltip showIcon content={getUnitTooltip("sol")} />
+											</div>
+										</td>
 										<td>{(military.sol as number).toLocaleString()}</td>
 										<td>-</td>
 										<td>
@@ -509,13 +538,25 @@ function KingdomMilitaryPage() {
 									};
 									return (
 										<tr key={key}>
-											<td>{UNIT_LABELS[key]}</td>
+											<td>
+												<div
+													style={{
+														display: "flex",
+														alignItems: "center",
+														gap: "0.5rem",
+													}}
+												>
+													{UNIT_LABELS[key]}
+													<Tooltip showIcon content={getUnitTooltip(key)} />
+												</div>
+											</td>
 											<td>{unitCount.toLocaleString()}</td>
 											<td>
 												{isDisbandMode ? (
 													"-"
 												) : queueCount > 0 ? (
 													<Tooltip
+														isButton
 														content={`Training queue: ${military.queue[
 															key as keyof typeof military.queue
 														]

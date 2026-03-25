@@ -2,9 +2,10 @@ import type React from "react";
 
 interface TooltipProps {
 	content: string;
-	children: React.ReactNode;
+	children?: React.ReactNode;
 	position?: "top" | "bottom" | "left" | "right";
 	isButton?: boolean;
+	showIcon?: boolean;
 }
 
 export function Tooltip({
@@ -12,6 +13,7 @@ export function Tooltip({
 	children,
 	position = "top",
 	isButton = false,
+	showIcon = false,
 }: TooltipProps) {
 	const commonProps = {
 		"data-tooltip": content,
@@ -21,10 +23,16 @@ export function Tooltip({
 			cursor: "help",
 			borderBottom: "none",
 			textDecoration: "none",
+			display: "inline-flex",
+			alignItems: "center",
+			justifyContent: "center",
 		} as React.CSSProperties,
 	};
 
-	if (isButton) {
+	const trigger = showIcon ? "ⓘ" : children;
+	const finalIsButton = isButton || showIcon;
+
+	if (finalIsButton) {
 		return (
 			<button
 				type="button"
@@ -40,19 +48,17 @@ export function Tooltip({
 					border: "none",
 				}}
 				onClick={(e) => {
-					// Prevent form submission if inside a form
-					// Prevent default behavior to keep focus for tooltip on touch
 					e.preventDefault();
 				}}
 			>
-				{children}
+				{trigger}
 			</button>
 		);
 	}
 
 	return (
 		<span {...commonProps} style={commonProps.style}>
-			{children}
+			{trigger}
 		</span>
 	);
 }
