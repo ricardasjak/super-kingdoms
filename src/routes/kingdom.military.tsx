@@ -467,18 +467,41 @@ function KingdomMilitaryPage() {
 								)}
 								{UNIT_KEYS.filter((key) => {
 									if (isDisbandMode) return true;
+
+									// Research check for basic unlocking
 									const techInfo =
 										GAME_PARAMS.militaryTechTree[
 											key as keyof typeof GAME_PARAMS.militaryTechTree
 										];
-									if (!techInfo) return true;
+
 									const researchData = (
 										myKingdom.research as Record<
 											string,
 											{ pts: number; perc: number }
 										>
 									)[key];
-									return (researchData?.perc ?? 0) >= 100;
+
+									const isUnlocked =
+										!techInfo || (researchData?.perc ?? 0) >= 100;
+									if (!isUnlocked) return false;
+
+									// Obsolete unit check (hide lower tiers if higher ones researched)
+									const isResearched = (k: string) =>
+										((
+											myKingdom.research as Record<
+												string,
+												{ pts: number; perc: number }
+											>
+										)[k]?.perc ?? 0) >= 100;
+
+									if (key === "tr" && (isResearched("dr") || isResearched("ft")))
+										return false;
+									if (key === "dr" && isResearched("ft")) return false;
+									if (key === "lt" && (isResearched("ld") || isResearched("lf")))
+										return false;
+									if (key === "ld" && isResearched("lf")) return false;
+
+									return true;
 								}).map((key) => {
 									const queueCount = (
 										military.queue[key as keyof typeof military.queue] || []
