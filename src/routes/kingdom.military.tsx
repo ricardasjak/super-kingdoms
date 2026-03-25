@@ -315,7 +315,7 @@ function KingdomMilitaryPage() {
 													gap: "0.5rem",
 												}}
 											>
-												Soldiers
+												🪖 Soldiers
 												<Tooltip showIcon content={getUnitTooltip("sol")} />
 											</div>
 										</td>
@@ -417,15 +417,15 @@ function KingdomMilitaryPage() {
 													gap: "0.5rem",
 												}}
 											>
-												Soldiers
+												🪖 Soldiers
 												<Tooltip showIcon content={getUnitTooltip("sol")} />
 											</div>
 										</td>
 										<td>{(military.sol as number).toLocaleString()}</td>
 										<td>-</td>
 										<td>
-											+${Math.floor(UNITS.sol.cost / 2)} <br />
-											<span style={{ fontSize: "0.8rem" }}>+ 1 pop</span>
+											+${Math.floor(UNITS.sol.cost / 2)}{" "}
+											<span style={{ fontSize: "0.8rem" }}>(+ 1 🪖)</span>
 										</td>
 										<td>
 											<button
@@ -572,23 +572,19 @@ function KingdomMilitaryPage() {
 											<td>
 												{isDisbandMode ? (
 													<>
-														+${Math.floor(UNITS[key].cost / 2)}
+														+${Math.floor(UNITS[key].cost / 2)}{" "}
 														{unitSolCost > 0 && (
-															<span
-																style={{ fontSize: "0.8rem", display: "block" }}
-															>
-																+ {unitSolCost} sol
+															<span style={{ fontSize: "0.8rem" }}>
+																(+ {unitSolCost} 🪖)
 															</span>
 														)}
 													</>
 												) : (
 													<>
-														${unitCost}
+														${unitCost}{" "}
 														{unitSolCost > 0 && (
-															<span
-																style={{ fontSize: "0.8rem", display: "block" }}
-															>
-																+ {unitSolCost} sol
+															<span style={{ fontSize: "0.8rem" }}>
+																(+ {unitSolCost} 🪖)
 															</span>
 														)}
 													</>

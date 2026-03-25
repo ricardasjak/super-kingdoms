@@ -1,0 +1,35 @@
+/* Global styles for Super Kingdoms */
+
+/* Make tables denser */
+table td, 
+table th {
+    padding: 0.15rem 0.5rem !important;
+    font-size: 0.9rem;
+}
+
+/* Adjust inputs to fit denser tables */
+table input[type="number"],
+table input[type="text"] {
+    margin-bottom: 0 !important;
+    padding: 0.15rem 0.4rem !important;
+    height: 1.8rem !important;
+    font-size: 0.9rem !important;
+}
+
+/* Make buttons in tables slightly smaller to match density */
+table button {
+    padding: 0.15rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    margin-bottom: 0 !important;
+    width: auto !important;
+}
+
+/* Reduce hgroup spacing to make header more compact */
+hgroup {
+    margin-bottom: 1rem !important;
+}
+
+/* Adjust article padding if needed */
+article {
+    padding: 1rem !important;
+}

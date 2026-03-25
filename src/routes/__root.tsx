@@ -1,5 +1,6 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import "@picocss/pico/css/pico.min.css";
+import "../styles.css";
 
 export const Route = createRootRoute({
 	component: RootLayout,

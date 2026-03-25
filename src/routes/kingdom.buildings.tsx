@@ -391,7 +391,6 @@ function KingdomBuildingsPage() {
 									{myKingdom.autoBuild && !isRazeMode && (
 										<th scope="col">Target %</th>
 									)}
-									{!isRazeMode && <th scope="col">Cost</th>}
 									<th scope="col">{isRazeMode ? "All" : "Max"}</th>
 									<th scope="col" style={{ width: "160px" }}>
 										{isRazeMode ? "Raze" : "Build"}
@@ -429,7 +428,6 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
-									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
@@ -503,7 +501,6 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
-									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
@@ -577,7 +574,6 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
-									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
@@ -658,7 +654,6 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
-									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
@@ -729,7 +724,6 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
-									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
@@ -805,7 +799,6 @@ function KingdomBuildingsPage() {
 											/>
 										</td>
 									)}
-									{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
 									<td>
 										<button
 											type="button"
@@ -880,8 +873,7 @@ function KingdomBuildingsPage() {
 												/>
 											</td>
 										)}
-										{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
-										<td>
+											<td>
 											<button
 												type="button"
 												onClick={() => handleMaxClick("asb")}
@@ -950,8 +942,7 @@ function KingdomBuildingsPage() {
 												/>
 											</td>
 										)}
-										{!isRazeMode && <td>${buildingCost.toLocaleString()}</td>}
-										<td>
+											<td>
 											<button
 												type="button"
 												onClick={() => handleMaxClick("ach")}
@@ -996,7 +987,6 @@ function KingdomBuildingsPage() {
 									<td>{buildings.rubble}</td>
 									<td>-</td>
 									{myKingdom.autoBuild && !isRazeMode && <td>-</td>}
-									{!isRazeMode && <td>-</td>}
 									<td>-</td>
 									<td>-</td>
 								</tr>
@@ -1016,8 +1006,8 @@ function KingdomBuildingsPage() {
 							</div>
 							<div>
 								<p>
-									<strong>Available Money:</strong>{" "}
-									{myKingdom.money.toLocaleString()}
+									<strong>Available to build:</strong>{" "}
+									{maxBuildings.toLocaleString()}
 								</p>
 								<p>
 									<strong>Total {isRazeMode ? "Refund" : "Cost"}:</strong>{" "}
