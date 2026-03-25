@@ -2,9 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
-import { calculateFreeLand } from "../utils/buildingUtils";
+import {
+	calculateFreeLand,
+	calculateIncomeMultiplier,
+} from "../utils/buildingUtils";
 
 export const Route = createFileRoute("/kingdom/buildings")({
 	component: KingdomBuildingsPage,
@@ -23,12 +27,7 @@ function QueueTooltip({
 	const queueString = queueArray.join(" ");
 
 	return (
-		<span
-			data-tooltip={`Construction queue: ${queueString}`}
-			style={{ cursor: "help" }}
-		>
-			+{count}
-		</span>
+		<Tooltip content={`Construction queue: ${queueString}`}>+{count}</Tooltip>
 	);
 }
 
@@ -234,6 +233,54 @@ function KingdomBuildingsPage() {
 		Math.floor(maxBuildings / GAME_PARAMS.buildings.duration) *
 		GAME_PARAMS.buildings.duration;
 
+	// Tooltip calculations
+	const popBonus = (myKingdom.research.pop?.perc ?? 0) / 100;
+	const resCapacityBoosted = Math.floor(
+		GAME_PARAMS.buildings.resCapacity * (1 + popBonus),
+	);
+
+	const incomeMultiplier = calculateIncomeMultiplier(
+		myKingdom.research.money?.perc ?? 0,
+	);
+	const resIncome = Math.round(
+		resCapacityBoosted * GAME_PARAMS.income.population * incomeMultiplier,
+	);
+	const smIncome = Math.round(GAME_PARAMS.income.sm * incomeMultiplier);
+
+	const raxUsage =
+		myKingdom.military.sol +
+		myKingdom.military.tr +
+		myKingdom.military.dr +
+		myKingdom.military.ft +
+		myKingdom.military.lt +
+		myKingdom.military.ld +
+		myKingdom.military.lf +
+		myKingdom.military.sci +
+		myKingdom.military.t * 2 +
+		myKingdom.military.ht * 2;
+	const raxCapacity = buildings.rax * GAME_PARAMS.buildings.raxCapacity;
+	const raxUtilization =
+		raxCapacity > 0 ? Math.floor((raxUsage / raxCapacity) * 100) : 0;
+
+	const powerBonus = (myKingdom.research.power?.perc ?? 0) / 100;
+	const fusionBonus =
+		(myKingdom.research.fusion?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.fusion?.bonus ?? 0) / 100
+			: 0;
+	const coreBonus =
+		(myKingdom.research.core?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.core?.bonus ?? 0) / 100
+			: 0;
+	const powerProductionPerPlant = Math.floor(
+		GAME_PARAMS.buildings.plantProduction *
+			(1 + powerBonus + fusionBonus + coreBonus),
+	);
+
+	const tcDiscount = GAME_PARAMS.military.calculateTcDiscount(
+		buildings.tc,
+		myKingdom.land,
+	);
+
 	const handleMaxClick = (key: string) => {
 		if (maxBuildingsRounded <= 0) return;
 		setBuildQueue({
@@ -327,7 +374,14 @@ function KingdomBuildingsPage() {
 							</thead>
 							<tbody>
 								<tr>
-									<td>Residences</td>
+									<td>
+										Residences{" "}
+										<Tooltip
+											content={`Pop capacity: ${resCapacityBoosted} | Income: $${resIncome.toLocaleString()} | Population is used to train units`}
+										>
+											ⓘ
+										</Tooltip>
+									</td>
 									<td>{actualPercent(buildings.res)}</td>
 									<td>{buildings.res}</td>
 									<td>
@@ -374,7 +428,14 @@ function KingdomBuildingsPage() {
 									</td>
 								</tr>
 								<tr>
-									<td>Star Mines</td>
+									<td>
+										Star Mines{" "}
+										<Tooltip
+											content={`Income per mine: $${smIncome.toLocaleString()}`}
+										>
+											ⓘ
+										</Tooltip>
+									</td>
 									<td>{actualPercent(buildings.sm)}</td>
 									<td>{buildings.sm}</td>
 									<td>
@@ -421,7 +482,14 @@ function KingdomBuildingsPage() {
 									</td>
 								</tr>
 								<tr>
-									<td>Power Plants</td>
+									<td>
+										Power Plants{" "}
+										<Tooltip
+											content={`Production: ${powerProductionPerPlant.toLocaleString()} power | Total Net: ${myKingdom.powerIncome.toLocaleString()} power/tick`}
+										>
+											ⓘ
+										</Tooltip>
+									</td>
 									<td>{actualPercent(buildings.plants)}</td>
 									<td>{buildings.plants}</td>
 									<td>
@@ -468,7 +536,21 @@ function KingdomBuildingsPage() {
 									</td>
 								</tr>
 								<tr>
-									<td>Barracks</td>
+									<td>
+										Barracks{" "}
+										<Tooltip
+											content={`Mil space: ${
+												GAME_PARAMS.buildings.raxCapacity
+											} | ${
+												raxCapacity - raxUsage >= 0 ? "Surplus" : "Deficit"
+											}: ${Math.abs(
+												(raxCapacity - raxUsage) /
+													GAME_PARAMS.buildings.raxCapacity,
+											).toFixed(1)} | Capacity: ${raxUtilization}%`}
+										>
+											ⓘ
+										</Tooltip>
+									</td>
 									<td>{actualPercent(buildings.rax)}</td>
 									<td>{buildings.rax}</td>
 									<td>
@@ -515,7 +597,10 @@ function KingdomBuildingsPage() {
 									</td>
 								</tr>
 								<tr>
-									<td>Probe Factories</td>
+									<td>
+										Probe Factories{" "}
+										<Tooltip content="Probes production: 1 probe">ⓘ</Tooltip>
+									</td>
 									<td>{actualPercent(buildings.pf)}</td>
 									<td>{buildings.pf}</td>
 									<td>
@@ -562,7 +647,16 @@ function KingdomBuildingsPage() {
 									</td>
 								</tr>
 								<tr>
-									<td>Training Camps</td>
+									<td>
+										Training Camps{" "}
+										<Tooltip
+											content={`Military discount: ${tcDiscount}%${
+												tcDiscount >= 30 ? " (Maximum reached)" : ""
+											}`}
+										>
+											ⓘ
+										</Tooltip>
+									</td>
 									<td>{actualPercent(buildings.tc)}</td>
 									<td>{buildings.tc}</td>
 									<td>
@@ -610,7 +704,14 @@ function KingdomBuildingsPage() {
 								</tr>
 								{isBuildingUnlocked("asb") && (
 									<tr>
-										<td>Air Support Bays</td>
+										<td>
+											Air Support Bays{" "}
+											<Tooltip
+												content={`Capacity per bay: ${40} TFs | Total capacity: ${buildings.asb * 40} | Used: ${myKingdom.military.tf}`}
+											>
+												ⓘ
+											</Tooltip>
+										</td>
 										<td>{actualPercent(buildings.asb)}</td>
 										<td>{buildings.asb}</td>
 										<td>
@@ -661,7 +762,14 @@ function KingdomBuildingsPage() {
 								)}
 								{isBuildingUnlocked("ach") && (
 									<tr>
-										<td>Aegis Control Hubs</td>
+										<td>
+											Aegis Control Hubs{" "}
+											<Tooltip
+												content={`Capacity per hub: ${60} F-74s | Total capacity: ${buildings.ach * 60} | Used: ${myKingdom.military.f74}`}
+											>
+												ⓘ
+											</Tooltip>
+										</td>
 										<td>{actualPercent(buildings.ach)}</td>
 										<td>{buildings.ach}</td>
 										<td>

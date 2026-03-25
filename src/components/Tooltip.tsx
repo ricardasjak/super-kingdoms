@@ -15,9 +15,13 @@ export function Tooltip({
 }: TooltipProps) {
 	const commonProps = {
 		"data-tooltip": content,
-		...(position !== "top" ? { "data-placement": position } : {}),
+		"data-tooltip-position": position,
 		tabIndex: 0,
-		style: { cursor: "help" } as React.CSSProperties,
+		style: {
+			cursor: "help",
+			borderBottom: "none",
+			textDecoration: "none",
+		} as React.CSSProperties,
 	};
 
 	if (isButton) {

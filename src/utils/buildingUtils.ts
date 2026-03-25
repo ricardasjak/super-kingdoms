@@ -230,3 +230,10 @@ export function calculateNewQueue(
 
 	return newQueue;
 }
+
+/**
+ * Calculates the multiplier for money income based on research percentage
+ */
+export function calculateIncomeMultiplier(moneyResearchPerc: number): number {
+	return 1 + moneyResearchPerc / 100;
+}

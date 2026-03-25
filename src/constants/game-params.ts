@@ -138,7 +138,7 @@ export const GAME_PARAMS = {
 		raxCapacity: 75,
 		asbCapacity: 40,
 		achCapacity: 60,
-		plantProduction: 140,
+		plantProduction: 100,
 		plantStorage: 1000,
 	},
 	military: {
