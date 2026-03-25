@@ -319,8 +319,11 @@ function KingdomResearchPage() {
 									return sum + weight;
 								}, 0);
 								const scientists = myKingdom.military.sci;
-								const pointsFor1PercLand = (myKingdom.land * 1.01) ** 2 * sumWeights - myKingdom.land ** 2 * sumWeights
-								const landCoverage = (scientists / pointsFor1PercLand) * myKingdom.land * 0.01;
+								const pointsFor1PercLand =
+									(myKingdom.land * 1.01) ** 2 * sumWeights -
+									myKingdom.land ** 2 * sumWeights;
+								const landCoverage =
+									(scientists / pointsFor1PercLand) * myKingdom.land * 0.01;
 
 								return (
 									<>

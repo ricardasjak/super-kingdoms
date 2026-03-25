@@ -372,6 +372,60 @@ export function processKingdomTick(
 		militaryChanged = true;
 	}
 
+	// Instant conversion/promotion of defensive units if researched
+	const isLdResearched = (newKingdom.research.ld?.perc ?? 0) >= 100;
+	const isLfResearched = (newKingdom.research.lf?.perc ?? 0) >= 100;
+
+	if (isLdResearched && newMilitary.lt > 0) {
+		const ltPoints = newMilitary.lt * 4;
+		const ldFromLt = Math.floor(ltPoints / 5);
+		const remPointsFromLt = ltPoints % 5;
+		newMilitary.lt = 0;
+		newMilitary.ld += ldFromLt;
+		newMilitary.sol += remPointsFromLt;
+		militaryChanged = true;
+	}
+
+	if (isLfResearched && newMilitary.ld > 0) {
+		const ldPoints = newMilitary.ld * 5;
+		const lfFromLd = Math.floor(ldPoints / 6);
+		const remPointsFromLd = ldPoints % 6;
+		const finalLd = Math.floor(remPointsFromLd / 5);
+		const finalRemSol = remPointsFromLd % 5;
+
+		newMilitary.ld = finalLd;
+		newMilitary.lf += lfFromLd;
+		newMilitary.sol += finalRemSol;
+		militaryChanged = true;
+	}
+
+	// Instant conversion/promotion of offensive units if researched
+	const isDrResearched = (newKingdom.research.dr?.perc ?? 0) >= 100;
+	const isFtResearched = (newKingdom.research.ft?.perc ?? 0) >= 100;
+
+	if (isDrResearched && newMilitary.tr > 0) {
+		const trPoints = newMilitary.tr * 4;
+		const drFromTr = Math.floor(trPoints / 5);
+		const remPointsFromTr = trPoints % 5;
+		newMilitary.tr = 0;
+		newMilitary.dr += drFromTr;
+		newMilitary.sol += remPointsFromTr;
+		militaryChanged = true;
+	}
+
+	if (isFtResearched && newMilitary.dr > 0) {
+		const drPoints = newMilitary.dr * 5;
+		const ftFromDr = Math.floor(drPoints / 6);
+		const remPointsFromDr = drPoints % 6;
+		const finalDr = Math.floor(remPointsFromDr / 5);
+		const finalRemSol = remPointsFromDr % 5;
+
+		newMilitary.dr = finalDr;
+		newMilitary.ft += ftFromDr;
+		newMilitary.sol += finalRemSol;
+		militaryChanged = true;
+	}
+
 	// Auto Assign Research Points
 	const autoAssign = kingdom.researchAutoAssign || [];
 	if (autoAssign.length > 0 && newKingdom.researchPts > 0) {

@@ -61,7 +61,8 @@ const INITIAL_TRAIN_QUEUE: Record<string, string> = {
 
 const getUnitTooltip = (key: string) => {
 	const unit = UNITS[key as keyof typeof UNITS];
-	const nwValue = GAME_PARAMS.nw.units[key as keyof typeof GAME_PARAMS.nw.units];
+	const nwValue =
+		GAME_PARAMS.nw.units[key as keyof typeof GAME_PARAMS.nw.units];
 	if (!unit) return "";
 	return `⚔️ Offense: ${unit.off} | 🛡️ Defense: ${unit.def} | ⚡ Power usage: ${unit.power} | 💎 NW: ${nwValue}`;
 };

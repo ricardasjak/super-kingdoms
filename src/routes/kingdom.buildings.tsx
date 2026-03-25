@@ -873,7 +873,7 @@ function KingdomBuildingsPage() {
 												/>
 											</td>
 										)}
-											<td>
+										<td>
 											<button
 												type="button"
 												onClick={() => handleMaxClick("asb")}
@@ -942,7 +942,7 @@ function KingdomBuildingsPage() {
 												/>
 											</td>
 										)}
-											<td>
+										<td>
 											<button
 												type="button"
 												onClick={() => handleMaxClick("ach")}
