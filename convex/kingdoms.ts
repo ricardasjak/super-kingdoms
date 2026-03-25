@@ -595,6 +595,83 @@ export const trainMilitary = mutation({
 
 import { calculateExplorationQueue } from "../src/utils/landUtils";
 
+export const disbandMilitary = mutation({
+	args: {
+		sol: v.number(),
+		sci: v.number(),
+		tr: v.number(),
+		dr: v.number(),
+		ft: v.number(),
+		tf: v.number(),
+		lt: v.number(),
+		ld: v.number(),
+		lf: v.number(),
+		f74: v.number(),
+		t: v.number(),
+		hgl: v.number(),
+		ht: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const kingdom = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (!kingdom) throw new Error("Kingdom not found");
+
+		const military = kingdom.military;
+		const units = GAME_PARAMS.military.units;
+		let moneyRefund = 0;
+		let soldiersRecovered = 0;
+		let populationRecovered = 0;
+
+		const newMilitary = { ...military };
+
+		for (const [key, count] of Object.entries(args)) {
+			if (count <= 0) continue;
+
+			const unitKey = key as keyof typeof units;
+			const currentCount = (military[unitKey] as number) || 0;
+
+			if (count > currentCount) {
+				throw new Error(
+					`Cannot disband ${count} ${key}. Have ${currentCount}.`,
+				);
+			}
+
+			// Deduct units
+			(newMilitary[unitKey] as number) -= count;
+
+			// Refund money (half base cost)
+			moneyRefund += Math.floor((count * units[unitKey].cost) / 2);
+
+			// Recover soldiers/population
+			if (unitKey === "sol") {
+				populationRecovered += count;
+			} else {
+				const unitSolCost = (units[unitKey] as (typeof units)["tr"]).sol || 0;
+				if (unitSolCost > 0) {
+					soldiersRecovered += count * unitSolCost;
+				}
+			}
+		}
+
+		await ctx.db.patch(kingdom._id, {
+			money: kingdom.money + moneyRefund,
+			population: kingdom.population + populationRecovered,
+			military: {
+				...newMilitary,
+				sol: newMilitary.sol + soldiersRecovered,
+			},
+		});
+
+		return { success: true };
+	},
+});
+
 export const exploreLand = mutation({
 	args: {
 		amount: v.number(),

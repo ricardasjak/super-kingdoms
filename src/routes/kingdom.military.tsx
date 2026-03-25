@@ -75,10 +75,12 @@ function KingdomMilitaryPage() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const military = myKingdom?.military;
 	const trainMilitary = useMutation(api.kingdoms.trainMilitary);
+	const disbandMilitary = useMutation(api.kingdoms.disbandMilitary);
 
 	const [trainQueue, setTrainQueue] = useState(INITIAL_TRAIN_QUEUE);
 	const [soldiersToTrain, setSoldiersToTrain] = useState("");
 	const [isTraining, setIsTraining] = useState(false);
+	const [isDisbandMode, setIsDisbandMode] = useState(false);
 	const { showMessage } = useKingdomMessage();
 
 	if (myKingdom === undefined) {
@@ -114,11 +116,11 @@ function KingdomMilitaryPage() {
 	);
 	const maxByMoney = Math.floor(myKingdom.money / soldierCost);
 	const remainingSoldierCapacity = Math.min(
-		maxByPop - soldiersInQueue,
+		maxByPop - currentSoldiers - soldiersInQueue,
 		maxByMoney,
 	);
 	const remainingSoldierCapacityRounded = roundToDuration(
-		remainingSoldierCapacity,
+		Math.max(0, remainingSoldierCapacity),
 		GAME_PARAMS.military.soldierDuration,
 	);
 
@@ -164,9 +166,10 @@ function KingdomMilitaryPage() {
 			showMessage("Soldiers successfully queued for training!", "success");
 		} catch (error) {
 			console.error(error);
-			const errorMessage =
-				error instanceof Error ? error.message : "Failed to train soldiers";
-			showMessage(errorMessage, "error");
+			showMessage(
+				error instanceof Error ? error.message : "Failed to train soldiers",
+				"error",
+			);
 		} finally {
 			setIsTraining(false);
 		}
@@ -182,22 +185,21 @@ function KingdomMilitaryPage() {
 		return sum + (parseInt(trainQueue[key], 10) || 0) * unitSolCost;
 	}, 0);
 
-	const handleTrain = async (e: React.FormEvent) => {
+	const refundAmount =
+		UNIT_KEYS.reduce((sum, key) => {
+			const count = parseInt(trainQueue[key], 10) || 0;
+			return sum + Math.floor((count * UNITS[key].cost) / 2);
+		}, 0) +
+		(parseInt(trainQueue.sol, 10) || 0) * Math.floor(UNITS.sol.cost / 2);
+
+	const handleTrainOrDisband = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (requestSum <= 0) {
-			showMessage("Please enter a valid amount of units to train.", "error");
-			return;
-		}
-
-		if (myKingdom.money < totalCost) {
-			showMessage("Not enough money!", "error");
-			return;
-		}
-
-		if (soldiersUsed > currentSoldiers) {
+		if (requestSum <= 0 && (parseInt(trainQueue.sol, 10) || 0) <= 0) {
 			showMessage(
-				`Not enough soldiers! Need ${soldiersUsed}, have ${currentSoldiers - soldiersInQueue}.`,
+				`Please enter a valid amount of units to ${
+					isDisbandMode ? "disband" : "train"
+				}.`,
 				"error",
 			);
 			return;
@@ -205,31 +207,60 @@ function KingdomMilitaryPage() {
 
 		setIsTraining(true);
 		try {
-			await trainMilitary({
-				sol: -soldiersUsed,
-				sci: parseInt(trainQueue.sci, 10) || 0,
-				tr: parseInt(trainQueue.tr, 10) || 0,
-				dr: parseInt(trainQueue.dr, 10) || 0,
-				ft: parseInt(trainQueue.ft, 10) || 0,
-				tf: parseInt(trainQueue.tf, 10) || 0,
-				lt: parseInt(trainQueue.lt, 10) || 0,
-				ld: parseInt(trainQueue.ld, 10) || 0,
-				lf: parseInt(trainQueue.lf, 10) || 0,
-				f74: parseInt(trainQueue.f74, 10) || 0,
-				t: parseInt(trainQueue.t, 10) || 0,
-				hgl: parseInt(trainQueue.hgl, 10) || 0,
-				ht: parseInt(trainQueue.ht, 10) || 0,
-			});
+			if (isDisbandMode) {
+				await disbandMilitary({
+					sol: parseInt(trainQueue.sol, 10) || 0,
+					sci: parseInt(trainQueue.sci, 10) || 0,
+					tr: parseInt(trainQueue.tr, 10) || 0,
+					dr: parseInt(trainQueue.dr, 10) || 0,
+					ft: parseInt(trainQueue.ft, 10) || 0,
+					tf: parseInt(trainQueue.tf, 10) || 0,
+					lt: parseInt(trainQueue.lt, 10) || 0,
+					ld: parseInt(trainQueue.ld, 10) || 0,
+					lf: parseInt(trainQueue.lf, 10) || 0,
+					f74: parseInt(trainQueue.f74, 10) || 0,
+					t: parseInt(trainQueue.t, 10) || 0,
+					hgl: parseInt(trainQueue.hgl, 10) || 0,
+					ht: parseInt(trainQueue.ht, 10) || 0,
+				});
+				showMessage("Units successfully disbanded!", "success");
+			} else {
+				if (myKingdom.money < totalCost) {
+					throw new Error("Not enough money!");
+				}
+				if (soldiersUsed > currentSoldiers) {
+					throw new Error(
+						`Not enough soldiers! Need ${soldiersUsed}, have ${currentSoldiers}.`,
+					);
+				}
+
+				await trainMilitary({
+					sol: -soldiersUsed,
+					sci: parseInt(trainQueue.sci, 10) || 0,
+					tr: parseInt(trainQueue.tr, 10) || 0,
+					dr: parseInt(trainQueue.dr, 10) || 0,
+					ft: parseInt(trainQueue.ft, 10) || 0,
+					tf: parseInt(trainQueue.tf, 10) || 0,
+					lt: parseInt(trainQueue.lt, 10) || 0,
+					ld: parseInt(trainQueue.ld, 10) || 0,
+					lf: parseInt(trainQueue.lf, 10) || 0,
+					f74: parseInt(trainQueue.f74, 10) || 0,
+					t: parseInt(trainQueue.t, 10) || 0,
+					hgl: parseInt(trainQueue.hgl, 10) || 0,
+					ht: parseInt(trainQueue.ht, 10) || 0,
+				});
+				showMessage(
+					"Military units successfully queued for training!",
+					"success",
+				);
+			}
 			setTrainQueue(INITIAL_TRAIN_QUEUE);
-			showMessage(
-				"Military units successfully queued for training!",
-				"success",
-			);
 		} catch (error) {
 			console.error(error);
-			const errorMessage =
-				error instanceof Error ? error.message : "Failed to train military";
-			showMessage(errorMessage, "error");
+			showMessage(
+				error instanceof Error ? error.message : "Action failed",
+				"error",
+			);
 		} finally {
 			setIsTraining(false);
 		}
@@ -245,96 +276,98 @@ function KingdomMilitaryPage() {
 					</hgroup>
 				</header>
 
-				<form onSubmit={handleTrainSoldiers}>
-					<figure>
-						<table className="striped" style={{ tableLayout: "fixed" }}>
-							<colgroup>
-								<col style={{ width: "25%" }} />
-								<col style={{ width: "15%" }} />
-								<col style={{ width: "15%" }} />
-								<col style={{ width: "15%" }} />
-								<col style={{ width: "15%" }} />
-								<col style={{ width: "15%" }} />
-							</colgroup>
-							<thead>
-								<tr>
-									<th scope="col">Unit Name</th>
-									<th scope="col">You own</th>
-									<th scope="col">In training</th>
-									<th scope="col">Cost</th>
-									<th scope="col">Max</th>
-									<th scope="col">Train</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>Soldiers</td>
-									<td>{(military.sol as number).toLocaleString()}</td>
-									<td>{soldiersInQueue.toLocaleString()}</td>
-									<td>${getUnitCost("sol", tcCount, land)}</td>
-									<td>
-										<button
-											type="button"
-											onClick={() =>
-												setSoldiersToTrain(
-													remainingSoldierCapacityRounded.toString(),
-												)
-											}
-											disabled={remainingSoldierCapacity <= 0}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												cursor:
-													remainingSoldierCapacity <= 0
-														? "not-allowed"
-														: "pointer",
-											}}
-										>
-											{remainingSoldierCapacity.toLocaleString()}
-										</button>
-									</td>
-									<td>
-										<input
-											type="number"
-											min="0"
-											max={remainingSoldierCapacity}
-											placeholder="0"
-											value={soldiersToTrain}
-											onChange={(e) => setSoldiersToTrain(e.target.value)}
-										/>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</figure>
-					<div
-						style={{
-							marginTop: "1rem",
-							display: "flex",
-							gap: "1rem",
-							alignItems: "center",
-						}}
-					>
-						<button
-							type="submit"
-							disabled={
-								isTraining ||
-								soldiersCount <= 0 ||
-								remainingSoldierCapacity <= 0
-							}
-							aria-busy={isTraining}
+				{!isDisbandMode && (
+					<form onSubmit={handleTrainSoldiers}>
+						<figure>
+							<table className="striped" style={{ tableLayout: "fixed" }}>
+								<colgroup>
+									<col style={{ width: "25%" }} />
+									<col style={{ width: "15%" }} />
+									<col style={{ width: "15%" }} />
+									<col style={{ width: "15%" }} />
+									<col style={{ width: "15%" }} />
+									<col style={{ width: "15%" }} />
+								</colgroup>
+								<thead>
+									<tr>
+										<th scope="col">Unit Name</th>
+										<th scope="col">You own</th>
+										<th scope="col">In training</th>
+										<th scope="col">Cost</th>
+										<th scope="col">Max</th>
+										<th scope="col">Train</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>Soldiers</td>
+										<td>{(military.sol as number).toLocaleString()}</td>
+										<td>{soldiersInQueue.toLocaleString()}</td>
+										<td>${getUnitCost("sol", tcCount, land)}</td>
+										<td>
+											<button
+												type="button"
+												onClick={() =>
+													setSoldiersToTrain(
+														remainingSoldierCapacityRounded.toString(),
+													)
+												}
+												disabled={remainingSoldierCapacityRounded <= 0}
+												style={{
+													padding: "0.25rem 0.5rem",
+													fontSize: "0.875rem",
+													cursor:
+														remainingSoldierCapacityRounded <= 0
+															? "not-allowed"
+															: "pointer",
+												}}
+											>
+												{remainingSoldierCapacityRounded.toLocaleString()}
+											</button>
+										</td>
+										<td>
+											<input
+												type="number"
+												min="0"
+												max={remainingSoldierCapacity}
+												placeholder="0"
+												value={soldiersToTrain}
+												onChange={(e) => setSoldiersToTrain(e.target.value)}
+											/>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</figure>
+						<div
+							style={{
+								marginTop: "1rem",
+								display: "flex",
+								gap: "1rem",
+								alignItems: "center",
+							}}
 						>
-							Train Soldiers
-						</button>
-						<span>
-							Cost: <strong>${soldiersCost.toLocaleString()}</strong>
-						</span>
-					</div>
-				</form>
+							<button
+								type="submit"
+								disabled={
+									isTraining ||
+									soldiersCount <= 0 ||
+									remainingSoldierCapacityRounded <= 0
+								}
+								aria-busy={isTraining}
+							>
+								Train Soldiers
+							</button>
+							<span>
+								Cost: <strong>${soldiersCost.toLocaleString()}</strong>
+							</span>
+						</div>
+					</form>
+				)}
 
 				<hr />
 
-				<form onSubmit={handleTrain}>
+				<form onSubmit={handleTrainOrDisband}>
 					<figure>
 						<table className="striped" style={{ tableLayout: "fixed" }}>
 							<colgroup>
@@ -350,13 +383,60 @@ function KingdomMilitaryPage() {
 									<th scope="col">Unit Name</th>
 									<th scope="col">You own</th>
 									<th scope="col">In training</th>
-									<th scope="col">Cost</th>
-									<th scope="col">Max</th>
-									<th scope="col">Train</th>
+									<th scope="col">{isDisbandMode ? "Refund" : "Cost"}</th>
+									<th scope="col">{isDisbandMode ? "All" : "Max"}</th>
+									<th scope="col">{isDisbandMode ? "Disband" : "Train"}</th>
 								</tr>
 							</thead>
 							<tbody>
+								{isDisbandMode && (
+									<tr>
+										<td>Soldiers</td>
+										<td>{(military.sol as number).toLocaleString()}</td>
+										<td>-</td>
+										<td>
+											+${Math.floor(UNITS.sol.cost / 2)} <br />
+											<span style={{ fontSize: "0.8rem" }}>+ 1 pop</span>
+										</td>
+										<td>
+											<button
+												type="button"
+												className="secondary"
+												onClick={() =>
+													setTrainQueue({
+														...INITIAL_TRAIN_QUEUE,
+														sol: military.sol.toString(),
+													})
+												}
+												disabled={military.sol <= 0}
+												style={{
+													padding: "0.25rem 0.5rem",
+													fontSize: "0.875rem",
+													backgroundColor: "#d81b60",
+													borderColor: "#d81b60",
+												}}
+											>
+												{military.sol.toLocaleString()}
+											</button>
+										</td>
+										<td>
+											<input
+												type="number"
+												min="0"
+												placeholder="0"
+												value={trainQueue.sol}
+												onChange={(e) =>
+													setTrainQueue({
+														...trainQueue,
+														sol: e.target.value,
+													})
+												}
+											/>
+										</td>
+									</tr>
+								)}
 								{UNIT_KEYS.filter((key) => {
+									if (isDisbandMode) return true;
 									const techInfo =
 										GAME_PARAMS.militaryTechTree[
 											key as keyof typeof GAME_PARAMS.militaryTechTree
@@ -415,14 +495,16 @@ function KingdomMilitaryPage() {
 										GAME_PARAMS.military.duration,
 									);
 									const handleMaxClick = () => {
-										if (maxUnitsRounded <= 0) return;
-										const clearedQueue: Record<string, string> = {};
-										for (const k of UNIT_KEYS) {
-											clearedQueue[k] = "";
-										}
+										const targetMax = isDisbandMode
+											? unitCount
+											: maxUnitsRounded;
+										if (targetMax <= 0) return;
+										const clearedQueue: Record<string, string> = {
+											...INITIAL_TRAIN_QUEUE,
+										};
 										setTrainQueue({
 											...clearedQueue,
-											[key]: maxUnitsRounded.toString(),
+											[key]: targetMax.toString(),
 										});
 									};
 									return (
@@ -430,7 +512,9 @@ function KingdomMilitaryPage() {
 											<td>{UNIT_LABELS[key]}</td>
 											<td>{unitCount.toLocaleString()}</td>
 											<td>
-												{queueCount > 0 ? (
+												{isDisbandMode ? (
+													"-"
+												) : queueCount > 0 ? (
 													<Tooltip
 														content={`Training queue: ${military.queue[
 															key as keyof typeof military.queue
@@ -445,34 +529,64 @@ function KingdomMilitaryPage() {
 												)}
 											</td>
 											<td>
-												${unitCost}
-												{unitSolCost > 0 && (
-													<span
-														style={{ fontSize: "0.8rem", display: "block" }}
-													>
-														+ {unitSolCost} sol
-													</span>
+												{isDisbandMode ? (
+													<>
+														+${Math.floor(UNITS[key].cost / 2)}
+														{unitSolCost > 0 && (
+															<span
+																style={{ fontSize: "0.8rem", display: "block" }}
+															>
+																+ {unitSolCost} sol
+															</span>
+														)}
+													</>
+												) : (
+													<>
+														${unitCost}
+														{unitSolCost > 0 && (
+															<span
+																style={{ fontSize: "0.8rem", display: "block" }}
+															>
+																+ {unitSolCost} sol
+															</span>
+														)}
+													</>
 												)}
 											</td>
 											<td>
 												<button
 													type="button"
 													onClick={handleMaxClick}
-													disabled={maxUnits <= 0}
+													disabled={
+														isDisbandMode
+															? unitCount <= 0
+															: maxUnitsRounded <= 0
+													}
 													style={{
 														padding: "0.25rem 0.5rem",
 														fontSize: "0.875rem",
-														cursor: maxUnits <= 0 ? "not-allowed" : "pointer",
+														cursor: (
+															isDisbandMode
+																? unitCount <= 0
+																: maxUnitsRounded <= 0
+														)
+															? "not-allowed"
+															: "pointer",
+														backgroundColor: isDisbandMode ? "#d81b60" : "",
+														borderColor: isDisbandMode ? "#d81b60" : "",
 													}}
 												>
-													{maxUnits.toLocaleString()}
+													{(isDisbandMode
+														? unitCount
+														: maxUnitsRounded
+													).toLocaleString()}
 												</button>
 											</td>
 											<td>
 												<input
 													type="number"
 													min="0"
-													max={maxUnits}
+													max={isDisbandMode ? unitCount : maxUnits}
 													placeholder="0"
 													value={trainQueue[key]}
 													onChange={(e) =>
@@ -500,16 +614,54 @@ function KingdomMilitaryPage() {
 					>
 						<button
 							type="submit"
-							disabled={isTraining || requestSum <= 0}
+							disabled={
+								isTraining ||
+								(requestSum <= 0 && (parseInt(trainQueue.sol, 10) || 0) <= 0)
+							}
 							aria-busy={isTraining}
+							style={{
+								backgroundColor: isDisbandMode ? "#d81b60" : "",
+								borderColor: isDisbandMode ? "#d81b60" : "",
+							}}
 						>
-							Train Military
+							{isDisbandMode ? "Disband Units" : "Train Military"}
 						</button>
-						<span>
-							Total Cost: <strong>${totalCost.toLocaleString()}</strong>
-						</span>
+						{isDisbandMode ? (
+							<span>
+								Total Refund: <strong>${refundAmount.toLocaleString()}</strong>
+							</span>
+						) : (
+							<span>
+								Total Cost: <strong>${totalCost.toLocaleString()}</strong>
+							</span>
+						)}
 					</div>
 				</form>
+
+				<footer
+					style={{
+						marginTop: "4rem",
+						display: "flex",
+						justifyContent: "flex-end",
+					}}
+				>
+					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+						<label htmlFor="disband-mode" style={{ fontSize: "0.9rem" }}>
+							<input
+								type="checkbox"
+								id="disband-mode"
+								role="switch"
+								aria-checked={isDisbandMode}
+								checked={isDisbandMode}
+								onChange={(e) => {
+									setIsDisbandMode(e.target.checked);
+									setTrainQueue(INITIAL_TRAIN_QUEUE);
+								}}
+							/>
+							Disband Units
+						</label>
+					</div>
+				</footer>
 			</article>
 		</main>
 	);
