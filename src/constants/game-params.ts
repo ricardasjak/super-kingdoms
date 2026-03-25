@@ -53,7 +53,7 @@ const MILITARY_UNITS = {
 		requiresBuilding: "ach",
 	},
 	t: { cost: 1750, sol: 1, power: 1.4, housing: 2, off: 9, def: 9 },
-	hgl: { cost: 1000, sol: 1, power: 0.7, housing: 1, off: 6, def: 6 },
+	hgl: { cost: 9999, sol: 0, power: 0, housing: 0, off: 0, def: 0 },
 	ht: { cost: 2250, sol: 1, power: 1.4, housing: 2, off: 12, def: 12 },
 } as const;
 
@@ -100,8 +100,7 @@ const RESEARCH_TECH_TREE: Partial<
 	lf: { requirePoints: 150_000, requires: "ld" },
 	f74: { requirePoints: 600_000, requires: "lf", building: "ach" },
 
-	hgl: { requirePoints: 100_000 },
-	ht: { requirePoints: 200_000, requires: "hgl" },
+	ht: { requirePoints: 200_000 },
 
 	fusion: { requirePoints: 30_000, bonus: 50 },
 	core: { requirePoints: 50_000, requires: "fusion", bonus: 20 },

@@ -11,7 +11,6 @@ export interface MilitaryNw {
 	lf: number;
 	f74: number;
 	t: number;
-	hgl: number;
 	ht: number;
 	sci: number;
 }
@@ -59,7 +58,6 @@ export function calculateNw(args: {
 		military.lf * GAME_PARAMS.nw.units.lf +
 		military.f74 * GAME_PARAMS.nw.units.f74 +
 		military.t * GAME_PARAMS.nw.units.t +
-		military.hgl * GAME_PARAMS.nw.units.hgl +
 		military.ht * GAME_PARAMS.nw.units.ht +
 		military.sci * GAME_PARAMS.nw.units.sci;
 

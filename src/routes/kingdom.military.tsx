@@ -22,7 +22,6 @@ const UNIT_KEYS = [
 	"lf",
 	"f74",
 	"t",
-	"hgl",
 	"ht",
 	"sci",
 ] as const;
@@ -38,7 +37,6 @@ const UNIT_LABELS: Record<string, string> = {
 	lf: "Laser Fighters",
 	f74: "Interceptor Drones",
 	t: "Tanks",
-	hgl: "High Guard Lancers",
 	ht: "Hover Tanks",
 	sci: "Scientists",
 };
@@ -54,7 +52,6 @@ const INITIAL_TRAIN_QUEUE: Record<string, string> = {
 	lf: "",
 	f74: "",
 	t: "",
-	hgl: "",
 	ht: "",
 	sci: "",
 };
@@ -494,10 +491,16 @@ function KingdomMilitaryPage() {
 											>
 										)[k]?.perc ?? 0) >= 100;
 
-									if (key === "tr" && (isResearched("dr") || isResearched("ft")))
+									if (
+										key === "tr" &&
+										(isResearched("dr") || isResearched("ft"))
+									)
 										return false;
 									if (key === "dr" && isResearched("ft")) return false;
-									if (key === "lt" && (isResearched("ld") || isResearched("lf")))
+									if (
+										key === "lt" &&
+										(isResearched("ld") || isResearched("lf"))
+									)
 										return false;
 									if (key === "ld" && isResearched("lf")) return false;
 

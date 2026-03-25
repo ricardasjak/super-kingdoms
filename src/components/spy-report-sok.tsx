@@ -29,7 +29,6 @@ export function calculateNetworth(
 		lf: number;
 		f74: number;
 		t: number;
-		hgl: number;
 		ht: number;
 		sci: number;
 	},
@@ -54,7 +53,6 @@ export function calculateMaxDefPotential(military: {
 	ld: number;
 	lf: number;
 	t: number;
-	hgl: number;
 	ht: number;
 }): number {
 	return GAME_PARAMS.military.calculateMaxDefPotential(military);
@@ -70,7 +68,6 @@ export function calculateMaxOffPotential(military: {
 	lf: number;
 	f74: number;
 	t: number;
-	hgl: number;
 	ht: number;
 }): number {
 	return GAME_PARAMS.military.calculateMaxOffPotential(military);
@@ -148,7 +145,6 @@ export function SpyReportSOK({
 		lf: number;
 		f74: number;
 		t: number;
-		hgl: number;
 		ht: number;
 	};
 	maxDefPotential: number;
@@ -221,7 +217,6 @@ export function SpyReportSOK({
 					{ label: "Laser Fighters", value: military.lf },
 					{ label: "F74 Interceptor Drones", value: military.f74 },
 					{ label: "Tanks", value: military.t },
-					{ label: "High Guard Lancers", value: military.hgl },
 					{ label: "Hover Tanks", value: military.ht },
 				]
 					.filter((u) => u.value > 0)
