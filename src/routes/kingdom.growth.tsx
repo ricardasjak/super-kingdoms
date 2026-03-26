@@ -11,8 +11,8 @@ import {
 	calculateIncomeMultiplier,
 } from "../utils/buildingUtils";
 
-export const Route = createFileRoute("/kingdom/buildings")({
-	component: KingdomBuildingsPage,
+export const Route = createFileRoute("/kingdom/growth")({
+	component: KingdomGrowthPage,
 });
 
 function QueueTooltip({
@@ -33,10 +33,10 @@ function QueueTooltip({
 		<Tooltip isButton content={`Construction queue: ${queueString}`}>
 			+{count}
 		</Tooltip>
-	);
+	)
 }
 
-function KingdomBuildingsPage() {
+function KingdomGrowthPage() {
 	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const buildings = myKingdom?.buildings;
@@ -54,7 +54,7 @@ function KingdomBuildingsPage() {
 		tc: "",
 		asb: "",
 		ach: "",
-	};
+	}
 
 	const [buildQueue, setBuildQueue] = useState(INITIAL_BUILD_QUEUE);
 	const [targetQueue, setTargetQueue] = useState({
@@ -66,7 +66,7 @@ function KingdomBuildingsPage() {
 		tc: "",
 		asb: "",
 		ach: "",
-	});
+	})
 	const [targetInitialized, setTargetInitialized] = useState(false);
 	const [isBuilding, setIsBuilding] = useState(false);
 	const [isRazeMode, setIsRazeMode] = useState(false);
@@ -84,7 +84,7 @@ function KingdomBuildingsPage() {
 					tc: buildings.target.tc.toString(),
 					asb: buildings.target.asb.toString(),
 					ach: buildings.target.ach.toString(),
-				});
+				})
 			} else {
 				const total =
 					buildings.res +
@@ -94,7 +94,7 @@ function KingdomBuildingsPage() {
 					buildings.pf +
 					buildings.tc +
 					buildings.asb +
-					buildings.ach;
+					buildings.ach
 
 				if (total > 0 && myKingdom?.land) {
 					setTargetQueue({
@@ -108,7 +108,7 @@ function KingdomBuildingsPage() {
 						tc: Math.round((buildings.tc / myKingdom.land) * 100).toString(),
 						asb: Math.round((buildings.asb / myKingdom.land) * 100).toString(),
 						ach: Math.round((buildings.ach / myKingdom.land) * 100).toString(),
-					});
+					})
 				} else {
 					setTargetQueue({
 						res: "0",
@@ -119,7 +119,7 @@ function KingdomBuildingsPage() {
 						tc: "0",
 						asb: "0",
 						ach: "0",
-					});
+					})
 				}
 			}
 			setTargetInitialized(true);
@@ -131,7 +131,7 @@ function KingdomBuildingsPage() {
 			<main className="container">
 				<article aria-busy="true">Loading kingdom...</article>
 			</main>
-		);
+		)
 	}
 
 	if (myKingdom === null) {
@@ -147,7 +147,7 @@ function KingdomBuildingsPage() {
 					<p>Could not locate buildings data for your kingdom.</p>
 				</article>
 			</main>
-		);
+		)
 	}
 
 	const isBuildingUnlocked = (buildingKey: string) => {
@@ -157,18 +157,18 @@ function KingdomBuildingsPage() {
 			if (techInfo && techInfo.building === buildingKey) {
 				const researchData = (
 					myKingdom.research as Record<string, { pts: number; perc: number }>
-				)[unitKey];
+				)[unitKey]
 				return (researchData?.perc ?? 0) >= 100;
 			}
 		}
 		return true; // No requirement means unlocked
-	};
+	}
 
 	const freeLand = calculateFreeLand(
 		myKingdom.land,
 		buildings,
 		buildings.queue,
-	);
+	)
 
 	const queuedCounts: Record<string, number> = {
 		res: 0,
@@ -179,7 +179,7 @@ function KingdomBuildingsPage() {
 		tc: 0,
 		asb: 0,
 		ach: 0,
-	};
+	}
 	if (buildings.queue) {
 		const keys = [
 			"res",
@@ -196,7 +196,7 @@ function KingdomBuildingsPage() {
 				queuedCounts[key] = buildings.queue[key].reduce(
 					(sum: number, val: number) => sum + val,
 					0,
-				);
+				)
 			}
 		}
 	}
@@ -206,26 +206,26 @@ function KingdomBuildingsPage() {
 		setBuildQueue((prev) => ({
 			...prev,
 			[name]: value,
-		}));
-	};
+		}))
+	}
 
 	const handleTargetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setTargetQueue((prev) => ({
 			...prev,
 			[name]: value,
-		}));
-	};
+		}))
+	}
 
 	const targetSum = Object.values(targetQueue).reduce(
 		(sum, val) => sum + (parseInt(val, 10) || 0),
 		0,
-	);
+	)
 
 	const requestSum = Object.values(buildQueue).reduce(
 		(sum, val) => sum + (parseInt(val, 10) || 0),
 		0,
-	);
+	)
 
 	const buildingCost = GAME_PARAMS.buildings.cost(myKingdom.land);
 	const totalCost = requestSum * buildingCost;
@@ -234,12 +234,12 @@ function KingdomBuildingsPage() {
 	const actualPercent = (count: number) => {
 		if (!myKingdom.land) return "0.0%";
 		return `${((count / myKingdom.land) * 100).toFixed(1)}%`;
-	};
+	}
 
 	const maxBuildings = Math.min(
 		freeLand,
 		Math.floor(myKingdom.money / buildingCost),
-	);
+	)
 	const maxBuildingsRounded =
 		Math.floor(maxBuildings / GAME_PARAMS.buildings.duration) *
 		GAME_PARAMS.buildings.duration;
@@ -248,14 +248,14 @@ function KingdomBuildingsPage() {
 	const popBonus = (myKingdom.research.pop?.perc ?? 0) / 100;
 	const resCapacityBoosted = Math.floor(
 		GAME_PARAMS.buildings.resCapacity * (1 + popBonus),
-	);
+	)
 
 	const incomeMultiplier = calculateIncomeMultiplier(
 		myKingdom.research.money?.perc ?? 0,
-	);
+	)
 	const resIncome = Math.round(
 		resCapacityBoosted * GAME_PARAMS.income.population * incomeMultiplier,
-	);
+	)
 	const smIncome = Math.round(GAME_PARAMS.income.sm * incomeMultiplier);
 
 	// Exploration Logic
@@ -263,7 +263,7 @@ function KingdomBuildingsPage() {
 	const exploreLevelMultiplier =
 		currentExploreLevel > 0
 			? GAME_PARAMS.explore.levelMultipliers[currentExploreLevel - 1]
-			: 1;
+			: 1
 
 	const handleExploreLevelChange = async (newLevel: number) => {
 		try {
@@ -273,9 +273,9 @@ function KingdomBuildingsPage() {
 			showMessage(
 				error instanceof Error ? error.message : "Update failed",
 				"error",
-			);
+			)
 		}
-	};
+	}
 
 	const baseExploreCost = GAME_PARAMS.explore.cost(myKingdom.land);
 	let landMultiplier = 1;
@@ -289,6 +289,20 @@ function KingdomBuildingsPage() {
 	const exploreCostPerLand = Math.round(
 		baseExploreCost * exploreLevelMultiplier * landMultiplier,
 	);
+
+	// Project expenses calculation
+	// (1.5 * exploreRatio * land * (exploreCostPerLand + buildingCost) / 24) / oneTickIncome
+	const exploreRatio = currentExploreLevel * 0.02;
+	const projectExpenseValue =
+		(1.5 *
+			exploreRatio *
+			myKingdom.land *
+			(exploreCostPerLand + buildingCost)) /
+		24;
+	const projectExpensesPerc =
+		myKingdom.moneyIncome > 0 && exploreRatio > 0
+			? Math.min(100, (projectExpenseValue / myKingdom.moneyIncome) * 100)
+			: 0;
 
 	const raxUsage =
 		myKingdom.military.sol +
@@ -309,26 +323,26 @@ function KingdomBuildingsPage() {
 	const fusionBonus =
 		(myKingdom.research.fusion?.perc ?? 0) >= 100
 			? (GAME_PARAMS.militaryTechTree.fusion?.bonus ?? 0) / 100
-			: 0;
+			: 0
 	const coreBonus =
 		(myKingdom.research.core?.perc ?? 0) >= 100
 			? (GAME_PARAMS.militaryTechTree.core?.bonus ?? 0) / 100
-			: 0;
+			: 0
 	const powerProductionPerPlant = Math.floor(
 		GAME_PARAMS.buildings.plantProduction *
 			(1 + powerBonus + fusionBonus + coreBonus),
-	);
+	)
 
 	const tcDiscount = GAME_PARAMS.military.calculateTcDiscount(
 		buildings.tc,
 		myKingdom.land,
-	);
+	)
 
 	const handleMaxClick = (key: string) => {
 		const bldKey = key as keyof Omit<
 			typeof buildings,
 			"queue" | "target" | "rubble"
-		>;
+		>
 		const targetMax = isRazeMode
 			? (buildings[bldKey] as number)
 			: maxBuildingsRounded;
@@ -336,8 +350,8 @@ function KingdomBuildingsPage() {
 		setBuildQueue({
 			...INITIAL_BUILD_QUEUE,
 			[key]: targetMax.toString(),
-		});
-	};
+		})
+	}
 
 	const handleBuildOrRaze = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -348,8 +362,8 @@ function KingdomBuildingsPage() {
 					isRazeMode ? "raze" : "construct"
 				}.`,
 				"error",
-			);
-			return;
+			)
+			return
 		}
 
 		setIsBuilding(true);
@@ -364,7 +378,7 @@ function KingdomBuildingsPage() {
 					tc: parseInt(buildQueue.tc, 10) || 0,
 					asb: parseInt(buildQueue.asb, 10) || 0,
 					ach: parseInt(buildQueue.ach, 10) || 0,
-				});
+				})
 				showMessage("Buildings successfully razed!", "success");
 			} else {
 				if (requestSum > freeLand) {
@@ -383,11 +397,11 @@ function KingdomBuildingsPage() {
 					tc: parseInt(buildQueue.tc, 10) || 0,
 					asb: parseInt(buildQueue.asb, 10) || 0,
 					ach: parseInt(buildQueue.ach, 10) || 0,
-				});
+				})
 				showMessage(
 					"Buildings successfully queued for construction!",
 					"success",
-				);
+				)
 			}
 			setBuildQueue(INITIAL_BUILD_QUEUE);
 		} catch (error) {
@@ -395,19 +409,48 @@ function KingdomBuildingsPage() {
 			showMessage(
 				error instanceof Error ? error.message : "Action failed",
 				"error",
-			);
+			)
 		} finally {
 			setIsBuilding(false);
 		}
-	};
+	}
 
 	return (
 		<main className="container">
 			<article>
 				<header>
 					<hgroup>
-						<h2>{myKingdom.kdName} Buildings</h2>
-						<p>Current structures and facilities</p>
+						<h2>{myKingdom.kdName} Growth</h2>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "0.5rem",
+								flexWrap: "wrap",
+							}}
+						>
+							<p style={{ margin: 0 }}>Current structures and facilities</p>
+							{projectExpensesPerc > 0 && (
+								<>
+									<span style={{ color: "var(--pico-muted-color)" }}>•</span>
+									<p style={{ margin: 0, fontSize: "0.9rem" }}>
+										Project expenses:{" "}
+										<strong
+											style={{
+												color:
+													projectExpensesPerc > 80
+														? "var(--pico-del-color)"
+														: projectExpensesPerc > 50
+															? "#d97706"
+															: "var(--pico-ins-color)",
+											}}
+										>
+											{Math.round(projectExpensesPerc)}%
+										</strong>
+									</p>
+								</>
+							)}
+						</div>
 					</hgroup>
 				</header>
 
@@ -1153,16 +1196,16 @@ function KingdomBuildingsPage() {
 										asb: parseInt(targetQueue.asb, 10) || 0,
 										ach: parseInt(targetQueue.ach, 10) || 0,
 									},
-								});
+								})
 								showMessage(
 									isChecked ? "Auto-Build enabled!" : "Auto-Build disabled!",
 									isChecked ? "success" : "warning",
-								);
+								)
 							} catch (error) {
 								showMessage(
 									error instanceof Error ? error.message : "Toggle failed",
 									"error",
-								);
+								)
 							}
 						}}
 					/>
@@ -1198,13 +1241,13 @@ function KingdomBuildingsPage() {
 											asb: parseInt(targetQueue.asb, 10) || 0,
 											ach: parseInt(targetQueue.ach, 10) || 0,
 										},
-									});
+									})
 									showMessage("Target percentages saved!", "success");
 								} catch (err) {
 									showMessage(
 										err instanceof Error ? err.message : "Failed to save",
 										"error",
-									);
+									)
 								}
 							}}
 							disabled={targetSum > 100}
@@ -1242,5 +1285,5 @@ function KingdomBuildingsPage() {
 				</footer>
 			</article>
 		</main>
-	);
+	)
 }
