@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
@@ -429,34 +430,18 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
-										<button
-											type="button"
+										<MaxButton
 											onClick={() => handleMaxClick("res")}
 											disabled={
 												isRazeMode
 													? buildings.res <= 0
 													: maxBuildingsRounded <= 0
 											}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												width: "100%",
-												cursor: (
-													isRazeMode
-														? buildings.res <= 0
-														: maxBuildingsRounded <= 0
-												)
-													? "not-allowed"
-													: "pointer",
-												backgroundColor: isRazeMode ? "#d81b60" : "",
-												borderColor: isRazeMode ? "#d81b60" : "",
-											}}
-										>
-											{(isRazeMode
+											label={(isRazeMode
 												? buildings.res
 												: maxBuildingsRounded
 											).toLocaleString()}
-										</button>
+										/>
 									</td>
 									<td>
 										<input
@@ -502,34 +487,18 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
-										<button
-											type="button"
+										<MaxButton
 											onClick={() => handleMaxClick("sm")}
 											disabled={
 												isRazeMode
 													? buildings.sm <= 0
 													: maxBuildingsRounded <= 0
 											}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												width: "100%",
-												cursor: (
-													isRazeMode
-														? buildings.sm <= 0
-														: maxBuildingsRounded <= 0
-												)
-													? "not-allowed"
-													: "pointer",
-												backgroundColor: isRazeMode ? "#d81b60" : "",
-												borderColor: isRazeMode ? "#d81b60" : "",
-											}}
-										>
-											{(isRazeMode
+											label={(isRazeMode
 												? buildings.sm
 												: maxBuildingsRounded
 											).toLocaleString()}
-										</button>
+										/>
 									</td>
 									<td>
 										<input
@@ -575,34 +544,18 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
-										<button
-											type="button"
+										<MaxButton
 											onClick={() => handleMaxClick("plants")}
 											disabled={
 												isRazeMode
 													? buildings.plants <= 0
 													: maxBuildingsRounded <= 0
 											}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												width: "100%",
-												cursor: (
-													isRazeMode
-														? buildings.plants <= 0
-														: maxBuildingsRounded <= 0
-												)
-													? "not-allowed"
-													: "pointer",
-												backgroundColor: isRazeMode ? "#d81b60" : "",
-												borderColor: isRazeMode ? "#d81b60" : "",
-											}}
-										>
-											{(isRazeMode
+											label={(isRazeMode
 												? buildings.plants
 												: maxBuildingsRounded
 											).toLocaleString()}
-										</button>
+										/>
 									</td>
 									<td>
 										<input
@@ -655,34 +608,18 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
-										<button
-											type="button"
+										<MaxButton
 											onClick={() => handleMaxClick("rax")}
 											disabled={
 												isRazeMode
 													? buildings.rax <= 0
 													: maxBuildingsRounded <= 0
 											}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												width: "100%",
-												cursor: (
-													isRazeMode
-														? buildings.rax <= 0
-														: maxBuildingsRounded <= 0
-												)
-													? "not-allowed"
-													: "pointer",
-												backgroundColor: isRazeMode ? "#d81b60" : "",
-												borderColor: isRazeMode ? "#d81b60" : "",
-											}}
-										>
-											{(isRazeMode
+											label={(isRazeMode
 												? buildings.rax
 												: maxBuildingsRounded
 											).toLocaleString()}
-										</button>
+										/>
 									</td>
 									<td>
 										<input
@@ -725,34 +662,18 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
-										<button
-											type="button"
+										<MaxButton
 											onClick={() => handleMaxClick("pf")}
 											disabled={
 												isRazeMode
 													? buildings.pf <= 0
 													: maxBuildingsRounded <= 0
 											}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												width: "100%",
-												cursor: (
-													isRazeMode
-														? buildings.pf <= 0
-														: maxBuildingsRounded <= 0
-												)
-													? "not-allowed"
-													: "pointer",
-												backgroundColor: isRazeMode ? "#d81b60" : "",
-												borderColor: isRazeMode ? "#d81b60" : "",
-											}}
-										>
-											{(isRazeMode
+											label={(isRazeMode
 												? buildings.pf
 												: maxBuildingsRounded
 											).toLocaleString()}
-										</button>
+										/>
 									</td>
 									<td>
 										<input
@@ -800,34 +721,18 @@ function KingdomBuildingsPage() {
 										</td>
 									)}
 									<td>
-										<button
-											type="button"
+										<MaxButton
 											onClick={() => handleMaxClick("tc")}
 											disabled={
 												isRazeMode
 													? buildings.tc <= 0
 													: maxBuildingsRounded <= 0
 											}
-											style={{
-												padding: "0.25rem 0.5rem",
-												fontSize: "0.875rem",
-												width: "100%",
-												cursor: (
-													isRazeMode
-														? buildings.tc <= 0
-														: maxBuildingsRounded <= 0
-												)
-													? "not-allowed"
-													: "pointer",
-												backgroundColor: isRazeMode ? "#d81b60" : "",
-												borderColor: isRazeMode ? "#d81b60" : "",
-											}}
-										>
-											{(isRazeMode
+											label={(isRazeMode
 												? buildings.tc
 												: maxBuildingsRounded
 											).toLocaleString()}
-										</button>
+										/>
 									</td>
 									<td>
 										<input
@@ -874,28 +779,18 @@ function KingdomBuildingsPage() {
 											</td>
 										)}
 										<td>
-											<button
-												type="button"
+											<MaxButton
 												onClick={() => handleMaxClick("asb")}
 												disabled={
 													isRazeMode
 														? buildings.asb <= 0
 														: maxBuildingsRounded <= 0
 												}
-												style={{
-													padding: "0.25rem 0.5rem",
-													fontSize: "0.875rem",
-													width: "100%",
-													backgroundColor: isRazeMode ? "#d81b60" : "",
-													borderColor: isRazeMode ? "#d81b60" : "",
-													color: isRazeMode ? "white" : "",
-												}}
-											>
-												{(isRazeMode
+												label={(isRazeMode
 													? buildings.asb
 													: maxBuildingsRounded
 												).toLocaleString()}
-											</button>
+											/>
 										</td>
 										<td>
 											<input
@@ -943,28 +838,18 @@ function KingdomBuildingsPage() {
 											</td>
 										)}
 										<td>
-											<button
-												type="button"
+											<MaxButton
 												onClick={() => handleMaxClick("ach")}
 												disabled={
 													isRazeMode
 														? buildings.ach <= 0
 														: maxBuildingsRounded <= 0
 												}
-												style={{
-													padding: "0.25rem 0.5rem",
-													fontSize: "0.875rem",
-													width: "100%",
-													backgroundColor: isRazeMode ? "#d81b60" : "",
-													borderColor: isRazeMode ? "#d81b60" : "",
-													color: isRazeMode ? "white" : "",
-												}}
-											>
-												{(isRazeMode
+												label={(isRazeMode
 													? buildings.ach
 													: maxBuildingsRounded
 												).toLocaleString()}
-											</button>
+											/>
 										</td>
 										<td>
 											<input

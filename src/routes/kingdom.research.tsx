@@ -2,9 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
-import { Tooltip } from "../../src/components/Tooltip";
 import { GAME_PARAMS } from "../../src/constants/game-params";
 import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
+import { MaxButton } from "../components/max-button";
+import { Tooltip } from "../components/Tooltip";
 
 export const Route = createFileRoute("/kingdom/research")({
 	component: KingdomResearchPage,
@@ -535,23 +536,14 @@ function KingdomResearchPage() {
 												</div>
 											</td>
 											<td>
-												<button
-													type="button"
-													className="outline"
+												<MaxButton
 													onClick={() => handleMaxClick(key)}
 													disabled={
 														isAssigning ||
 														myKingdom.researchPts <= 0 ||
 														!prerequisiteMet
 													}
-													style={{
-														padding: "0.25rem 0.5rem",
-														fontSize: "0.875rem",
-														width: "100%",
-													}}
-												>
-													Max
-												</button>
+												/>
 											</td>
 											<td>
 												<input
@@ -832,9 +824,7 @@ function KingdomResearchPage() {
 																</div>
 															</td>
 															<td>
-																<button
-																	type="button"
-																	className="outline"
+																<MaxButton
 																	onClick={() => handleMaxClick(key)}
 																	disabled={
 																		isAssigning ||
@@ -842,14 +832,10 @@ function KingdomResearchPage() {
 																		!prerequisiteMet ||
 																		(data?.perc ?? 0) >= 100
 																	}
-																	style={{
-																		padding: "0.25rem 0.5rem",
-																		fontSize: "0.875rem",
-																		width: "100%",
-																	}}
-																>
-																	{(data?.perc ?? 0) >= 100 ? "Done" : "Max"}
-																</button>
+																	label={
+																		(data?.perc ?? 0) >= 100 ? "Done" : "Max"
+																	}
+																/>
 															</td>
 															<td>
 																<input

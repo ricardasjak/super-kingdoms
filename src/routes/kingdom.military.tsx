@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
+import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
@@ -321,25 +322,15 @@ function KingdomMilitaryPage() {
 										<td>{soldiersInQueue.toLocaleString()}</td>
 										<td>${getUnitCost("sol", tcCount, land)}</td>
 										<td>
-											<button
-												type="button"
+											<MaxButton
 												onClick={() =>
 													setSoldiersToTrain(
 														remainingSoldierCapacityRounded.toString(),
 													)
 												}
 												disabled={remainingSoldierCapacityRounded <= 0}
-												style={{
-													padding: "0.25rem 0.5rem",
-													fontSize: "0.875rem",
-													cursor:
-														remainingSoldierCapacityRounded <= 0
-															? "not-allowed"
-															: "pointer",
-												}}
-											>
-												{remainingSoldierCapacityRounded.toLocaleString()}
-											</button>
+												label={remainingSoldierCapacityRounded.toLocaleString()}
+											/>
 										</td>
 										<td>
 											<input
@@ -361,8 +352,12 @@ function KingdomMilitaryPage() {
 								display: "flex",
 								gap: "1rem",
 								alignItems: "center",
+								justifyContent: "flex-end",
 							}}
 						>
+							<span>
+								Cost: <strong>${soldiersCost.toLocaleString()}</strong>
+							</span>
 							<button
 								type="submit"
 								disabled={
@@ -371,12 +366,10 @@ function KingdomMilitaryPage() {
 									remainingSoldierCapacityRounded <= 0
 								}
 								aria-busy={isTraining}
+								style={{ width: "auto", marginBottom: 0 }}
 							>
 								Train Soldiers
 							</button>
-							<span>
-								Cost: <strong>${soldiersCost.toLocaleString()}</strong>
-							</span>
 						</div>
 					</form>
 				)}
@@ -618,33 +611,18 @@ function KingdomMilitaryPage() {
 												)}
 											</td>
 											<td>
-												<button
-													type="button"
+												<MaxButton
 													onClick={handleMaxClick}
 													disabled={
 														isDisbandMode
 															? unitCount <= 0
 															: maxUnitsRounded <= 0
 													}
-													style={{
-														padding: "0.25rem 0.5rem",
-														fontSize: "0.875rem",
-														cursor: (
-															isDisbandMode
-																? unitCount <= 0
-																: maxUnitsRounded <= 0
-														)
-															? "not-allowed"
-															: "pointer",
-														backgroundColor: isDisbandMode ? "#d81b60" : "",
-														borderColor: isDisbandMode ? "#d81b60" : "",
-													}}
-												>
-													{(isDisbandMode
+													label={(isDisbandMode
 														? unitCount
 														: maxUnitsRounded
 													).toLocaleString()}
-												</button>
+												/>
 											</td>
 											<td>
 												<input
@@ -674,22 +652,9 @@ function KingdomMilitaryPage() {
 							display: "flex",
 							gap: "1rem",
 							alignItems: "center",
+							justifyContent: "flex-end",
 						}}
 					>
-						<button
-							type="submit"
-							disabled={
-								isTraining ||
-								(requestSum <= 0 && (parseInt(trainQueue.sol, 10) || 0) <= 0)
-							}
-							aria-busy={isTraining}
-							style={{
-								backgroundColor: isDisbandMode ? "#d81b60" : "",
-								borderColor: isDisbandMode ? "#d81b60" : "",
-							}}
-						>
-							{isDisbandMode ? "Disband Units" : "Train Military"}
-						</button>
 						{isDisbandMode ? (
 							<span>
 								Total Refund: <strong>${refundAmount.toLocaleString()}</strong>
@@ -699,6 +664,22 @@ function KingdomMilitaryPage() {
 								Total Cost: <strong>${totalCost.toLocaleString()}</strong>
 							</span>
 						)}
+						<button
+							type="submit"
+							disabled={
+								isTraining ||
+								(requestSum <= 0 && (parseInt(trainQueue.sol, 10) || 0) <= 0)
+							}
+							aria-busy={isTraining}
+							style={{
+								width: "auto",
+								marginBottom: 0,
+								backgroundColor: isDisbandMode ? "#d81b60" : "",
+								borderColor: isDisbandMode ? "#d81b60" : "",
+							}}
+						>
+							{isDisbandMode ? "Disband Units" : "Build Military"}
+						</button>
 					</div>
 				</form>
 
