@@ -43,6 +43,7 @@ function KingdomBuildingsPage() {
 	const buildBuildings = useMutation(api.kingdoms.buildBuildings);
 	const razeBuildings = useMutation(api.kingdoms.razeBuildings);
 	const saveAutoBuildSettings = useMutation(api.kingdoms.saveAutoBuildSettings);
+	const toggleAutoExplore = useMutation(api.kingdoms.toggleAutoExplore);
 
 	const INITIAL_BUILD_QUEUE = {
 		res: "",
@@ -257,6 +258,38 @@ function KingdomBuildingsPage() {
 	);
 	const smIncome = Math.round(GAME_PARAMS.income.sm * incomeMultiplier);
 
+	// Exploration Logic
+	const currentExploreLevel = Number(myKingdom.autoExplore || 0);
+	const exploreLevelMultiplier =
+		currentExploreLevel > 0
+			? GAME_PARAMS.explore.levelMultipliers[currentExploreLevel - 1]
+			: 1;
+
+	const handleExploreLevelChange = async (newLevel: number) => {
+		try {
+			await toggleAutoExplore({ autoExplore: newLevel });
+		} catch (error) {
+			console.error("Failed to update auto explore level", error);
+			showMessage(
+				error instanceof Error ? error.message : "Update failed",
+				"error",
+			);
+		}
+	};
+
+	const baseExploreCost = GAME_PARAMS.explore.cost(myKingdom.land);
+	let landMultiplier = 1;
+	if (myKingdom.land < 1000) {
+		landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[1000];
+	} else if (myKingdom.land < 2500) {
+		landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[2500];
+	} else if (myKingdom.land < 5000) {
+		landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[5000];
+	}
+	const exploreCostPerLand = Math.round(
+		baseExploreCost * exploreLevelMultiplier * landMultiplier,
+	);
+
 	const raxUsage =
 		myKingdom.military.sol +
 		myKingdom.military.tr +
@@ -377,6 +410,162 @@ function KingdomBuildingsPage() {
 						<p>Current structures and facilities</p>
 					</hgroup>
 				</header>
+
+				<form
+					onSubmit={(e) => e.preventDefault()}
+					style={{ marginBottom: "1rem" }}
+				>
+					<article
+						style={{
+							padding: "0.75rem 1rem",
+							marginBottom: "1rem",
+							backgroundColor: "var(--pico-card-sectioning-background-color)",
+						}}
+					>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "1.5rem",
+								flexWrap: "wrap",
+							}}
+						>
+							<div
+								style={{
+									display: "flex",
+									alignItems: "center",
+									gap: "0.5rem",
+									minWidth: "150px",
+								}}
+							>
+								<strong style={{ fontSize: "0.9rem", whiteSpace: "nowrap" }}>
+									Auto-Exploration:
+								</strong>
+							</div>
+
+							<div
+								style={{
+									flex: 1,
+									display: "flex",
+									alignItems: "center",
+									gap: "0.75rem",
+									minWidth: "300px",
+								}}
+							>
+								<input
+									type="range"
+									min="0"
+									max="5"
+									step="1"
+									value={currentExploreLevel}
+									onChange={(e) =>
+										handleExploreLevelChange(
+											Number.parseInt(e.target.value, 10),
+										)
+									}
+									style={{
+										marginBottom: 0,
+										height: "1.5rem",
+										cursor: "pointer",
+									}}
+								/>
+								<div
+									style={{
+										display: "flex",
+										justifyContent: "space-between",
+										width: "100%",
+										position: "absolute",
+										top: "1.4rem",
+										left: 0,
+										pointerEvents: "none",
+										fontSize: "0.65rem",
+										color: "var(--pico-muted-color)",
+									}}
+								>
+									{/* These spacers help align text under the slider if needed, but for slimness we keep it simple */}
+								</div>
+								{/* Limit Chip now sits here immediately after the slider */}
+								<div
+									style={{
+										display: "flex",
+										alignItems: "center",
+										minWidth: "100px",
+									}}
+								>
+									<span
+										style={{
+											padding: "2px 10px",
+											borderRadius: "12px",
+											fontSize: "0.75rem",
+											fontWeight: "bold",
+											whiteSpace: "nowrap",
+											backgroundColor:
+												currentExploreLevel === 0
+													? "rgba(149, 165, 166, 0.15)"
+													: currentExploreLevel * 2 >= 10
+														? "rgba(192, 57, 43, 0.3)"
+														: currentExploreLevel * 2 >= 8
+															? "rgba(231, 76, 60, 0.2)"
+															: "rgba(46, 204, 113, 0.15)",
+											color:
+												currentExploreLevel === 0
+													? "#7f8c8d"
+													: currentExploreLevel * 2 >= 10
+														? "#96281b"
+														: currentExploreLevel * 2 >= 8
+															? "#e74c3c"
+															: "#27ae60",
+											border: `1px solid ${
+												currentExploreLevel === 0
+													? "rgba(149, 165, 166, 0.3)"
+													: currentExploreLevel * 2 >= 10
+														? "rgba(150, 40, 27, 0.5)"
+														: currentExploreLevel * 2 >= 8
+															? "rgba(231, 76, 60, 0.4)"
+															: "rgba(39, 174, 96, 0.3)"
+											}`,
+										}}
+									>
+										{currentExploreLevel === 0
+											? "Off"
+											: `${currentExploreLevel * 2}% Limit`}
+									</span>
+								</div>
+							</div>
+
+							<div
+								style={{
+									fontSize: "0.85rem",
+									display: "flex",
+									alignItems: "center",
+									gap: "1rem",
+									paddingLeft: "1rem",
+									borderLeft: "1px solid var(--pico-border-color)",
+								}}
+							>
+								<div style={{ display: "flex", flexDirection: "column" }}>
+									<div style={{ display: "flex", gap: "0.3rem" }}>
+										<strong>{exploreLevelMultiplier.toFixed(3)}x</strong>
+										<span style={{ color: "var(--pico-muted-color)" }}>
+											multiplier
+										</span>
+									</div>
+									<div style={{ fontSize: "0.75rem", fontWeight: "bold" }}>
+										${exploreCostPerLand.toLocaleString()}{" "}
+										<span
+											style={{
+												fontWeight: "normal",
+												color: "var(--pico-muted-color)",
+											}}
+										>
+											/ land piece
+										</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</article>
+				</form>
 
 				<form onSubmit={handleBuildOrRaze}>
 					<figure>
