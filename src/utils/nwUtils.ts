@@ -67,5 +67,7 @@ export function calculateNw(args: {
 	const moneyNw = Math.floor(money / GAME_PARAMS.nw.money);
 	const probesNw = Math.floor(probes / GAME_PARAMS.nw.probes);
 
-	return militaryNw + landNw + buildingsNw + popNw + moneyNw + probesNw;
+	return Math.floor(
+		militaryNw + landNw + buildingsNw + popNw + moneyNw + probesNw,
+	);
 }

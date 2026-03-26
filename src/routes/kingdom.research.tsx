@@ -89,7 +89,7 @@ function KingdomResearchPage() {
 		{ key: "tf", label: "Tactical Fighters", data: research.tf },
 		{ key: "ld", label: "Laser Dragoons", data: research.ld },
 		{ key: "lf", label: "Laser Fighters", data: research.lf },
-		{ key: "f74", label: "Interceptor Drones", data: research.f74 },
+		{ key: "f74", label: "F74 Drones", data: research.f74 },
 		{ key: "ht", label: "Hover Tanks", data: research.ht },
 		{ key: "fusion", label: "Fusion Technology", data: research.fusion },
 		{ key: "core", label: "Energy Core", data: research.core },

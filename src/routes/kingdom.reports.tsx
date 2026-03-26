@@ -45,7 +45,6 @@ function KingdomReportsPage() {
 		ld: myKingdom.military.ld,
 		lf: myKingdom.military.lf,
 		t: myKingdom.military.t,
-		hgl: myKingdom.military.hgl,
 		ht: myKingdom.military.ht,
 	});
 	const maxOff = calculateMaxOffPotential({
@@ -58,7 +57,6 @@ function KingdomReportsPage() {
 		lf: myKingdom.military.lf,
 		f74: myKingdom.military.f74,
 		t: myKingdom.military.t,
-		hgl: myKingdom.military.hgl,
 		ht: myKingdom.military.ht,
 	});
 	const minDef = calculateMinDefPotential({

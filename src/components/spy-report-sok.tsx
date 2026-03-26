@@ -215,7 +215,7 @@ export function SpyReportSOK({
 					{ label: "Laser Troopers", value: military.lt },
 					{ label: "Laser Dragoons", value: military.ld },
 					{ label: "Laser Fighters", value: military.lf },
-					{ label: "F74 Interceptor Drones", value: military.f74 },
+					{ label: "F74 Drones", value: military.f74 },
 					{ label: "Tanks", value: military.t },
 					{ label: "Hover Tanks", value: military.ht },
 				]

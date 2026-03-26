@@ -19,7 +19,7 @@ const schema = defineSchema({
 		moneyIncome: v.number(),
 		powerIncome: v.number(),
 		nw: v.number(),
-		autoExplore: v.optional(v.boolean()),
+		autoExplore: v.optional(v.number()),
 		autoBuild: v.optional(v.boolean()),
 		landQueue: v.array(v.number()),
 		military: v.object({

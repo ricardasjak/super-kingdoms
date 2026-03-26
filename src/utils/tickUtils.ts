@@ -43,7 +43,7 @@ export function processKingdomTick(
 		moneyIncome: number;
 		powerIncome: number;
 		landQueue: number[];
-		autoExplore?: boolean;
+		autoExplore?: number;
 		autoBuild?: boolean;
 		researchPts: number;
 		researchAutoAssign?: string[];
@@ -142,7 +142,9 @@ export function processKingdomTick(
 	const popBonus = (kingdom.research.pop?.perc ?? 0) / 100;
 	const resCapacityBoosted = GAME_PARAMS.buildings.resCapacity * (1 + popBonus);
 
-	const maxPopulation = buildings.res * resCapacityBoosted - raxSurplus;
+	const maxPopulation = Math.floor(
+		buildings.res * resCapacityBoosted - raxSurplus,
+	);
 	let populationChange = 0;
 	if (kingdom.population < maxPopulation) {
 		populationChange = Math.ceil(
@@ -162,7 +164,7 @@ export function processKingdomTick(
 	const newKingdom = {
 		...kingdom,
 		money: kingdom.money + moneyIncome,
-		population: Math.max(0, kingdom.population + populationChange),
+		population: Math.round(Math.max(0, kingdom.population + populationChange)),
 		popChange: populationChange,
 		power: Math.min(
 			GAME_PARAMS.buildings.plantStorage * buildings.plants,
@@ -302,15 +304,30 @@ export function processKingdomTick(
 		}
 	}
 
-	if (newKingdom.autoExplore) {
+	if ((Number(newKingdom.autoExplore) || 0) > 0) {
+		const level = Number(newKingdom.autoExplore);
+		const limitPct = level * 0.02; // 0.02 (2%), 0.04 (4%), 0.06 (6%), 0.08 (8%), 0.10 (10%)
 		const currentQueueSum = newKingdom.landQueue.reduce((a, b) => a + b, 0);
-		const maxPossibleExplore = Math.floor(
-			newKingdom.land * GAME_PARAMS.explore.limit,
-		);
+		const maxPossibleExplore = Math.floor(newKingdom.land * limitPct);
 		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
 
 		if (maxExplore > 0) {
-			const costPerLand = GAME_PARAMS.explore.cost(newKingdom.land);
+			const baseCost = GAME_PARAMS.explore.cost(newKingdom.land);
+			const levelMultiplier =
+				GAME_PARAMS.explore.levelMultipliers[level - 1] ?? 1;
+
+			let landMultiplier = 1;
+			if (newKingdom.land < 1000)
+				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[1000];
+			else if (newKingdom.land < 2500)
+				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[2500];
+			else if (newKingdom.land < 5000)
+				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[5000];
+
+			const costPerLand = Math.round(
+				baseCost * levelMultiplier * landMultiplier,
+			);
+
 			const maxAffordable = Math.floor(newKingdom.money / costPerLand);
 			const exploreAmount = Math.floor(Math.min(maxExplore, maxAffordable));
 			const validExploreAmount = Math.floor(exploreAmount / 24) * 24;
@@ -390,12 +407,10 @@ export function processKingdomTick(
 		const ldPoints = newMilitary.ld * 5;
 		const lfFromLd = Math.floor(ldPoints / 6);
 		const remPointsFromLd = ldPoints % 6;
-		const finalLd = Math.floor(remPointsFromLd / 5);
-		const finalRemSol = remPointsFromLd % 5;
 
-		newMilitary.ld = finalLd;
+		newMilitary.ld = 0;
 		newMilitary.lf += lfFromLd;
-		newMilitary.sol += finalRemSol;
+		newMilitary.sol += remPointsFromLd;
 		militaryChanged = true;
 	}
 
@@ -417,12 +432,10 @@ export function processKingdomTick(
 		const drPoints = newMilitary.dr * 5;
 		const ftFromDr = Math.floor(drPoints / 6);
 		const remPointsFromDr = drPoints % 6;
-		const finalDr = Math.floor(remPointsFromDr / 5);
-		const finalRemSol = remPointsFromDr % 5;
 
-		newMilitary.dr = finalDr;
+		newMilitary.dr = 0;
 		newMilitary.ft += ftFromDr;
-		newMilitary.sol += finalRemSol;
+		newMilitary.sol += remPointsFromDr;
 		militaryChanged = true;
 	}
 

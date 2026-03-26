@@ -20,7 +20,7 @@ const STARTING_VALUES = {
 	moneyIncome: 0,
 	powerIncome: 0,
 	landQueue: [] as number[],
-	autoExplore: false,
+	autoExplore: 5,
 	autoBuild: false,
 	military: {
 		sol: 200,
@@ -572,7 +572,7 @@ export const trainMilitary = mutation({
 			currentF74 + f74InQueue + newF74Count > f74HousingLimit
 		) {
 			throw new Error(
-				`Cannot train Interceptor Drones. Housing capacity: ${f74HousingLimit} (ACH: ${kingdom.buildings.ach} × ${GAME_PARAMS.buildings.achCapacity}). Currently have ${currentF74} + ${f74InQueue} in queue.`,
+				`Cannot train Interceptor F74. Housing capacity: ${f74HousingLimit} (ACH: ${kingdom.buildings.ach} × ${GAME_PARAMS.buildings.achCapacity}). Currently have ${currentF74} + ${f74InQueue} in queue.`,
 			);
 		}
 
@@ -777,7 +777,7 @@ export const razeBuildings = mutation({
 
 export const toggleAutoExplore = mutation({
 	args: {
-		autoExplore: v.boolean(),
+		autoExplore: v.number(),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);

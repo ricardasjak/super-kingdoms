@@ -1,6 +1,25 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: <it's ok> */
 import { mutation } from "./_generated/server";
 
+export const autoExploreMigration = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const records = await ctx.db.query("kingdoms").collect();
+		let count = 0;
+		for (const record of records) {
+			/** @ts-expect-error - record.autoExplore is still seen as number by types but might be boolean in DB */
+			if (typeof record.autoExplore === "boolean") {
+				await ctx.db.patch(record._id, {
+					/** @ts-expect-error */
+					autoExplore: record.autoExplore ? 5 : 0,
+				});
+				count++;
+			}
+		}
+		return `Migrated ${count} records to numeric autoExplore`;
+	},
+});
+
 export const runResearchMigration = mutation({
 	args: {},
 	handler: async (ctx) => {

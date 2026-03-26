@@ -128,7 +128,13 @@ export const GAME_PARAMS = {
 	explore: {
 		duration: 24,
 		limit: 0.1,
-		cost: (land: number) => Math.round(Math.sqrt(land) * 111),
+		cost: (land: number) => Math.sqrt(land) * 111,
+		levelMultipliers: [0.33, 0.67, 1, 1.5, 2],
+		landLevelMultipliers: {
+			1000: 0.25,
+			2500: 0.5,
+			5000: 0.75,
+		},
 	},
 	buildings: {
 		duration: 16,

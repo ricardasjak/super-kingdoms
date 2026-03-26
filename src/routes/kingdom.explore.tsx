@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { GAME_PARAMS } from "../constants/game-params";
 
@@ -10,98 +9,125 @@ export const Route = createFileRoute("/kingdom/explore")({
 
 function KingdomExplore() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
-	const exploreLand = useMutation(api.kingdoms.exploreLand);
 	const toggleAutoExplore = useMutation(api.kingdoms.toggleAutoExplore);
-	const [amount, setAmount] = useState<number>(0);
-	const [isExploring, setIsExploring] = useState(false);
 
 	if (myKingdom === undefined) return <p aria-busy="true">Loading...</p>;
 	if (!myKingdom) return <p>Kingdom not found.</p>;
 
 	const currentlyInQueue = myKingdom.landQueue.reduce((a, b) => a + b, 0);
-	const maxPossibleExplore = Math.floor(
-		myKingdom.land * GAME_PARAMS.explore.limit,
-	);
-	const maxExplore = Math.max(0, maxPossibleExplore - currentlyInQueue);
+	const currentLevel = Number(myKingdom.autoExplore || 0);
+	const limitPct = currentLevel * 0.02;
+	const maxPossibleExplore = Math.floor(myKingdom.land * limitPct);
 
-	const costPerLand = GAME_PARAMS.explore.cost(myKingdom.land);
-	const totalCost = costPerLand * amount;
-	const isOverLimit = amount > maxExplore;
-	const isBroke = myKingdom.money < totalCost;
-	const canExplore = amount > 0 && !isOverLimit && !isBroke && !isExploring;
+	const baseCost = GAME_PARAMS.explore.cost(myKingdom.land);
+	let landMultiplier = 1;
+	let discountLabel = "";
+	if (myKingdom.land < 1000) {
+		landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[1000];
+		discountLabel = `New Kingdom Discount (${Math.round((1 - landMultiplier) * 100)}%)`;
+	} else if (myKingdom.land < 2500) {
+		landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[2500];
+		discountLabel = `Developing Kingdom Discount (${Math.round((1 - landMultiplier) * 100)}%)`;
+	} else if (myKingdom.land < 5000) {
+		landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[5000];
+		discountLabel = `Established Kingdom Discount (${Math.round((1 - landMultiplier) * 100)}%)`;
+	}
 
-	const handleExplore = async () => {
-		if (!canExplore) return;
-		setIsExploring(true);
+	const levelMultiplier =
+		currentLevel > 0
+			? GAME_PARAMS.explore.levelMultipliers[currentLevel - 1]
+			: 1;
+	const costPerLand = Math.round(baseCost * levelMultiplier * landMultiplier);
+
+	const handleLevelChange = async (newLevel: number) => {
 		try {
-			await exploreLand({ amount });
-			setAmount(0);
-			alert(`Successfully queued exploration for ${amount} land.`);
+			await toggleAutoExplore({ autoExplore: newLevel });
 		} catch (error) {
-			console.error("Failed to explore land", error);
-			alert(error instanceof Error ? error.message : "Exploration failed");
-		} finally {
-			setIsExploring(false);
+			console.error("Failed to update auto explore level", error);
+			alert(error instanceof Error ? error.message : "Update failed");
 		}
 	};
+
+	const levels = [
+		{ val: 0, label: "0% (Disabled)" },
+		{ val: 1, label: "2%" },
+		{ val: 2, label: "4%" },
+		{ val: 3, label: "6%" },
+		{ val: 4, label: "8%" },
+		{ val: 5, label: "10% (Max)" },
+	];
 
 	return (
 		<main className="container">
 			<article>
 				<header>
 					<h2>Explore Land</h2>
-					<p>Send expeditions to discover new land for your kingdom.</p>
+					<p>
+						Expeditions are now managed automatically based on your desired
+						expansion level.
+					</p>
 				</header>
 				<div className="grid">
 					<div>
-						<h3>Exploration Desk</h3>
-						<label htmlFor="exploreAmount">
-							Amount of land to explore (Max {maxExplore})
+						<h3>Exploration Strategy</h3>
+						<label htmlFor="autoExploreRange">
+							Exploration Level:{" "}
+							<strong>
+								{levels.find((l) => l.val === currentLevel)?.label}
+							</strong>
 							<input
-								type="number"
-								id="exploreAmount"
-								name="exploreAmount"
+								type="range"
+								id="autoExploreRange"
+								name="autoExploreRange"
 								min="0"
-								max={maxExplore}
-								value={amount || ""}
+								max="5"
+								step="1"
+								value={currentLevel}
 								onChange={(e) =>
-									setAmount(Number.parseInt(e.target.value, 10) || 0)
+									handleLevelChange(Number.parseInt(e.target.value, 10))
 								}
+								style={{ marginBottom: "1rem" }}
 							/>
 						</label>
-						<p>
+
+						<div
+							className="grid"
+							style={{
+								fontSize: "0.85rem",
+								textAlign: "center",
+								color: "var(--pico-muted-color)",
+							}}
+						>
+							{levels.map((l) => (
+								<button
+									key={l.val}
+									type="button"
+									className={currentLevel === l.val ? "" : "outline"}
+									style={{
+										padding: "0.25rem 0.5rem",
+										fontSize: "0.85rem",
+										marginBottom: 0,
+									}}
+									onClick={() => handleLevelChange(l.val)}
+								>
+									{l.val}
+								</button>
+							))}
+						</div>
+
+						<p style={{ marginTop: "1.5rem" }}>
 							<small>
-								Cost: ${costPerLand.toLocaleString()} per piece of land.
+								Exploration will trigger automatically every tick if:
+								<ul style={{ marginTop: "0.5rem" }}>
+									<li>
+										Your current land + queue is below{" "}
+										<strong>{currentLevel * 2}%</strong> of your current land.
+									</li>
+									<li>You have enough money in the treasury.</li>
+								</ul>
+								Expeditions are queued in chunks of 24 land pieces.
 							</small>
 						</p>
-						<hr />
-						<label htmlFor="autoExplore">
-							<input
-								type="checkbox"
-								role="switch"
-								id="autoExplore"
-								name="autoExplore"
-								aria-checked={myKingdom.autoExplore ?? false}
-								checked={myKingdom.autoExplore ?? false}
-								onChange={async (e) => {
-									try {
-										await toggleAutoExplore({ autoExplore: e.target.checked });
-									} catch (error) {
-										console.error("Failed to toggle auto explore", error);
-										alert(
-											error instanceof Error ? error.message : "Toggle failed",
-										);
-									}
-								}}
-							/>
-							Enable Auto-Explore
-						</label>
-						<small>
-							Automatically queues exploration right after gaining money income.
-							It attempts to explore the maximum multiple of 24 that satisfies
-							your budget and the {GAME_PARAMS.explore.limit * 100}% limit
-							limit.
-						</small>
 					</div>
 					<div>
 						<article
@@ -109,10 +135,13 @@ function KingdomExplore() {
 								backgroundColor: "var(--pico-card-sectioning-background-color)",
 							}}
 						>
-							<h4>Overview</h4>
+							<h4>Kingdom Status</h4>
 							<ul>
 								<li>Current Land: {myKingdom.land.toLocaleString()}</li>
-								<li>Treasury: ${myKingdom.money.toLocaleString()}</li>
+								<li>
+									Current Limit: {maxPossibleExplore.toLocaleString()} land (
+									{currentLevel * 2}%)
+								</li>
 								<li>
 									Actively Exploring:{" "}
 									<span
@@ -129,28 +158,21 @@ function KingdomExplore() {
 							</ul>
 							<hr />
 							<ul>
-								<li>Requested Explorations: {amount.toLocaleString()}</li>
-								<li
-									style={{
-										color: isBroke ? "var(--pico-del-color)" : "inherit",
-									}}
-								>
-									Total Cost Estimate: ${totalCost.toLocaleString()}
-								</li>
+								<li>Cost: ${costPerLand.toLocaleString()} per piece of land</li>
+								{discountLabel && (
+									<li
+										style={{
+											color: "var(--pico-primary)",
+											fontSize: "0.85rem",
+											fontWeight: "bold",
+										}}
+									>
+										{discountLabel}
+									</li>
+								)}
 								<li>Completion Time: {GAME_PARAMS.explore.duration} ticks</li>
+								<li>Treasury: ${myKingdom.money.toLocaleString()}</li>
 							</ul>
-							<button
-								type="button"
-								onClick={handleExplore}
-								disabled={!canExplore}
-								aria-busy={isExploring}
-							>
-								{isOverLimit
-									? "Over Limit!"
-									: isBroke
-										? "Not Enough Money"
-										: "Queue Expedition"}
-							</button>
 						</article>
 					</div>
 				</div>

@@ -36,7 +36,7 @@ const UNIT_LABELS: Record<string, string> = {
 	lt: "Laser Troopers",
 	ld: "Laser Dragoons",
 	lf: "Laser Fighters",
-	f74: "Interceptor Drones",
+	f74: "F74 Drones",
 	t: "Tanks",
 	ht: "Hover Tanks",
 	sci: "Scientists",
