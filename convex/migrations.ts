@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: <it's ok> */
 import { mutation } from "./_generated/server";
 
 export const autoExploreMigration = mutation({
@@ -7,11 +6,10 @@ export const autoExploreMigration = mutation({
 		const records = await ctx.db.query("kingdoms").collect();
 		let count = 0;
 		for (const record of records) {
-			/** @ts-expect-error - record.autoExplore is still seen as number by types but might be boolean in DB */
-			if (typeof record.autoExplore === "boolean") {
+			const autoExplore = record.autoExplore as unknown;
+			if (typeof autoExplore === "boolean") {
 				await ctx.db.patch(record._id, {
-					/** @ts-expect-error */
-					autoExplore: record.autoExplore ? 5 : 0,
+					autoExplore: autoExplore ? 10 : 0,
 				});
 				count++;
 			}

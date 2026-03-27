@@ -121,9 +121,9 @@ function KingdomMilitaryPage() {
 		myKingdom.population * GAME_PARAMS.military.soldiersLimit,
 	);
 	const maxByMoney = Math.floor(myKingdom.money / soldierCost);
-	const remainingSoldierCapacity = Math.min(
-		maxByPop - currentSoldiers - soldiersInQueue,
-		maxByMoney,
+	const remainingSoldierCapacity = Math.max(
+		0,
+		Math.min(maxByPop - soldiersInQueue, maxByMoney),
 	);
 	const remainingSoldierCapacityRounded = roundToDuration(
 		Math.max(0, remainingSoldierCapacity),
@@ -169,7 +169,6 @@ function KingdomMilitaryPage() {
 				ht: 0,
 			});
 			setSoldiersToTrain("");
-			showMessage("Soldiers successfully queued for training!", "success");
 		} catch (error) {
 			console.error(error);
 			showMessage(
@@ -255,10 +254,6 @@ function KingdomMilitaryPage() {
 					hgl: parseInt(trainQueue.hgl, 10) || 0,
 					ht: parseInt(trainQueue.ht, 10) || 0,
 				});
-				showMessage(
-					"Military units successfully queued for training!",
-					"success",
-				);
 			}
 			setTrainQueue(INITIAL_TRAIN_QUEUE);
 		} catch (error) {

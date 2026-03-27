@@ -108,7 +108,7 @@ const RESEARCH_TECH_TREE: Partial<
 };
 
 export const GAME_PARAMS = {
-	roundLength: 480,
+	roundLength: 960,
 	income: {
 		population: 2,
 		sm: 140,
@@ -129,7 +129,7 @@ export const GAME_PARAMS = {
 		duration: 24,
 		limit: 0.1,
 		cost: (land: number) => Math.sqrt(land) * 111,
-		levelMultipliers: [0.33, 0.67, 1, 1.5, 2],
+		levelMultipliers: [0.165, 0.33, 0.5, 0.67, 0.835, 1, 1.25, 1.5, 1.75, 2],
 		landLevelMultipliers: {
 			1000: 0.25,
 			2500: 0.5,

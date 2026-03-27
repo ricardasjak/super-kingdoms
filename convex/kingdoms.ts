@@ -20,7 +20,7 @@ const STARTING_VALUES = {
 	moneyIncome: 0,
 	powerIncome: 0,
 	landQueue: [] as number[],
-	autoExplore: 5,
+	autoExplore: 10,
 	autoBuild: false,
 	military: {
 		sol: 200,
@@ -543,6 +543,21 @@ export const trainMilitary = mutation({
 
 		if (kingdom.military.sol < soldiersToDeduct) {
 			throw new Error("Not enough soldiers");
+		}
+
+		if (args.sol > 0) {
+			const soldiersInQueue = (kingdom.military.queue.sol || []).reduce(
+				(a, b) => a + b,
+				0,
+			);
+			const maxByPop = Math.floor(
+				kingdom.population * GAME_PARAMS.military.soldiersLimit,
+			);
+			if (soldiersInQueue + args.sol > maxByPop) {
+				throw new Error(
+					`Cannot queue ${args.sol} soldiers. Training queue limit reached (${maxByPop} total allowed in training).`,
+				);
+			}
 		}
 
 		const tfHousingLimit =

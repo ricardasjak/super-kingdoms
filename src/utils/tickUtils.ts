@@ -2,7 +2,7 @@ import { GAME_PARAMS } from "../constants/game-params";
 import { calculateFreeLand, calculateNewQueue } from "./buildingUtils";
 import { calculateExplorationQueue } from "./landUtils";
 
-type MilitaryUnits = {
+export type MilitaryUnits = {
 	sol: number;
 	tr: number;
 	dr: number;
@@ -33,40 +33,50 @@ type MilitaryUnits = {
 	};
 };
 
-export function processKingdomTick(
-	kingdom: {
-		population: number;
-		land: number;
-		money: number;
-		power: number;
-		probes: number;
-		moneyIncome: number;
-		powerIncome: number;
-		landQueue: number[];
-		autoExplore?: number;
-		autoBuild?: boolean;
-		researchPts: number;
-		researchAutoAssign?: string[];
-		research: {
-			pop: { pts: number; perc: number };
-			power: { pts: number; perc: number };
-			mil: { pts: number; perc: number };
-			money: { pts: number; perc: number };
-			fdc: { pts: number; perc: number };
-			warp: { pts: number; perc: number };
-			dr?: { pts: number; perc: number };
-			ft?: { pts: number; perc: number };
-			tf?: { pts: number; perc: number };
-			ld?: { pts: number; perc: number };
-			lf?: { pts: number; perc: number };
-			f74?: { pts: number; perc: number };
-			hgl?: { pts: number; perc: number };
-			ht?: { pts: number; perc: number };
-			fusion?: { pts: number; perc: number };
-			core?: { pts: number; perc: number };
-		};
-	},
-	buildings: {
+export type KingdomSettings = {
+	population: number;
+	land: number;
+	money: number;
+	power: number;
+	probes: number;
+	moneyIncome: number;
+	powerIncome: number;
+	landQueue: number[];
+	autoExplore?: number;
+	autoBuild?: boolean;
+	researchPts: number;
+	researchAutoAssign?: string[];
+	research: {
+		pop: { pts: number; perc: number };
+		power: { pts: number; perc: number };
+		mil: { pts: number; perc: number };
+		money: { pts: number; perc: number };
+		fdc: { pts: number; perc: number };
+		warp: { pts: number; perc: number };
+		dr?: { pts: number; perc: number };
+		ft?: { pts: number; perc: number };
+		tf?: { pts: number; perc: number };
+		ld?: { pts: number; perc: number };
+		lf?: { pts: number; perc: number };
+		f74?: { pts: number; perc: number };
+		hgl?: { pts: number; perc: number };
+		ht?: { pts: number; perc: number };
+		fusion?: { pts: number; perc: number };
+		core?: { pts: number; perc: number };
+	};
+};
+
+export type BuildingState = {
+	res: number;
+	plants: number;
+	rax: number;
+	sm: number;
+	pf: number;
+	tc: number;
+	asb: number;
+	ach: number;
+	rubble: number;
+	target?: {
 		res: number;
 		plants: number;
 		rax: number;
@@ -75,28 +85,22 @@ export function processKingdomTick(
 		tc: number;
 		asb: number;
 		ach: number;
-		rubble: number;
-		target?: {
-			res: number;
-			plants: number;
-			rax: number;
-			sm: number;
-			pf: number;
-			tc: number;
-			asb: number;
-			ach: number;
-		};
-		queue: {
-			res: number[];
-			plants: number[];
-			rax: number[];
-			sm: number[];
-			pf: number[];
-			tc: number[];
-			asb: number[];
-			ach: number[];
-		};
-	},
+	};
+	queue: {
+		res: number[];
+		plants: number[];
+		rax: number[];
+		sm: number[];
+		pf: number[];
+		tc: number[];
+		asb: number[];
+		ach: number[];
+	};
+};
+
+export function processKingdomTick(
+	kingdom: KingdomSettings,
+	buildings: BuildingState,
 	military: MilitaryUnits,
 ) {
 	const moneyBonus = (kingdom.research.money?.perc ?? 0) / 100;
@@ -180,6 +184,47 @@ export function processKingdomTick(
 	};
 
 	let kingdomChanged = false;
+
+	if ((Number(newKingdom.autoExplore) || 0) > 0) {
+		const level = Number(newKingdom.autoExplore);
+		const limitPct = level * 0.01; // 0.01 (1%), ..., 0.10 (10%)
+		const currentQueueSum = newKingdom.landQueue.reduce((a, b) => a + b, 0);
+		const maxPossibleExplore = Math.floor(newKingdom.land * limitPct);
+		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
+
+		if (maxExplore > 0) {
+			const baseCost = GAME_PARAMS.explore.cost(newKingdom.land);
+			const levelMultiplier =
+				GAME_PARAMS.explore.levelMultipliers[level - 1] ?? 1;
+
+			let landMultiplier = 1;
+			if (newKingdom.land < 1000)
+				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[1000];
+			else if (newKingdom.land < 2500)
+				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[2500];
+			else if (newKingdom.land < 5000)
+				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[5000];
+
+			const costPerLand = Math.round(
+				baseCost * levelMultiplier * landMultiplier,
+			);
+
+			const maxAffordable = Math.floor(newKingdom.money / costPerLand);
+			const exploreAmount = Math.floor(Math.min(maxExplore, maxAffordable));
+			const validExploreAmount = Math.floor(exploreAmount / 24) * 24;
+
+			if (validExploreAmount > 0) {
+				newKingdom.money -= validExploreAmount * costPerLand;
+				newKingdom.landQueue = calculateExplorationQueue(
+					newKingdom.landQueue,
+					validExploreAmount,
+					GAME_PARAMS.explore.duration,
+				);
+				kingdomChanged = true;
+			}
+		}
+	}
+
 	if (newKingdom.landQueue.length > 0) {
 		const completedLand = newKingdom.landQueue[0];
 		newKingdom.land += completedLand;
@@ -300,46 +345,6 @@ export function processKingdomTick(
 						}
 					}
 				}
-			}
-		}
-	}
-
-	if ((Number(newKingdom.autoExplore) || 0) > 0) {
-		const level = Number(newKingdom.autoExplore);
-		const limitPct = level * 0.02; // 0.02 (2%), 0.04 (4%), 0.06 (6%), 0.08 (8%), 0.10 (10%)
-		const currentQueueSum = newKingdom.landQueue.reduce((a, b) => a + b, 0);
-		const maxPossibleExplore = Math.floor(newKingdom.land * limitPct);
-		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
-
-		if (maxExplore > 0) {
-			const baseCost = GAME_PARAMS.explore.cost(newKingdom.land);
-			const levelMultiplier =
-				GAME_PARAMS.explore.levelMultipliers[level - 1] ?? 1;
-
-			let landMultiplier = 1;
-			if (newKingdom.land < 1000)
-				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[1000];
-			else if (newKingdom.land < 2500)
-				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[2500];
-			else if (newKingdom.land < 5000)
-				landMultiplier = GAME_PARAMS.explore.landLevelMultipliers[5000];
-
-			const costPerLand = Math.round(
-				baseCost * levelMultiplier * landMultiplier,
-			);
-
-			const maxAffordable = Math.floor(newKingdom.money / costPerLand);
-			const exploreAmount = Math.floor(Math.min(maxExplore, maxAffordable));
-			const validExploreAmount = Math.floor(exploreAmount / 24) * 24;
-
-			if (validExploreAmount > 0) {
-				newKingdom.money -= validExploreAmount * costPerLand;
-				newKingdom.landQueue = calculateExplorationQueue(
-					newKingdom.landQueue,
-					validExploreAmount,
-					GAME_PARAMS.explore.duration,
-				);
-				kingdomChanged = true;
 			}
 		}
 	}

@@ -33,7 +33,7 @@ function QueueTooltip({
 		<Tooltip isButton content={`Construction queue: ${queueString}`}>
 			+{count}
 		</Tooltip>
-	)
+	);
 }
 
 function KingdomGrowthPage() {
@@ -54,7 +54,7 @@ function KingdomGrowthPage() {
 		tc: "",
 		asb: "",
 		ach: "",
-	}
+	};
 
 	const [buildQueue, setBuildQueue] = useState(INITIAL_BUILD_QUEUE);
 	const [targetQueue, setTargetQueue] = useState({
@@ -66,7 +66,7 @@ function KingdomGrowthPage() {
 		tc: "",
 		asb: "",
 		ach: "",
-	})
+	});
 	const [targetInitialized, setTargetInitialized] = useState(false);
 	const [isBuilding, setIsBuilding] = useState(false);
 	const [isRazeMode, setIsRazeMode] = useState(false);
@@ -84,7 +84,7 @@ function KingdomGrowthPage() {
 					tc: buildings.target.tc.toString(),
 					asb: buildings.target.asb.toString(),
 					ach: buildings.target.ach.toString(),
-				})
+				});
 			} else {
 				const total =
 					buildings.res +
@@ -94,7 +94,7 @@ function KingdomGrowthPage() {
 					buildings.pf +
 					buildings.tc +
 					buildings.asb +
-					buildings.ach
+					buildings.ach;
 
 				if (total > 0 && myKingdom?.land) {
 					setTargetQueue({
@@ -108,7 +108,7 @@ function KingdomGrowthPage() {
 						tc: Math.round((buildings.tc / myKingdom.land) * 100).toString(),
 						asb: Math.round((buildings.asb / myKingdom.land) * 100).toString(),
 						ach: Math.round((buildings.ach / myKingdom.land) * 100).toString(),
-					})
+					});
 				} else {
 					setTargetQueue({
 						res: "0",
@@ -119,7 +119,7 @@ function KingdomGrowthPage() {
 						tc: "0",
 						asb: "0",
 						ach: "0",
-					})
+					});
 				}
 			}
 			setTargetInitialized(true);
@@ -131,7 +131,7 @@ function KingdomGrowthPage() {
 			<main className="container">
 				<article aria-busy="true">Loading kingdom...</article>
 			</main>
-		)
+		);
 	}
 
 	if (myKingdom === null) {
@@ -147,7 +147,7 @@ function KingdomGrowthPage() {
 					<p>Could not locate buildings data for your kingdom.</p>
 				</article>
 			</main>
-		)
+		);
 	}
 
 	const isBuildingUnlocked = (buildingKey: string) => {
@@ -157,18 +157,18 @@ function KingdomGrowthPage() {
 			if (techInfo && techInfo.building === buildingKey) {
 				const researchData = (
 					myKingdom.research as Record<string, { pts: number; perc: number }>
-				)[unitKey]
+				)[unitKey];
 				return (researchData?.perc ?? 0) >= 100;
 			}
 		}
 		return true; // No requirement means unlocked
-	}
+	};
 
 	const freeLand = calculateFreeLand(
 		myKingdom.land,
 		buildings,
 		buildings.queue,
-	)
+	);
 
 	const queuedCounts: Record<string, number> = {
 		res: 0,
@@ -179,7 +179,7 @@ function KingdomGrowthPage() {
 		tc: 0,
 		asb: 0,
 		ach: 0,
-	}
+	};
 	if (buildings.queue) {
 		const keys = [
 			"res",
@@ -196,7 +196,7 @@ function KingdomGrowthPage() {
 				queuedCounts[key] = buildings.queue[key].reduce(
 					(sum: number, val: number) => sum + val,
 					0,
-				)
+				);
 			}
 		}
 	}
@@ -206,26 +206,26 @@ function KingdomGrowthPage() {
 		setBuildQueue((prev) => ({
 			...prev,
 			[name]: value,
-		}))
-	}
+		}));
+	};
 
 	const handleTargetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setTargetQueue((prev) => ({
 			...prev,
 			[name]: value,
-		}))
-	}
+		}));
+	};
 
 	const targetSum = Object.values(targetQueue).reduce(
 		(sum, val) => sum + (parseInt(val, 10) || 0),
 		0,
-	)
+	);
 
 	const requestSum = Object.values(buildQueue).reduce(
 		(sum, val) => sum + (parseInt(val, 10) || 0),
 		0,
-	)
+	);
 
 	const buildingCost = GAME_PARAMS.buildings.cost(myKingdom.land);
 	const totalCost = requestSum * buildingCost;
@@ -234,12 +234,12 @@ function KingdomGrowthPage() {
 	const actualPercent = (count: number) => {
 		if (!myKingdom.land) return "0.0%";
 		return `${((count / myKingdom.land) * 100).toFixed(1)}%`;
-	}
+	};
 
 	const maxBuildings = Math.min(
 		freeLand,
 		Math.floor(myKingdom.money / buildingCost),
-	)
+	);
 	const maxBuildingsRounded =
 		Math.floor(maxBuildings / GAME_PARAMS.buildings.duration) *
 		GAME_PARAMS.buildings.duration;
@@ -248,14 +248,14 @@ function KingdomGrowthPage() {
 	const popBonus = (myKingdom.research.pop?.perc ?? 0) / 100;
 	const resCapacityBoosted = Math.floor(
 		GAME_PARAMS.buildings.resCapacity * (1 + popBonus),
-	)
+	);
 
 	const incomeMultiplier = calculateIncomeMultiplier(
 		myKingdom.research.money?.perc ?? 0,
-	)
+	);
 	const resIncome = Math.round(
 		resCapacityBoosted * GAME_PARAMS.income.population * incomeMultiplier,
-	)
+	);
 	const smIncome = Math.round(GAME_PARAMS.income.sm * incomeMultiplier);
 
 	// Exploration Logic
@@ -263,7 +263,7 @@ function KingdomGrowthPage() {
 	const exploreLevelMultiplier =
 		currentExploreLevel > 0
 			? GAME_PARAMS.explore.levelMultipliers[currentExploreLevel - 1]
-			: 1
+			: 1;
 
 	const handleExploreLevelChange = async (newLevel: number) => {
 		try {
@@ -273,9 +273,9 @@ function KingdomGrowthPage() {
 			showMessage(
 				error instanceof Error ? error.message : "Update failed",
 				"error",
-			)
+			);
 		}
-	}
+	};
 
 	const baseExploreCost = GAME_PARAMS.explore.cost(myKingdom.land);
 	let landMultiplier = 1;
@@ -292,7 +292,7 @@ function KingdomGrowthPage() {
 
 	// Project expenses calculation
 	// (1.5 * exploreRatio * land * (exploreCostPerLand + buildingCost) / 24) / oneTickIncome
-	const exploreRatio = currentExploreLevel * 0.02;
+	const exploreRatio = currentExploreLevel * 0.01;
 	const projectExpenseValue =
 		(1.5 *
 			exploreRatio *
@@ -323,26 +323,26 @@ function KingdomGrowthPage() {
 	const fusionBonus =
 		(myKingdom.research.fusion?.perc ?? 0) >= 100
 			? (GAME_PARAMS.militaryTechTree.fusion?.bonus ?? 0) / 100
-			: 0
+			: 0;
 	const coreBonus =
 		(myKingdom.research.core?.perc ?? 0) >= 100
 			? (GAME_PARAMS.militaryTechTree.core?.bonus ?? 0) / 100
-			: 0
+			: 0;
 	const powerProductionPerPlant = Math.floor(
 		GAME_PARAMS.buildings.plantProduction *
 			(1 + powerBonus + fusionBonus + coreBonus),
-	)
+	);
 
 	const tcDiscount = GAME_PARAMS.military.calculateTcDiscount(
 		buildings.tc,
 		myKingdom.land,
-	)
+	);
 
 	const handleMaxClick = (key: string) => {
 		const bldKey = key as keyof Omit<
 			typeof buildings,
 			"queue" | "target" | "rubble"
-		>
+		>;
 		const targetMax = isRazeMode
 			? (buildings[bldKey] as number)
 			: maxBuildingsRounded;
@@ -350,8 +350,8 @@ function KingdomGrowthPage() {
 		setBuildQueue({
 			...INITIAL_BUILD_QUEUE,
 			[key]: targetMax.toString(),
-		})
-	}
+		});
+	};
 
 	const handleBuildOrRaze = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -362,8 +362,8 @@ function KingdomGrowthPage() {
 					isRazeMode ? "raze" : "construct"
 				}.`,
 				"error",
-			)
-			return
+			);
+			return;
 		}
 
 		setIsBuilding(true);
@@ -378,7 +378,7 @@ function KingdomGrowthPage() {
 					tc: parseInt(buildQueue.tc, 10) || 0,
 					asb: parseInt(buildQueue.asb, 10) || 0,
 					ach: parseInt(buildQueue.ach, 10) || 0,
-				})
+				});
 				showMessage("Buildings successfully razed!", "success");
 			} else {
 				if (requestSum > freeLand) {
@@ -397,11 +397,11 @@ function KingdomGrowthPage() {
 					tc: parseInt(buildQueue.tc, 10) || 0,
 					asb: parseInt(buildQueue.asb, 10) || 0,
 					ach: parseInt(buildQueue.ach, 10) || 0,
-				})
+				});
 				showMessage(
 					"Buildings successfully queued for construction!",
 					"success",
-				)
+				);
 			}
 			setBuildQueue(INITIAL_BUILD_QUEUE);
 		} catch (error) {
@@ -409,11 +409,11 @@ function KingdomGrowthPage() {
 			showMessage(
 				error instanceof Error ? error.message : "Action failed",
 				"error",
-			)
+			);
 		} finally {
 			setIsBuilding(false);
 		}
-	}
+	};
 
 	return (
 		<main className="container">
@@ -434,7 +434,7 @@ function KingdomGrowthPage() {
 								<>
 									<span style={{ color: "var(--pico-muted-color)" }}>•</span>
 									<p style={{ margin: 0, fontSize: "0.9rem" }}>
-										Project expenses:{" "}
+										Projected expenses to income:{" "}
 										<strong
 											style={{
 												color:
@@ -495,37 +495,52 @@ function KingdomGrowthPage() {
 									minWidth: "300px",
 								}}
 							>
-								<input
-									type="range"
-									min="0"
-									max="5"
-									step="1"
-									value={currentExploreLevel}
-									onChange={(e) =>
-										handleExploreLevelChange(
-											Number.parseInt(e.target.value, 10),
-										)
-									}
-									style={{
-										marginBottom: 0,
-										height: "1.5rem",
-										cursor: "pointer",
-									}}
-								/>
 								<div
 									style={{
+										flex: 1,
 										display: "flex",
-										justifyContent: "space-between",
-										width: "100%",
-										position: "absolute",
-										top: "1.4rem",
-										left: 0,
-										pointerEvents: "none",
-										fontSize: "0.65rem",
-										color: "var(--pico-muted-color)",
+										flexDirection: "column",
+										position: "relative",
 									}}
 								>
-									{/* These spacers help align text under the slider if needed, but for slimness we keep it simple */}
+									<input
+										type="range"
+										min="0"
+										max="10"
+										step="1"
+										value={currentExploreLevel}
+										onChange={(e) =>
+											handleExploreLevelChange(
+												Number.parseInt(e.target.value, 10),
+											)
+										}
+										style={{
+											marginBottom: 0,
+											height: "1.5rem",
+											cursor: "pointer",
+										}}
+									/>
+									{currentExploreLevel > 0 &&
+										Math.floor(myKingdom.land * (currentExploreLevel * 0.01)) <
+											24 && (
+											<div
+												style={{
+													color: "#e67e22",
+													fontSize: "0.65rem",
+													fontWeight: "bold",
+													display: "flex",
+													alignItems: "center",
+													gap: "0.3rem",
+													whiteSpace: "nowrap",
+													position: "absolute",
+													top: "1.4rem",
+													left: 0,
+												}}
+											>
+												<span>⚠️</span>
+												<span>explorer will never pick 24 land to explore</span>
+											</div>
+										)}
 								</div>
 								{/* Limit Chip now sits here immediately after the slider */}
 								<div
@@ -545,25 +560,25 @@ function KingdomGrowthPage() {
 											backgroundColor:
 												currentExploreLevel === 0
 													? "rgba(149, 165, 166, 0.15)"
-													: currentExploreLevel * 2 >= 10
+													: currentExploreLevel >= 10
 														? "rgba(192, 57, 43, 0.3)"
-														: currentExploreLevel * 2 >= 8
+														: currentExploreLevel >= 8
 															? "rgba(231, 76, 60, 0.2)"
 															: "rgba(46, 204, 113, 0.15)",
 											color:
 												currentExploreLevel === 0
 													? "#7f8c8d"
-													: currentExploreLevel * 2 >= 10
+													: currentExploreLevel >= 10
 														? "#96281b"
-														: currentExploreLevel * 2 >= 8
+														: currentExploreLevel >= 8
 															? "#e74c3c"
 															: "#27ae60",
 											border: `1px solid ${
 												currentExploreLevel === 0
 													? "rgba(149, 165, 166, 0.3)"
-													: currentExploreLevel * 2 >= 10
+													: currentExploreLevel >= 10
 														? "rgba(150, 40, 27, 0.5)"
-														: currentExploreLevel * 2 >= 8
+														: currentExploreLevel >= 8
 															? "rgba(231, 76, 60, 0.4)"
 															: "rgba(39, 174, 96, 0.3)"
 											}`,
@@ -571,41 +586,45 @@ function KingdomGrowthPage() {
 									>
 										{currentExploreLevel === 0
 											? "Off"
-											: `${currentExploreLevel * 2}% Limit`}
+											: `${currentExploreLevel}% Limit`}
 									</span>
 								</div>
 							</div>
 
-							<div
-								style={{
-									fontSize: "0.85rem",
-									display: "flex",
-									alignItems: "center",
-									gap: "1rem",
-									paddingLeft: "1rem",
-									borderLeft: "1px solid var(--pico-border-color)",
-								}}
-							>
-								<div style={{ display: "flex", flexDirection: "column" }}>
-									<div style={{ display: "flex", gap: "0.3rem" }}>
-										<strong>{exploreLevelMultiplier.toFixed(3)}x</strong>
-										<span style={{ color: "var(--pico-muted-color)" }}>
-											multiplier
-										</span>
-									</div>
-									<div style={{ fontSize: "0.75rem", fontWeight: "bold" }}>
-										${exploreCostPerLand.toLocaleString()}{" "}
-										<span
-											style={{
-												fontWeight: "normal",
-												color: "var(--pico-muted-color)",
-											}}
-										>
-											/ land piece
-										</span>
+							{currentExploreLevel > 0 && (
+								<div
+									style={{
+										fontSize: "0.85rem",
+										display: "flex",
+										alignItems: "center",
+										gap: "1rem",
+										paddingLeft: "1rem",
+										borderLeft: "1px solid var(--pico-border-color)",
+									}}
+								>
+									<div style={{ display: "flex", flexDirection: "column" }}>
+										<div style={{ display: "flex", gap: "0.3rem" }}>
+											<strong>
+												{(exploreLevelMultiplier * landMultiplier).toFixed(3)}x
+											</strong>
+											<span style={{ color: "var(--pico-muted-color)" }}>
+												multiplier
+											</span>
+										</div>
+										<div style={{ fontSize: "0.75rem", fontWeight: "bold" }}>
+											${exploreCostPerLand.toLocaleString()}{" "}
+											<span
+												style={{
+													fontWeight: "normal",
+													color: "var(--pico-muted-color)",
+												}}
+											>
+												/ land piece
+											</span>
+										</div>
 									</div>
 								</div>
-							</div>
+							)}
 						</div>
 					</article>
 				</form>
@@ -1196,16 +1215,16 @@ function KingdomGrowthPage() {
 										asb: parseInt(targetQueue.asb, 10) || 0,
 										ach: parseInt(targetQueue.ach, 10) || 0,
 									},
-								})
+								});
 								showMessage(
 									isChecked ? "Auto-Build enabled!" : "Auto-Build disabled!",
 									isChecked ? "success" : "warning",
-								)
+								);
 							} catch (error) {
 								showMessage(
 									error instanceof Error ? error.message : "Toggle failed",
 									"error",
-								)
+								);
 							}
 						}}
 					/>
@@ -1241,13 +1260,13 @@ function KingdomGrowthPage() {
 											asb: parseInt(targetQueue.asb, 10) || 0,
 											ach: parseInt(targetQueue.ach, 10) || 0,
 										},
-									})
+									});
 									showMessage("Target percentages saved!", "success");
 								} catch (err) {
 									showMessage(
 										err instanceof Error ? err.message : "Failed to save",
 										"error",
-									)
+									);
 								}
 							}}
 							disabled={targetSum > 100}
@@ -1285,5 +1304,5 @@ function KingdomGrowthPage() {
 				</footer>
 			</article>
 		</main>
-	)
+	);
 }

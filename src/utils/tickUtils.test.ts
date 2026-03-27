@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { GAME_PARAMS } from "../constants/game-params";
-import { processKingdomTick } from "./tickUtils";
+import {
+	type BuildingState,
+	type KingdomSettings,
+	type MilitaryUnits,
+	processKingdomTick,
+} from "./tickUtils";
 
 describe("processKingdomTick", () => {
 	it("should correctly calculate money and power income", () => {
@@ -498,5 +503,93 @@ describe("processKingdomTick", () => {
 		// Total: 2700 * 1.25 = 3375
 		expect(updatedKingdom.moneyIncome).toBe(3375);
 		expect(updatedKingdom.research?.money.perc).toBe(25);
+	});
+
+	it("should cap auto-exploration at the correct limit (10% of land)", () => {
+		const kingdom = {
+			population: 2250,
+			land: 250,
+			money: 300000,
+			power: 10000,
+			moneyIncome: 0,
+			powerIncome: 0,
+			probes: 0,
+			landQueue: [] as number[],
+			autoExplore: 10,
+			researchPts: 0,
+			research: {
+				pop: { pts: 0, perc: 0 },
+				power: { pts: 0, perc: 0 },
+				mil: { pts: 0, perc: 0 },
+				money: { pts: 0, perc: 0 },
+				fdc: { pts: 0, perc: 0 },
+				warp: { pts: 0, perc: 0 },
+			},
+		};
+
+		const buildings = {
+			res: 80,
+			plants: 40,
+			rax: 10,
+			sm: 30,
+			pf: 10,
+			tc: 0,
+			asb: 0,
+			ach: 0,
+			rubble: 0,
+			queue: {
+				res: [],
+				plants: [],
+				rax: [],
+				sm: [],
+				pf: [],
+				tc: [],
+				asb: [],
+				ach: [],
+			},
+		};
+
+		const military = {
+			sol: 200,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			hgl: 0,
+			ht: 0,
+			sci: 100,
+			queue: {
+				sol: [],
+				tr: [],
+				dr: [],
+				ft: [],
+				tf: [],
+				lt: [],
+				ld: [],
+				lf: [],
+				f74: [],
+				t: [],
+				hgl: [],
+				ht: [],
+				sci: [],
+			},
+		};
+
+		const { updatedKingdom } = processKingdomTick(
+			kingdom as unknown as KingdomSettings,
+			buildings as unknown as BuildingState,
+			military as unknown as MilitaryUnits,
+		);
+
+		// Since auto-exploration now happens BEFORE the queue progresses in the same tick,
+		// 1 piece is added to land and 23 remain in queue (if started with empty queue).
+		const queueSum = updatedKingdom.landQueue.reduce((a, b) => a + b, 0);
+		expect(queueSum).toBe(23);
+		expect(updatedKingdom.land).toBe(251);
 	});
 });
