@@ -477,8 +477,8 @@ export function processKingdomTick(
 			} else {
 				// Standard bonus research
 				const prerequisiteKey = (
-					GAME_PARAMS.researchPrerequisites as Record<string, string>
-				)[researchKey];
+					GAME_PARAMS.research.params as Record<string, { requires?: string }>
+				)[researchKey]?.requires;
 				if (prerequisiteKey) {
 					const prerequisite = (
 						newKingdom.research as Record<string, { pts: number; perc: number }>
@@ -486,7 +486,7 @@ export function processKingdomTick(
 					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue; // Skip if prerequisite not completed
 				}
 				required = GAME_PARAMS.research.required(
-					researchKey as keyof typeof GAME_PARAMS.research.weights,
+					researchKey as keyof typeof GAME_PARAMS.research.params,
 					newKingdom.land,
 				);
 			}
@@ -520,7 +520,7 @@ export function processKingdomTick(
 	for (const key of standardResearchKeys) {
 		const pts = newKingdom.research[key].pts;
 		const required = GAME_PARAMS.research.required(key, newKingdom.land);
-		const maxBonus = GAME_PARAMS.research.bonuses[key];
+		const maxBonus = GAME_PARAMS.research.params[key].bonus;
 		let perc = 0;
 		if (required > 0) {
 			perc = Math.min(Math.floor((maxBonus * pts) / required), maxBonus);

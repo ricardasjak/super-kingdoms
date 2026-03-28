@@ -530,7 +530,10 @@ function KingdomMilitaryPage() {
 										(f74Count + f74Queue) * f74Housing;
 									const asbTotalCapacity =
 										myKingdom.buildings.asb * GAME_PARAMS.buildings.asbCapacity;
-									const asbAvailableSpace = Math.max(0, asbTotalCapacity - asbUsed);
+									const asbAvailableSpace = Math.max(
+										0,
+										asbTotalCapacity - asbUsed,
+									);
 
 									let housingLimit = Infinity;
 									if (key === "tf") {

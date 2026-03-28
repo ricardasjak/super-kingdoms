@@ -118,7 +118,7 @@ function KingdomResearchPage() {
 			required = techInfo.requirePoints;
 		} else {
 			required = GAME_PARAMS.research.required(
-				key as keyof typeof GAME_PARAMS.research.weights,
+				key as keyof typeof GAME_PARAMS.research.params,
 				myKingdom.land,
 			);
 		}
@@ -314,9 +314,12 @@ function KingdomResearchPage() {
 								const autoAssign = myKingdom.researchAutoAssign || [];
 								const sumWeights = autoAssign.reduce((sum, key) => {
 									const weight =
-										(GAME_PARAMS.research.weights as Record<string, number>)[
-											key
-										] || 0;
+										(
+											GAME_PARAMS.research.params as Record<
+												string,
+												{ weight: number }
+											>
+										)[key]?.weight || 0;
 									return sum + weight;
 								}, 0);
 								const scientists = myKingdom.military.sci;
@@ -454,8 +457,11 @@ function KingdomResearchPage() {
 							<tbody>
 								{standardResearchTopics.map(({ key, label, data }) => {
 									const prerequisiteKey = (
-										GAME_PARAMS.researchPrerequisites as Record<string, string>
-									)[key];
+										GAME_PARAMS.research.params as Record<
+											string,
+											{ requires?: string }
+										>
+									)[key]?.requires;
 									const prerequisiteMet = prerequisiteKey
 										? ((
 												myKingdom.research as Record<
@@ -480,7 +486,12 @@ function KingdomResearchPage() {
 													</div>
 												)}
 												{(data?.perc ?? 0) >= 100 && (
-													<div style={{ fontSize: "0.75rem", color: "var(--pico-ins-color)" }}>
+													<div
+														style={{
+															fontSize: "0.75rem",
+															color: "var(--pico-ins-color)",
+														}}
+													>
 														Completed
 													</div>
 												)}
@@ -489,7 +500,7 @@ function KingdomResearchPage() {
 											<td>
 												{(() => {
 													const required = GAME_PARAMS.research.required(
-														key,
+														key as keyof typeof GAME_PARAMS.research.params,
 														myKingdom.land,
 													);
 													const current = data?.pts ?? 0;
@@ -742,7 +753,9 @@ function KingdomResearchPage() {
 																			} else {
 																				// Append cost info as well for more detail
 																				tooltipContent += ` | Cost: $${discountedCost.toLocaleString()}${
-																					solCost > 0 ? ` | Soldiers: ${solCost}` : ""
+																					solCost > 0
+																						? ` | Soldiers: ${solCost}`
+																						: ""
 																				}`;
 																			}
 																			return (
@@ -760,7 +773,8 @@ function KingdomResearchPage() {
 																			];
 																		if (techInfo?.bonus || key === "long") {
 																			let content = `Unlocks ${techInfo?.bonus}% better power plants`;
-																			if (key === "core") content += " and Warp Drive";
+																			if (key === "core")
+																				content += " and Warp Drive";
 																			if (key === "long")
 																				content = `Increases residences base capacity by ${techInfo?.bonus} population`;
 
@@ -777,14 +791,25 @@ function KingdomResearchPage() {
 																	})()}
 																</div>
 																{!prerequisiteMet && (
-																	<div style={{ fontSize: "0.75rem", color: "red" }}>
+																	<div
+																		style={{
+																			fontSize: "0.75rem",
+																			color: "red",
+																		}}
+																	>
 																		Locked: Needs{" "}
-																		{techTopics.find((t) => t.key === prerequisite)
-																			?.label || prerequisite}
+																		{techTopics.find(
+																			(t) => t.key === prerequisite,
+																		)?.label || prerequisite}
 																	</div>
 																)}
 																{(data?.perc ?? 0) >= 100 && (
-																	<div style={{ fontSize: "0.75rem", color: "var(--pico-ins-color)" }}>
+																	<div
+																		style={{
+																			fontSize: "0.75rem",
+																			color: "var(--pico-ins-color)",
+																		}}
+																	>
 																		Completed
 																	</div>
 																)}

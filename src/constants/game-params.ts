@@ -57,29 +57,14 @@ const MILITARY_UNITS = {
 	ht: { cost: 2250, sol: 1, power: 1.4, housing: 2, off: 12, def: 12 },
 } as const;
 
-export const RESEARCH_WEIGHTS = {
-	pop: 0.00475,
-	power: 0.00311,
-	mil: 0.00291,
-	money: 0.00535,
-	fdc: 0.0004,
-	warp: 0.00173,
+export const RESEARCH_PARAMS = {
+	pop: { weight: 0.00475, bonus: 20 },
+	power: { weight: 0.00311, bonus: 50 },
+	mil: { weight: 0.00291, bonus: 30 },
+	money: { weight: 0.00535, bonus: 25 },
+	fdc: { weight: 0.0004, bonus: 25 },
+	warp: { weight: 0.00173, bonus: 20, requires: "core" },
 } as const;
-
-export const RESEARCH_BONUS = {
-	pop: 20,
-	power: 50,
-	mil: 30,
-	money: 25,
-	fdc: 25,
-	warp: 20,
-} as const;
-
-export const RESEARCH_PREREQUISITES: Partial<
-	Record<keyof typeof RESEARCH_WEIGHTS, string>
-> = {
-	warp: "core",
-};
 
 const RESEARCH_TECH_TREE: Partial<
 	Record<
@@ -115,7 +100,9 @@ export const GAME_PARAMS = {
 	population: {
 		growth: 0.05,
 		decline: (pop: number, land: number) =>
-			Math.round(Math.max(land / 5, pop * 0.05)),
+			Math.round(
+				Math.max(100, land > 10_000 ? land / 10 : land / 5, pop * 0.05),
+			),
 	},
 	power: {
 		consumption: {
@@ -141,7 +128,7 @@ export const GAME_PARAMS = {
 		resCapacity: 50,
 		raxCapacity: 75,
 		asbCapacity: 60,
-		achCapacity: 0,// disabled
+		achCapacity: 0, // disabled
 		plantProduction: 100,
 		plantStorage: 1000,
 	},
@@ -187,15 +174,13 @@ export const GAME_PARAMS = {
 		},
 	},
 	militaryTechTree: RESEARCH_TECH_TREE,
-	researchPrerequisites: RESEARCH_PREREQUISITES,
 	research: {
-		weights: RESEARCH_WEIGHTS,
-		bonuses: RESEARCH_BONUS,
+		params: RESEARCH_PARAMS,
 		/**
 		 * calculates land based research required points
 		 */
-		required: (property: keyof typeof RESEARCH_WEIGHTS, land: number) =>
-			Math.round(land * land * RESEARCH_WEIGHTS[property]),
+		required: (property: keyof typeof RESEARCH_PARAMS, land: number) =>
+			Math.round(land * land * RESEARCH_PARAMS[property].weight),
 	},
 	nw: {
 		units: {

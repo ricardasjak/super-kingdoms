@@ -1068,8 +1068,8 @@ export const assignResearchPoints = mutation({
 		for (const key of standardKeys) {
 			if (args[key] > 0) {
 				const prerequisite = (
-					GAME_PARAMS.researchPrerequisites as Record<string, string>
-				)[key];
+					GAME_PARAMS.research.params as Record<string, { requires?: string }>
+				)[key]?.requires;
 				if (prerequisite) {
 					const preData = (
 						newResearch as Record<string, { pts: number; perc: number }>
@@ -1083,7 +1083,7 @@ export const assignResearchPoints = mutation({
 				const currentPts = newResearch[key].pts;
 				const newPts = currentPts + args[key];
 				const required = GAME_PARAMS.research.required(key, kingdom.land);
-				const maxBonus = GAME_PARAMS.research.bonuses[key];
+				const maxBonus = GAME_PARAMS.research.params[key].bonus;
 				let perc = 0;
 				if (required > 0) {
 					perc = Math.min(Math.floor((maxBonus * newPts) / required), maxBonus);
