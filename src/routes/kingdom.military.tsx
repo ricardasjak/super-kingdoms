@@ -62,7 +62,10 @@ const getUnitTooltip = (key: string) => {
 	const nwValue =
 		GAME_PARAMS.nw.units[key as keyof typeof GAME_PARAMS.nw.units];
 	if (!unit) return "";
-	return `⚔️ Offense: ${unit.off} | 🛡️ Defense: ${unit.def} | ⚡ Power usage: ${unit.power} | 💎 NW: ${nwValue}`;
+	const row1 = `⚔️ Offense: ${unit.off} | 🛡️ Defense: ${unit.def} | `;
+	const row2 = `🏠 Space: ${unit.housing} | ⚡ Power: ${unit.power} | `;
+	const row3 = `💎 NW: ${nwValue}`;
+	return `${row1}\n${row2}\n${row3}`;
 };
 
 function getUnitCost(key: keyof typeof UNITS, tcCount: number, land: number) {
@@ -508,31 +511,38 @@ function KingdomMilitaryPage() {
 										unitSolCost > 0
 											? Math.floor(currentSoldiers / unitSolCost)
 											: Infinity;
-									const tfHousingLimit =
-										key === "tf"
-											? Math.max(
-													0,
-													myKingdom.buildings.asb *
-														GAME_PARAMS.buildings.asbCapacity -
-														unitCount -
-														queueCount,
-												)
-											: Infinity;
-									const f74HousingLimit =
-										key === "f74"
-											? Math.max(
-													0,
-													myKingdom.buildings.ach *
-														GAME_PARAMS.buildings.achCapacity -
-														unitCount -
-														queueCount,
-												)
-											: Infinity;
+									const tfCount = military.tf || 0;
+									const f74Count = military.f74 || 0;
+									const tfQueue = (military.queue.tf || []).reduce(
+										(a, b) => a + b,
+										0,
+									);
+									const f74Queue = (military.queue.f74 || []).reduce(
+										(a, b) => a + b,
+										0,
+									);
+
+									const tfHousing = GAME_PARAMS.military.units.tf.housing;
+									const f74Housing = GAME_PARAMS.military.units.f74.housing;
+
+									const asbUsed =
+										(tfCount + tfQueue) * tfHousing +
+										(f74Count + f74Queue) * f74Housing;
+									const asbTotalCapacity =
+										myKingdom.buildings.asb * GAME_PARAMS.buildings.asbCapacity;
+									const asbAvailableSpace = Math.max(0, asbTotalCapacity - asbUsed);
+
+									let housingLimit = Infinity;
+									if (key === "tf") {
+										housingLimit = Math.floor(asbAvailableSpace / tfHousing);
+									} else if (key === "f74") {
+										housingLimit = Math.floor(asbAvailableSpace / f74Housing);
+									}
+
 									const maxUnits = Math.min(
 										maxByMoney,
 										maxBySoldiers,
-										tfHousingLimit,
-										f74HousingLimit,
+										housingLimit,
 									);
 									const maxUnitsRounded = roundToDuration(
 										maxUnits,

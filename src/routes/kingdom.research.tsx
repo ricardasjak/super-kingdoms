@@ -36,7 +36,6 @@ function KingdomResearchPage() {
 		tf: "",
 		ld: "",
 		lf: "",
-		f74: "",
 		hgl: "",
 		ht: "",
 		fusion: "",
@@ -86,10 +85,9 @@ function KingdomResearchPage() {
 	const techTopics = [
 		{ key: "dr", label: "Dragoons", data: research.dr },
 		{ key: "ft", label: "Fighters", data: research.ft },
-		{ key: "tf", label: "Tactical Fighters", data: research.tf },
+		{ key: "tf", label: "Air Supremacy Beacon", data: research.tf },
 		{ key: "ld", label: "Laser Dragoons", data: research.ld },
 		{ key: "lf", label: "Laser Fighters", data: research.lf },
-		{ key: "f74", label: "F74 Drones", data: research.f74 },
 		{ key: "ht", label: "Hover Tanks", data: research.ht },
 		{ key: "fusion", label: "Fusion Technology", data: research.fusion },
 		{ key: "core", label: "Energy Core", data: research.core },
@@ -155,7 +153,6 @@ function KingdomResearchPage() {
 				tf: "",
 				ld: "",
 				lf: "",
-				f74: "",
 				hgl: "",
 				ht: "",
 				fusion: "",
@@ -208,7 +205,7 @@ function KingdomResearchPage() {
 				tf: parseInt(assignQueue.tf, 10) || 0,
 				ld: parseInt(assignQueue.ld, 10) || 0,
 				lf: parseInt(assignQueue.lf, 10) || 0,
-				f74: parseInt(assignQueue.f74, 10) || 0,
+				f74: 0,
 				hgl: 0,
 				ht: parseInt(assignQueue.ht, 10) || 0,
 				fusion: parseInt(assignQueue.fusion, 10) || 0,
@@ -227,7 +224,6 @@ function KingdomResearchPage() {
 				tf: "",
 				ld: "",
 				lf: "",
-				f74: "",
 				hgl: "",
 				ht: "",
 				fusion: "",
@@ -476,6 +472,11 @@ function KingdomResearchPage() {
 														Locked: Needs{" "}
 														{techTopics.find((t) => t.key === prerequisiteKey)
 															?.label || prerequisiteKey}
+													</div>
+												)}
+												{(data?.perc ?? 0) >= 100 && (
+													<div style={{ fontSize: "0.75rem", color: "var(--pico-ins-color)" }}>
+														Completed
 													</div>
 												)}
 											</td>
@@ -729,11 +730,16 @@ function KingdomResearchPage() {
 																			const solCost = (
 																				unitStats as typeof GAME_PARAMS.military.units.tr
 																			).sol;
-																			const tooltipContent = `Offense: ${unitStats?.off} | Defense: ${unitStats?.def} | Cost: $${discountedCost.toLocaleString()}${
-																				solCost > 0
-																					? ` | Soldiers: ${solCost}`
-																					: ""
-																			}`;
+																			let tooltipContent = `Unlocks ${label}: ⚔️ ${unitStats?.off} | 🛡️ ${unitStats?.def} points`;
+																			if (key === "tf") {
+																				tooltipContent =
+																					"Unlocks Air Support Bays (building) and mechanical units (TFs, F74 Drones)";
+																			} else {
+																				// Append cost info as well for more detail
+																				tooltipContent += ` | Cost: $${discountedCost.toLocaleString()}${
+																					solCost > 0 ? ` | Soldiers: ${solCost}` : ""
+																				}`;
+																			}
 																			return (
 																				<Tooltip
 																					content={tooltipContent}
@@ -764,16 +770,15 @@ function KingdomResearchPage() {
 																	})()}
 																</div>
 																{!prerequisiteMet && (
-																	<div
-																		style={{
-																			fontSize: "0.75rem",
-																			color: "red",
-																		}}
-																	>
+																	<div style={{ fontSize: "0.75rem", color: "red" }}>
 																		Locked: Needs{" "}
-																		{techTopics.find(
-																			(t) => t.key === prerequisite,
-																		)?.label || prerequisite}
+																		{techTopics.find((t) => t.key === prerequisite)
+																			?.label || prerequisite}
+																	</div>
+																)}
+																{(data?.perc ?? 0) >= 100 && (
+																	<div style={{ fontSize: "0.75rem", color: "var(--pico-ins-color)" }}>
+																		Completed
 																	</div>
 																)}
 															</td>

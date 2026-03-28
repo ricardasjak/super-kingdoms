@@ -423,7 +423,6 @@ export function SpyReportSOB({
 		"pf",
 		"tc",
 		"asb",
-		"ach",
 		"rubble",
 	] as const;
 

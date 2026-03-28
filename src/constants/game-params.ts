@@ -35,7 +35,7 @@ const MILITARY_UNITS = {
 		cost: 1500,
 		sol: 0,
 		power: 1.4,
-		housing: 1,
+		housing: 2,
 		off: 12,
 		def: 0,
 		requiresBuilding: "asb",
@@ -50,7 +50,7 @@ const MILITARY_UNITS = {
 		housing: 1,
 		off: 0,
 		def: 8,
-		requiresBuilding: "ach",
+		requiresBuilding: "asb",
 	},
 	t: { cost: 1750, sol: 1, power: 1.4, housing: 2, off: 9, def: 9 },
 	hgl: { cost: 9999, sol: 0, power: 0, housing: 0, off: 0, def: 0 },
@@ -94,12 +94,10 @@ const RESEARCH_TECH_TREE: Partial<
 > = {
 	dr: { requirePoints: 60_000 },
 	ft: { requirePoints: 120_000, requires: "dr" },
-	tf: { requirePoints: 480_000, requires: "ft", building: "asb" },
+	tf: { requirePoints: 1_000, building: "asb" },
 
 	ld: { requirePoints: 72_000 },
 	lf: { requirePoints: 150_000, requires: "ld" },
-	f74: { requirePoints: 600_000, requires: "lf", building: "ach" },
-
 	ht: { requirePoints: 200_000 },
 
 	fusion: { requirePoints: 30_000, bonus: 50 },
@@ -141,8 +139,8 @@ export const GAME_PARAMS = {
 		cost: (land: number) => Math.round(Math.sqrt(land) * 63),
 		resCapacity: 50,
 		raxCapacity: 75,
-		asbCapacity: 40,
-		achCapacity: 60,
+		asbCapacity: 60,
+		achCapacity: 0,// disabled
 		plantProduction: 100,
 		plantStorage: 1000,
 	},

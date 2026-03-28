@@ -53,7 +53,6 @@ function KingdomGrowthPage() {
 		pf: "",
 		tc: "",
 		asb: "",
-		ach: "",
 	};
 
 	const [buildQueue, setBuildQueue] = useState(INITIAL_BUILD_QUEUE);
@@ -65,7 +64,6 @@ function KingdomGrowthPage() {
 		pf: "",
 		tc: "",
 		asb: "",
-		ach: "",
 	});
 	const [targetInitialized, setTargetInitialized] = useState(false);
 	const [isBuilding, setIsBuilding] = useState(false);
@@ -83,7 +81,6 @@ function KingdomGrowthPage() {
 					pf: buildings.target.pf.toString(),
 					tc: buildings.target.tc.toString(),
 					asb: buildings.target.asb.toString(),
-					ach: buildings.target.ach.toString(),
 				});
 			} else {
 				const total =
@@ -107,7 +104,6 @@ function KingdomGrowthPage() {
 						pf: Math.round((buildings.pf / myKingdom.land) * 100).toString(),
 						tc: Math.round((buildings.tc / myKingdom.land) * 100).toString(),
 						asb: Math.round((buildings.asb / myKingdom.land) * 100).toString(),
-						ach: Math.round((buildings.ach / myKingdom.land) * 100).toString(),
 					});
 				} else {
 					setTargetQueue({
@@ -118,7 +114,6 @@ function KingdomGrowthPage() {
 						pf: "0",
 						tc: "0",
 						asb: "0",
-						ach: "0",
 					});
 				}
 			}
@@ -178,19 +173,9 @@ function KingdomGrowthPage() {
 		pf: 0,
 		tc: 0,
 		asb: 0,
-		ach: 0,
 	};
 	if (buildings.queue) {
-		const keys = [
-			"res",
-			"plants",
-			"rax",
-			"sm",
-			"pf",
-			"tc",
-			"asb",
-			"ach",
-		] as const;
+		const keys = ["res", "plants", "rax", "sm", "pf", "tc", "asb"] as const;
 		for (const key of keys) {
 			if (buildings.queue[key]) {
 				queuedCounts[key] = buildings.queue[key].reduce(
@@ -377,7 +362,7 @@ function KingdomGrowthPage() {
 					pf: parseInt(buildQueue.pf, 10) || 0,
 					tc: parseInt(buildQueue.tc, 10) || 0,
 					asb: parseInt(buildQueue.asb, 10) || 0,
-					ach: parseInt(buildQueue.ach, 10) || 0,
+					ach: 0,
 				});
 				showMessage("Buildings successfully razed!", "success");
 			} else {
@@ -396,7 +381,7 @@ function KingdomGrowthPage() {
 					pf: parseInt(buildQueue.pf, 10) || 0,
 					tc: parseInt(buildQueue.tc, 10) || 0,
 					asb: parseInt(buildQueue.asb, 10) || 0,
-					ach: parseInt(buildQueue.ach, 10) || 0,
+					ach: 0,
 				});
 				showMessage(
 					"Buildings successfully queued for construction!",
@@ -1005,7 +990,14 @@ function KingdomGrowthPage() {
 											Air Support Bays{" "}
 											<Tooltip
 												showIcon
-												content={`Capacity per bay: ${40} TFs | Total capacity: ${buildings.asb * 40} | Used: ${myKingdom.military.tf}`}
+												content={`Capacity per bay: ${
+													GAME_PARAMS.buildings.asbCapacity
+												} space | Total: ${
+													buildings.asb * GAME_PARAMS.buildings.asbCapacity
+												} | Used: ${
+													(myKingdom.military.tf || 0) * 2 +
+													(myKingdom.military.f74 || 0)
+												}`}
 											/>
 										</td>
 										<td>{actualPercent(buildings.asb)}</td>
@@ -1057,65 +1049,7 @@ function KingdomGrowthPage() {
 										</td>
 									</tr>
 								)}
-								{/* Aegis Control Hubs */}
-								{isBuildingUnlocked("ach") && (
-									<tr>
-										<td>
-											Aegis Control Hubs{" "}
-											<Tooltip
-												showIcon
-												content={`Capacity per hub: ${60} F-74s | Total capacity: ${buildings.ach * 60} | Used: ${myKingdom.military.f74}`}
-											/>
-										</td>
-										<td>{actualPercent(buildings.ach)}</td>
-										<td>{buildings.ach}</td>
-										<td>
-											<QueueTooltip
-												isRazeMode={isRazeMode}
-												count={queuedCounts.ach}
-												queueArray={buildings.queue?.ach || []}
-											/>
-										</td>
-										{myKingdom.autoBuild && !isRazeMode && (
-											<td>
-												<input
-													type="number"
-													name="ach"
-													value={targetQueue.ach}
-													onChange={handleTargetChange}
-													min="0"
-													max="100"
-												/>
-											</td>
-										)}
-										<td>
-											<MaxButton
-												onClick={() => handleMaxClick("ach")}
-												disabled={
-													isRazeMode
-														? buildings.ach <= 0
-														: maxBuildingsRounded <= 0
-												}
-												label={(isRazeMode
-													? buildings.ach
-													: maxBuildingsRounded
-												).toLocaleString()}
-											/>
-										</td>
-										<td>
-											<input
-												type="number"
-												name="ach"
-												value={buildQueue.ach}
-												onChange={handleInputChange}
-												min="0"
-												max={isRazeMode ? buildings.ach : undefined}
-												disabled={isBuilding}
-												style={{ marginBottom: 0 }}
-											/>
-										</td>
-									</tr>
-								)}
+
 								{/* Rubble */}
 								<tr>
 									<td>Rubble</td>
@@ -1213,7 +1147,7 @@ function KingdomGrowthPage() {
 										pf: parseInt(targetQueue.pf, 10) || 0,
 										tc: parseInt(targetQueue.tc, 10) || 0,
 										asb: parseInt(targetQueue.asb, 10) || 0,
-										ach: parseInt(targetQueue.ach, 10) || 0,
+										ach: 0,
 									},
 								});
 								showMessage(
@@ -1258,7 +1192,7 @@ function KingdomGrowthPage() {
 											pf: parseInt(targetQueue.pf, 10) || 0,
 											tc: parseInt(targetQueue.tc, 10) || 0,
 											asb: parseInt(targetQueue.asb, 10) || 0,
-											ach: parseInt(targetQueue.ach, 10) || 0,
+											ach: 0,
 										},
 									});
 									showMessage("Target percentages saved!", "success");

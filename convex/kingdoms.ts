@@ -560,34 +560,30 @@ export const trainMilitary = mutation({
 			}
 		}
 
-		const tfHousingLimit =
+		const asbCapacity =
 			kingdom.buildings.asb * GAME_PARAMS.buildings.asbCapacity;
 		const currentTf = kingdom.military.tf || 0;
 		const tfInQueue = (kingdom.military.queue.tf || []).reduce(
 			(a, b) => a + b,
 			0,
 		);
-		const newTfCount = args.tf;
-		if (newTfCount > 0 && currentTf + tfInQueue + newTfCount > tfHousingLimit) {
-			throw new Error(
-				`Cannot train Tactical Fighters. Housing capacity: ${tfHousingLimit} (ASB: ${kingdom.buildings.asb} × ${GAME_PARAMS.buildings.asbCapacity}). Currently have ${currentTf} + ${tfInQueue} in queue.`,
-			);
-		}
-
-		const f74HousingLimit =
-			kingdom.buildings.ach * GAME_PARAMS.buildings.achCapacity;
 		const currentF74 = kingdom.military.f74 || 0;
 		const f74InQueue = (kingdom.military.queue.f74 || []).reduce(
 			(a, b) => a + b,
 			0,
 		);
-		const newF74Count = args.f74;
-		if (
-			newF74Count > 0 &&
-			currentF74 + f74InQueue + newF74Count > f74HousingLimit
-		) {
+
+		const tfHousing = GAME_PARAMS.military.units.tf.housing;
+		const f74Housing = GAME_PARAMS.military.units.f74.housing;
+
+		const usedAsb =
+			(currentTf + tfInQueue) * tfHousing +
+			(currentF74 + f74InQueue) * f74Housing;
+		const requestedAsb = args.tf * tfHousing + args.f74 * f74Housing;
+
+		if (requestedAsb > 0 && usedAsb + requestedAsb > asbCapacity) {
 			throw new Error(
-				`Cannot train Interceptor F74. Housing capacity: ${f74HousingLimit} (ACH: ${kingdom.buildings.ach} × ${GAME_PARAMS.buildings.achCapacity}). Currently have ${currentF74} + ${f74InQueue} in queue.`,
+				`Not enough ASB capacity. Capacity: ${asbCapacity}. Currently used: ${usedAsb}. Requested: ${requestedAsb}.`,
 			);
 		}
 
