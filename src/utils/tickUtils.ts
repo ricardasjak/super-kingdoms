@@ -63,6 +63,8 @@ export type KingdomSettings = {
 		ht?: { pts: number; perc: number };
 		fusion?: { pts: number; perc: number };
 		core?: { pts: number; perc: number };
+		armor?: { pts: number; perc: number };
+		long?: { pts: number; perc: number };
 	};
 };
 
@@ -144,7 +146,12 @@ export function processKingdomTick(
 	const raxSurplus = Math.max(0, raxUsage - raxCapacity);
 
 	const popBonus = (kingdom.research.pop?.perc ?? 0) / 100;
-	const resCapacityBoosted = GAME_PARAMS.buildings.resCapacity * (1 + popBonus);
+	const longBonus =
+		(kingdom.research.long?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.long?.bonus ?? 0)
+			: 0;
+	const resCapacityBoosted =
+		(GAME_PARAMS.buildings.resCapacity + longBonus) * (1 + popBonus);
 
 	const maxPopulation = Math.floor(
 		buildings.res * resCapacityBoosted - raxSurplus,
@@ -534,6 +541,7 @@ export function processKingdomTick(
 		"core",
 		"warp",
 		"armor",
+		"long",
 	] as const;
 	for (const key of techResearchKeys) {
 		const researchData = (

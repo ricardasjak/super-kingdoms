@@ -41,6 +41,7 @@ function KingdomResearchPage() {
 		fusion: "",
 		core: "",
 		armor: "",
+		long: "",
 	});
 	const [isAssigning, setIsAssigning] = useState(false);
 	const [hireAmount, setHireAmount] = useState("");
@@ -92,6 +93,7 @@ function KingdomResearchPage() {
 		{ key: "fusion", label: "Fusion Technology", data: research.fusion },
 		{ key: "core", label: "Energy Core", data: research.core },
 		{ key: "armor", label: "Probe Armor", data: research.armor },
+		{ key: "long", label: "Longevity", data: research.long },
 	] as const;
 
 	const techTree = GAME_PARAMS.militaryTechTree;
@@ -158,6 +160,7 @@ function KingdomResearchPage() {
 				fusion: "",
 				core: "",
 				armor: "",
+				long: "",
 				[key]: assignable.toString(),
 			};
 		});
@@ -211,6 +214,7 @@ function KingdomResearchPage() {
 				fusion: parseInt(assignQueue.fusion, 10) || 0,
 				core: parseInt(assignQueue.core, 10) || 0,
 				armor: parseInt(assignQueue.armor, 10) || 0,
+				long: parseInt(assignQueue.long, 10) || 0,
 			});
 			setAssignQueue({
 				pop: "",
@@ -229,6 +233,7 @@ function KingdomResearchPage() {
 				fusion: "",
 				core: "",
 				armor: "",
+				long: "",
 			});
 			showMessage("Research points successfully assigned!", "success");
 		} catch (error) {
@@ -753,10 +758,12 @@ function KingdomResearchPage() {
 																			GAME_PARAMS.militaryTechTree[
 																				key as keyof typeof GAME_PARAMS.militaryTechTree
 																			];
-																		if (techInfo?.bonus) {
-																			let content = `Unlocks ${techInfo.bonus}% better power plants`;
-																			if (key === "core")
-																				content += " and Warp Drive";
+																		if (techInfo?.bonus || key === "long") {
+																			let content = `Unlocks ${techInfo?.bonus}% better power plants`;
+																			if (key === "core") content += " and Warp Drive";
+																			if (key === "long")
+																				content = `Increases residences base capacity by ${techInfo?.bonus} population`;
+
 																			return (
 																				<Tooltip
 																					content={content}

@@ -104,6 +104,7 @@ const schema = defineSchema({
 			fusion: v.optional(v.object({ pts: v.number(), perc: v.number() })),
 			core: v.optional(v.object({ pts: v.number(), perc: v.number() })),
 			armor: v.optional(v.object({ pts: v.number(), perc: v.number() })),
+			long: v.optional(v.object({ pts: v.number(), perc: v.number() })),
 		}),
 		researchAutoAssign: v.array(v.string()),
 	}).index("by_userId", ["userId"]),

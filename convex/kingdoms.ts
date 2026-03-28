@@ -1005,6 +1005,7 @@ export const assignResearchPoints = mutation({
 		fusion: v.number(),
 		core: v.number(),
 		armor: v.number(),
+		long: v.number(),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
@@ -1034,6 +1035,7 @@ export const assignResearchPoints = mutation({
 			"core",
 			"warp",
 			"armor",
+			"long",
 		] as const;
 
 		let totalPoints = 0;
@@ -1103,6 +1105,7 @@ export const assignResearchPoints = mutation({
 			"core",
 			"warp",
 			"armor",
+			"long",
 		] as const;
 		for (const key of techKeys) {
 			if (args[key] > 0) {

@@ -94,7 +94,7 @@ const RESEARCH_TECH_TREE: Partial<
 > = {
 	dr: { requirePoints: 60_000 },
 	ft: { requirePoints: 120_000, requires: "dr" },
-	tf: { requirePoints: 1_000, building: "asb" },
+	tf: { requirePoints: 600_000, building: "asb" },
 
 	ld: { requirePoints: 72_000 },
 	lf: { requirePoints: 150_000, requires: "ld" },
@@ -103,6 +103,7 @@ const RESEARCH_TECH_TREE: Partial<
 	fusion: { requirePoints: 30_000, bonus: 50 },
 	core: { requirePoints: 50_000, requires: "fusion", bonus: 20 },
 	armor: { requirePoints: 92_000 },
+	long: { requirePoints: 400_000, requires: "core", bonus: 5 },
 };
 
 export const GAME_PARAMS = {
