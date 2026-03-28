@@ -243,6 +243,7 @@ export const updateRulerName = mutation({
 			.unique();
 
 		if (!existing) throw new Error("Kingdom not found");
+		if (existing.state === "dead") throw new Error("Kingdom is dead");
 
 		await ctx.db.patch(existing._id, {
 			rulerName: args.rulerName,
@@ -309,6 +310,7 @@ export const buildBuildings = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		if (!kingdom.buildings) throw new Error("Buildings not found");
 
@@ -413,6 +415,7 @@ export const trainMilitary = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		if (!kingdom.military) throw new Error("Military not found");
 
@@ -632,6 +635,7 @@ export const disbandMilitary = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		const military = kingdom.military;
 		const units = GAME_PARAMS.military.units;
@@ -697,6 +701,7 @@ export const exploreLand = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		if (args.amount <= 0) {
 			throw new Error("Invalid exploration amount");
@@ -755,6 +760,7 @@ export const razeBuildings = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		const currentBuildings = kingdom.buildings;
 		const buildingCost = GAME_PARAMS.buildings.cost(kingdom.land);
@@ -800,6 +806,7 @@ export const toggleAutoExplore = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		await ctx.db.patch(kingdom._id, {
 			autoExplore: args.autoExplore,
@@ -831,6 +838,7 @@ export const saveAutoBuildSettings = mutation({
 			.unique();
 
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		console.log("args.target", args.target);
 
@@ -1016,6 +1024,7 @@ export const assignResearchPoints = mutation({
 			.withIndex("by_userId", (q) => q.eq("userId", userId))
 			.unique();
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		const researchKeys = [
 			"pop",
@@ -1158,6 +1167,7 @@ export const saveResearchAutoAssign = mutation({
 			.withIndex("by_userId", (q) => q.eq("userId", userId))
 			.unique();
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		await ctx.db.patch(kingdom._id, {
 			researchAutoAssign: args.priority,
@@ -1178,6 +1188,7 @@ export const buyScientists = mutation({
 			.withIndex("by_userId", (q) => q.eq("userId", userId))
 			.unique();
 		if (!kingdom) throw new Error("Kingdom not found");
+		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
 
 		const amount = Math.floor(args.amount);
 		if (amount <= 0) {

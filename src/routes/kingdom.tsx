@@ -30,6 +30,34 @@ function KingdomLayoutContent() {
 		return null;
 	}
 
+	if (myKingdom.state === "dead") {
+		return (
+			<div className="container" style={{ textAlign: "center", marginTop: "5rem" }}>
+				<article style={{ borderColor: "var(--pico-del-color)" }}>
+					<header style={{ backgroundColor: "var(--pico-del-color)", color: "white" }}>
+						<h2 style={{ margin: 0 }}>OFFICIAL NOTICE</h2>
+					</header>
+					<h1 style={{ color: "var(--pico-del-color)", fontSize: "3rem", margin: "2rem 0" }}>
+						YOUR KINGDOM HAS FALLEN
+					</h1>
+					<p style={{ fontSize: "1.2rem" }}>
+						The population of <strong>{myKingdom.kdName}</strong> has been completely eradicated.
+						A kingdom cannot exist without its people.
+					</p>
+					<footer style={{ marginTop: "2rem" }}>
+						<button
+							type="button"
+							onClick={() => navigate({ to: "/kingdom/delete" })}
+							className="secondary"
+						>
+							Release Land & Start Over
+						</button>
+					</footer>
+				</article>
+			</div>
+		);
+	}
+
 	return (
 		<div>
 			{myKingdom && (

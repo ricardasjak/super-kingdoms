@@ -66,6 +66,7 @@ export type KingdomSettings = {
 		armor?: { pts: number; perc: number };
 		long?: { pts: number; perc: number };
 	};
+	state?: "dead" | "newbiemode";
 };
 
 export type BuildingState = {
@@ -177,6 +178,13 @@ export function processKingdomTick(
 		money: kingdom.money + moneyIncome,
 		population: Math.round(Math.max(0, kingdom.population + populationChange)),
 		popChange: populationChange,
+	};
+
+	if (newKingdom.population <= 0) {
+		newKingdom.state = "dead";
+	}
+
+	Object.assign(newKingdom, {
 		power: Math.min(
 			GAME_PARAMS.buildings.plantStorage * buildings.plants,
 			Math.max(0, Math.round(kingdom.power + powerIncome)),
@@ -188,7 +196,7 @@ export function processKingdomTick(
 		research: { ...kingdom.research },
 		land: kingdom.land,
 		landQueue: [...kingdom.landQueue],
-	};
+	});
 
 	let kingdomChanged = false;
 

@@ -107,6 +107,7 @@ const schema = defineSchema({
 			long: v.optional(v.object({ pts: v.number(), perc: v.number() })),
 		}),
 		researchAutoAssign: v.array(v.string()),
+		state: v.optional(v.union(v.literal("dead"), v.literal("newbiemode"))),
 	}).index("by_userId", ["userId"]),
 	spyReports: defineTable({
 		userId: v.string(),

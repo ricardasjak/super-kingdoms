@@ -87,7 +87,7 @@ export const processBatch = internalMutation({
 				const buildings = kingdom.buildings;
 				const military = kingdom.military;
 
-				if (!buildings) return;
+				if (!buildings || kingdom.state === "dead") return;
 
 				const { updatedKingdom, updatedBuildings, updatedMilitary } =
 					processKingdomTick(kingdom, buildings, military);
@@ -104,6 +104,7 @@ export const processBatch = internalMutation({
 					landQueue: updatedKingdom.landQueue,
 					researchPts: updatedKingdom.researchPts,
 					research: updatedKingdom.research,
+					state: updatedKingdom.state,
 				};
 
 				if (updatedBuildings) {
@@ -180,7 +181,7 @@ export const calculateNetworth = internalMutation({
 			kingdoms.map(async (kd) => {
 				const military = kd.military;
 				const buildings = kd.buildings;
-				if (!military || !buildings) return;
+				if (!military || !buildings || kd.state === "dead") return;
 
 				const nw = calculateNw({
 					military,
