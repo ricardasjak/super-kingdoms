@@ -230,11 +230,12 @@ export const createKingdom = mutation({
 			});
 
 			await ctx.db.insert("kingdoms", {
+				...STARTING_VALUES,
+				autoBuild: true,
 				kdName: botKdName,
 				rulerName: botRulerName,
 				planetType: botPlanetType,
 				raceType: botRaceType,
-				...STARTING_VALUES,
 				nw: botNw,
 				military,
 				buildings,
@@ -334,8 +335,6 @@ export const populateKingdoms = mutation({
 				BOT_NAME_SUFFIXES[Math.floor(Math.random() * BOT_NAME_SUFFIXES.length)];
 			const randomKdName = `${prefix} ${suffix} ${Math.floor(Math.random() * 900) + 100}`;
 
-			const fakeUserId = `fake_user_${Math.random().toString(36).substring(7)}`;
-
 			const { _id, _creationTime, ...kdData } = existingKd;
 
 			const randomLand = Math.floor(Math.random() * 2250) + 250; // 250 to 2500
@@ -353,7 +352,9 @@ export const populateKingdoms = mutation({
 
 			await ctx.db.insert("kingdoms", {
 				...kdData,
-				userId: fakeUserId,
+				userId: undefined,
+				botOwnerKd: "freelancer",
+				autoBuild: true,
 				kdName: randomKdName,
 				land: randomLand,
 				population: randomPop,
