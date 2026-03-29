@@ -6,6 +6,7 @@ import { GAME_PARAMS } from "../../src/constants/game-params";
 import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
 import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
+import type { ResearchTechType, ResearchTopicType } from "../types/game";
 
 export const Route = createFileRoute("/kingdom/research")({
 	component: KingdomResearchPage,
@@ -24,7 +25,9 @@ function KingdomResearchPage() {
 	const hireScientists = useMutation(api.kingdoms.buyScientists);
 	const { showMessage } = useKingdomMessage();
 
-	const [assignQueue, setAssignQueue] = useState({
+	const [assignQueue, setAssignQueue] = useState<
+		Record<ResearchTopicType | ResearchTechType, string>
+	>({
 		pop: "",
 		power: "",
 		mil: "",

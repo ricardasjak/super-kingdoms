@@ -1,3 +1,13 @@
+import type {
+	BuildingConfig,
+	BuildingType,
+	MilitaryUnitConfig,
+	MilitaryUnitType,
+	ResearchTechConfig,
+	ResearchTechType,
+	ResearchTopicType,
+} from "../types/game";
+
 export const PLANET_TYPES = [
 	"Mountainous",
 	"Forest and Wilderness",
@@ -25,33 +35,7 @@ export const RACE_TYPES = [
 	"Shadow",
 ] as const;
 
-export type MilitaryUnitType =
-	| "sol"
-	| "sci"
-	| "tr"
-	| "dr"
-	| "ft"
-	| "tf"
-	| "lt"
-	| "ld"
-	| "lf"
-	| "f74"
-	| "t"
-	| "ht";
-
-const MILITARY_UNITS: Record<
-	MilitaryUnitType,
-	{
-		cost: number;
-		sol: number;
-		power: number;
-		housing: number;
-		off: number;
-		def: number;
-		researchRequired?: ResearchTechType;
-		buildingRequired?: BuildingType;
-	}
-> = {
+const MILITARY_UNITS: Record<MilitaryUnitType, MilitaryUnitConfig> = {
 	sol: { cost: 150, sol: 0, power: 0.7, housing: 1, off: 1, def: 1 },
 	sci: { cost: 1000, sol: 1, power: 0.7, housing: 1, off: 0, def: 0 },
 	tr: { cost: 350, sol: 1, power: 0.7, housing: 1, off: 4, def: 0 },
@@ -134,27 +118,7 @@ export const RESEARCH_PARAMS = {
 	warp: { weight: 0.00173, bonus: 20, requires: "r_core" },
 } as const;
 
-export type ResearchTechType =
-	| "r_dr"
-	| "r_ft"
-	| "r_tf"
-	| "r_f74"
-	| "r_ld"
-	| "r_lf"
-	| "r_ht"
-	| "r_fusion"
-	| "r_core"
-	| "r_armor"
-	| "r_long";
-
-const RESEARCH_TECH_TREE: Record<
-	ResearchTechType,
-	{
-		requirePoints: number;
-		requires?: ResearchTechType;
-		bonus?: number;
-	}
-> = {
+const RESEARCH_TECH_TREE: Record<ResearchTechType, ResearchTechConfig> = {
 	r_dr: { requirePoints: 60_000 },
 	r_ft: { requirePoints: 120_000, requires: "r_dr" },
 	r_tf: { requirePoints: 3000, requires: "r_ft" },
@@ -170,22 +134,7 @@ const RESEARCH_TECH_TREE: Record<
 	r_long: { requirePoints: 400_000, requires: "r_core", bonus: 5 },
 };
 
-export type BuildingType =
-	| "res"
-	| "plants"
-	| "rax"
-	| "sm"
-	| "pf"
-	| "tc"
-	| "asb";
-
-export const BUILDINGS_LIST: Record<
-	BuildingType,
-	{
-		label: string;
-		researchRequired?: ResearchTechType;
-	}
-> = {
+export const BUILDINGS_LIST: Record<BuildingType, BuildingConfig> = {
 	res: { label: "Residencies" },
 	plants: { label: "Power Plants" },
 	rax: { label: "Barracks" },
@@ -284,7 +233,7 @@ export const GAME_PARAMS = {
 		/**
 		 * calculates land based research required points
 		 */
-		required: (property: keyof typeof RESEARCH_PARAMS, land: number) =>
+		required: (property: ResearchTopicType, land: number) =>
 			Math.round(land * land * RESEARCH_PARAMS[property].weight),
 	},
 	nw: {

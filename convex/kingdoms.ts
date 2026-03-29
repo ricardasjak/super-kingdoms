@@ -9,8 +9,14 @@ import {
 	GAME_PARAMS,
 	PLANET_TYPES,
 	RACE_TYPES,
-	type ResearchTechType,
 } from "../src/constants/game-params";
+import type { ResearchTechType, ResearchTopicType } from "../src/types/game";
+import {
+	calculateFreeLand,
+	calculateMilitaryQueue,
+	calculateNewQueue,
+} from "../src/utils/buildingUtils";
+import { calculateExplorationQueue } from "../src/utils/landUtils";
 import { calculateNw } from "../src/utils/nwUtils";
 import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
@@ -373,12 +379,6 @@ export const populateKingdoms = mutation({
 	},
 });
 
-import {
-	calculateFreeLand,
-	calculateMilitaryQueue,
-	calculateNewQueue,
-} from "../src/utils/buildingUtils";
-
 export const buildBuildings = kingdomMutation({
 	args: {
 		res: v.number(),
@@ -660,8 +660,6 @@ export const trainMilitary = kingdomMutation({
 		});
 	},
 });
-
-import { calculateExplorationQueue } from "../src/utils/landUtils";
 
 export const disbandMilitary = kingdomMutation({
 	args: {
@@ -1015,13 +1013,15 @@ export const assignResearchPoints = kingdomMutation({
 		r_long: v.number(),
 	},
 	handler: async (ctx, { kingdom, ...args }) => {
-		const researchKeys = [
+		const _standardKeys: ResearchTopicType[] = [
 			"pop",
 			"power",
 			"mil",
 			"money",
 			"fdc",
 			"warp",
+		];
+		const _techKeys: ResearchTechType[] = [
 			"r_dr",
 			"r_ft",
 			"r_tf",
@@ -1034,10 +1034,16 @@ export const assignResearchPoints = kingdomMutation({
 			"r_armor",
 			"r_long",
 		];
+		const researchKeys: (ResearchTopicType | ResearchTechType)[] = [
+			..._standardKeys,
+			..._techKeys,
+		];
+
+		const typedArgs = args as Record<string, number>;
 
 		let totalPoints = 0;
 		for (const key of researchKeys) {
-			totalPoints += args[key];
+			totalPoints += typedArgs[key] || 0;
 		}
 
 		if (totalPoints > kingdom.researchPts) {
@@ -1045,7 +1051,7 @@ export const assignResearchPoints = kingdomMutation({
 		}
 
 		for (const key of researchKeys) {
-			if (args[key] < 0) {
+			if (typedArgs[key] < 0) {
 				throw new Error("Invalid negative points");
 			}
 		}
@@ -1053,17 +1059,8 @@ export const assignResearchPoints = kingdomMutation({
 		if (totalPoints === 0) return { success: true };
 
 		const newResearch = { ...kingdom.research };
-		const standardKeys = [
-			"pop",
-			"power",
-			"mil",
-			"money",
-			"fdc",
-			"warp",
-		] as const;
-
-		for (const key of standardKeys) {
-			if (args[key] > 0) {
+		for (const key of _standardKeys) {
+			if (typedArgs[key] > 0) {
 				const prerequisite = (
 					GAME_PARAMS.research.params as Record<string, { requires?: string }>
 				)[key]?.requires;
@@ -1078,7 +1075,7 @@ export const assignResearchPoints = kingdomMutation({
 					}
 				}
 				const currentPts = newResearch[key].pts;
-				const newPts = currentPts + args[key];
+				const newPts = currentPts + typedArgs[key];
 				const required = GAME_PARAMS.research.required(key, kingdom.land);
 				const maxBonus = GAME_PARAMS.research.params[key].bonus;
 				let perc = 0;
@@ -1089,27 +1086,9 @@ export const assignResearchPoints = kingdomMutation({
 			}
 		}
 
-		const techKeys = [
-			"dr",
-			"ft",
-			"tf",
-			"ld",
-			"lf",
-			"f74",
-			"hgl",
-			"ht",
-			"fusion",
-			"core",
-			"warp",
-			"armor",
-			"long",
-		] as const;
-		for (const key of techKeys) {
-			if (args[key] > 0) {
-				const techInfo =
-					GAME_PARAMS.militaryTechTree[
-						key as keyof typeof GAME_PARAMS.militaryTechTree
-					];
+		for (const key of _techKeys) {
+			if (typedArgs[key] > 0) {
+				const techInfo = GAME_PARAMS.militaryTechTree[key];
 				if (!techInfo) continue;
 
 				if (techInfo.requires) {
@@ -1123,7 +1102,7 @@ export const assignResearchPoints = kingdomMutation({
 				}
 
 				const currentPts = newResearch[key]?.pts ?? 0;
-				const newPts = currentPts + args[key];
+				const newPts = currentPts + typedArgs[key];
 				const required = techInfo.requirePoints;
 				let perc = 0;
 				if (required > 0) {

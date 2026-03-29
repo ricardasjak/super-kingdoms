@@ -6,6 +6,7 @@ import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
+import type { BuildingType } from "../types/game";
 import {
 	calculateFreeLand,
 	calculateIncomeMultiplier,
@@ -45,7 +46,7 @@ function KingdomGrowthPage() {
 	const saveAutoBuildSettings = useMutation(api.kingdoms.saveAutoBuildSettings);
 	const toggleAutoExplore = useMutation(api.kingdoms.toggleAutoExplore);
 
-	const INITIAL_BUILD_QUEUE = {
+	const INITIAL_BUILD_QUEUE: Record<BuildingType, string> = {
 		res: "",
 		sm: "",
 		plants: "",

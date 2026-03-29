@@ -6,6 +6,7 @@ import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
+import type { MilitaryUnitType } from "../types/game";
 
 export const Route = createFileRoute("/kingdom/military")({
 	component: KingdomMilitaryPage,
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/kingdom/military")({
 
 const UNITS = GAME_PARAMS.military.units;
 
-const UNIT_KEYS = [
+const UNIT_KEYS: MilitaryUnitType[] = [
 	"tr",
 	"dr",
 	"ft",
@@ -25,9 +26,9 @@ const UNIT_KEYS = [
 	"t",
 	"ht",
 	"sci",
-] as const;
+];
 
-const UNIT_LABELS: Record<string, string> = {
+const UNIT_LABELS: Record<MilitaryUnitType, string> = {
 	sol: "Soldiers",
 	tr: "Troopers",
 	dr: "Dragoons",
@@ -42,7 +43,7 @@ const UNIT_LABELS: Record<string, string> = {
 	sci: "Scientists",
 };
 
-const INITIAL_TRAIN_QUEUE: Record<string, string> = {
+const INITIAL_TRAIN_QUEUE: Record<MilitaryUnitType, string> = {
 	sol: "",
 	tr: "",
 	dr: "",
@@ -567,7 +568,7 @@ function KingdomMilitaryPage() {
 											? unitCount
 											: maxUnitsRounded;
 										if (targetMax <= 0) return;
-										const clearedQueue: Record<string, string> = {
+										const clearedQueue: Record<MilitaryUnitType, string> = {
 											...INITIAL_TRAIN_QUEUE,
 										};
 										setTrainQueue({

@@ -1,4 +1,9 @@
 import { GAME_PARAMS } from "../constants/game-params";
+import type {
+	BuildingType,
+	ResearchTechType,
+	ResearchTopicType,
+} from "../types/game";
 import { calculateFreeLand, calculateNewQueue } from "./buildingUtils";
 import { calculateExplorationQueue } from "./landUtils";
 
@@ -246,7 +251,7 @@ export function processKingdomTick(
 
 	const newBuildings = { ...buildings };
 	const newQueue = { ...buildings.queue };
-	const keys = [
+	const keys: BuildingType[] = [
 		"res",
 		"plants",
 		"rax",
@@ -254,8 +259,7 @@ export function processKingdomTick(
 		"pf",
 		"tc",
 		"asb",
-		"ach",
-	] as const;
+	];
 	let queueChanged = false;
 
 	for (const key of keys) {
@@ -512,16 +516,19 @@ export function processKingdomTick(
 	}
 
 	// Recalculate Research Percentages
-	const standardResearchKeys = [
+	const standardResearchKeys: ResearchTopicType[] = [
 		"pop",
 		"power",
 		"mil",
 		"money",
 		"fdc",
 		"warp",
-	] as const;
+	];
 	for (const key of standardResearchKeys) {
-		const pts = newKingdom.research[key].pts;
+		const resData =
+			newKingdom.research[key as keyof typeof newKingdom.research];
+		if (!resData) continue;
+		const pts = resData.pts;
 		const required = GAME_PARAMS.research.required(key, newKingdom.land);
 		const maxBonus = GAME_PARAMS.research.params[key].bonus;
 		let perc = 0;
@@ -531,7 +538,7 @@ export function processKingdomTick(
 		newKingdom.research[key] = { pts, perc };
 	}
 
-	const techResearchKeys = [
+	const techResearchKeys: ResearchTechType[] = [
 		"r_dr",
 		"r_ft",
 		"r_tf",
@@ -543,7 +550,7 @@ export function processKingdomTick(
 		"r_core",
 		"r_armor",
 		"r_long",
-	] as const;
+	];
 	for (const key of techResearchKeys) {
 		const researchData = (
 			newKingdom.research as Record<string, { pts: number; perc: number }>
