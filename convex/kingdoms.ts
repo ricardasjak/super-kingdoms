@@ -1,5 +1,10 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import {
+	BOT_NAME_PREFIXES,
+	BOT_NAME_SUFFIXES,
+} from "../src/constants/bot-names";
 import {
 	GAME_PARAMS,
 	PLANET_TYPES,
@@ -73,6 +78,17 @@ const STARTING_VALUES = {
 	researchAutoAssign: [] as string[],
 };
 
+const INITIAL_BUILDING_TARGETS = {
+	res: 25,
+	sm: 25,
+	rax: 20,
+	plants: 10,
+	tc: 10,
+	pf: 10,
+	asb: 0,
+	ach: 0,
+};
+
 export const getMyKingdom = query({
 	args: {},
 	handler: async (ctx) => {
@@ -91,6 +107,7 @@ export const createKingdom = mutation({
 		rulerName: v.string(),
 		planetType: v.string(),
 		raceType: v.string(),
+		botNames: v.optional(v.array(v.string())),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
@@ -129,6 +146,7 @@ export const createKingdom = mutation({
 				asb: [],
 				ach: [],
 			},
+			target: INITIAL_BUILDING_TARGETS,
 		};
 
 		const military = {
@@ -171,7 +189,7 @@ export const createKingdom = mutation({
 			probes: STARTING_VALUES.probes,
 		});
 
-		await ctx.db.insert("kingdoms", {
+		const playerKdId = await ctx.db.insert("kingdoms", {
 			userId,
 			kdName: args.kdName,
 			rulerName: args.rulerName,
@@ -180,28 +198,49 @@ export const createKingdom = mutation({
 			...STARTING_VALUES,
 			nw,
 			military,
-			buildings: {
-				res: 80,
-				plants: 40,
-				rax: 10,
-				sm: 30,
-				pf: 10,
-				tc: 0,
-				asb: 0,
-				ach: 0,
-				rubble: 0,
-				queue: {
-					res: [],
-					plants: [],
-					rax: [],
-					sm: [],
-					pf: [],
-					tc: [],
-					asb: [],
-					ach: [],
-				},
-			},
+			buildings,
 		});
+
+		// Create bots
+		const botPrefix = args.kdName.split(" ")[0] || "Bot";
+		const botLimit = GAME_PARAMS.bots.limitPerKingdom;
+		for (let i = 0; i < botLimit; i++) {
+			const botPlanetType =
+				PLANET_TYPES[Math.floor(Math.random() * PLANET_TYPES.length)];
+			const botRaceType =
+				RACE_TYPES[Math.floor(Math.random() * RACE_TYPES.length)];
+			const botKdName =
+				args.botNames?.[i] ||
+				(() => {
+					const s =
+						BOT_NAME_SUFFIXES[
+							Math.floor(Math.random() * BOT_NAME_SUFFIXES.length)
+						];
+					return `${botPrefix} ${s} ${Math.floor(Math.random() * 900) + 100}`;
+				})();
+			const botRulerName = args.rulerName;
+
+			const botNw = calculateNw({
+				military,
+				buildings,
+				land: STARTING_VALUES.land,
+				population: STARTING_VALUES.population,
+				money: STARTING_VALUES.money,
+				probes: STARTING_VALUES.probes,
+			});
+
+			await ctx.db.insert("kingdoms", {
+				kdName: botKdName,
+				rulerName: botRulerName,
+				planetType: botPlanetType,
+				raceType: botRaceType,
+				...STARTING_VALUES,
+				nw: botNw,
+				military,
+				buildings,
+				botOwnerKd: playerKdId,
+			});
+		}
 	},
 });
 
@@ -249,6 +288,19 @@ export const getKingdomsCount = query({
 	},
 });
 
+export const searchKingdoms = query({
+	args: {
+		paginationOpts: paginationOptsValidator,
+	},
+	handler: async (ctx, args) => {
+		return await ctx.db
+			.query("kingdoms")
+			.withIndex("by_land_nw")
+			.order("desc")
+			.paginate(args.paginationOpts);
+	},
+});
+
 export const updateRulerName = kingdomMutation({
 	args: {
 		rulerName: v.string(),
@@ -276,15 +328,43 @@ export const populateKingdoms = mutation({
 
 		// Clone the kingdom 1000 times
 		for (let i = 0; i < 1000; i++) {
-			const randomKdName = Math.floor(Math.random() * 1000000000).toString();
+			const prefix =
+				BOT_NAME_PREFIXES[Math.floor(Math.random() * BOT_NAME_PREFIXES.length)];
+			const suffix =
+				BOT_NAME_SUFFIXES[Math.floor(Math.random() * BOT_NAME_SUFFIXES.length)];
+			const randomKdName = `${prefix} ${suffix} ${Math.floor(Math.random() * 900) + 100}`;
+
 			const fakeUserId = `fake_user_${Math.random().toString(36).substring(7)}`;
 
 			const { _id, _creationTime, ...kdData } = existingKd;
+
+			const randomLand = Math.floor(Math.random() * 2250) + 250; // 250 to 2500
+			// Scale population with land roughly (starting 250 land -> 2250 pop, so 9 pop/land)
+			const randomPop = randomLand * 9;
+
+			const randomNw = calculateNw({
+				military: kdData.military,
+				buildings: kdData.buildings,
+				land: randomLand,
+				population: randomPop,
+				money: kdData.money,
+				probes: kdData.probes,
+			});
 
 			await ctx.db.insert("kingdoms", {
 				...kdData,
 				userId: fakeUserId,
 				kdName: randomKdName,
+				land: randomLand,
+				population: randomPop,
+				nw: randomNw,
+				buildings: {
+					...kdData.buildings,
+					target: kdData.buildings.target || INITIAL_BUILDING_TARGETS,
+				},
+				planetType:
+					PLANET_TYPES[Math.floor(Math.random() * PLANET_TYPES.length)],
+				raceType: RACE_TYPES[Math.floor(Math.random() * RACE_TYPES.length)],
 			});
 		}
 

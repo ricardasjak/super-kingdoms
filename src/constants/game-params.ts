@@ -204,4 +204,7 @@ export const GAME_PARAMS = {
 		money: 500,
 		probes: 1000,
 	},
+	bots: {
+		limitPerKingdom: 5,
+	},
 } as const;

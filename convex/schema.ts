@@ -108,7 +108,11 @@ const schema = defineSchema({
 		}),
 		researchAutoAssign: v.array(v.string()),
 		state: v.optional(v.union(v.literal("dead"), v.literal("newbiemode"))),
-	}).index("by_userId", ["userId"]),
+		botOwnerKd: v.optional(v.string()),
+	})
+		.index("by_userId", ["userId"])
+		.index("by_botOwnerKd", ["botOwnerKd"])
+		.index("by_land_nw", ["land", "nw"]),
 	spyReports: defineTable({
 		userId: v.string(),
 		targetKdName: v.string(),
