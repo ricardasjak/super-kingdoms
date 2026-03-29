@@ -33,3 +33,110 @@ hgroup {
 article {
 	padding: 1rem;
 }
+
+/* Research Tree Styles */
+
+/* Technical Research Indented List */
+.technical-research-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 1rem;
+	padding: 1rem;
+	background: var(--pico-card-background-color);
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--pico-border-radius);
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.tech-list-item {
+	display: flex;
+	flex-direction: column;
+}
+
+.tech-node-content {
+	display: flex;
+	flex-direction: column;
+	padding: 0.75rem 1rem;
+	margin-bottom: 0.5rem;
+	background: rgba(120, 120, 120, 0.05);
+	border-left: 3px solid var(--pico-muted-border-color);
+	border-radius: 0 var(--pico-border-radius) var(--pico-border-radius) 0;
+	transition:
+		border-color 0.2s ease,
+		background 0.2s ease;
+}
+
+.tech-node-content.completed {
+	border-left-color: var(--pico-ins-color);
+	background: rgba(0, 255, 100, 0.05);
+}
+
+.tech-node-content.locked {
+	opacity: 0.7;
+	filter: grayscale(0.5);
+	border-left-style: dashed;
+}
+
+.tech-node-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+	gap: 1rem;
+}
+
+.tech-title-wrap {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.tech-tree-elbow {
+	color: var(--pico-muted-color);
+	font-weight: normal;
+	opacity: 0.5;
+	margin-right: -0.25rem;
+}
+
+.active-badge {
+	font-size: 0.7rem;
+	padding: 0.1rem 0.4rem;
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border-radius: 12px;
+	font-weight: bold;
+}
+
+.tech-node-progress {
+	display: flex;
+	flex-direction: column;
+}
+
+.tech-node-progress progress {
+	margin-bottom: 0.2rem;
+	height: 0.5rem;
+}
+
+.progress-labels {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.75rem;
+	color: var(--pico-muted-color);
+}
+
+.badge {
+	padding: 0.2rem 0.5rem;
+	border-radius: var(--pico-border-radius);
+	font-size: 0.75rem;
+	font-weight: bold;
+}
+.badge.success {
+	background: rgba(0, 255, 100, 0.1);
+	color: var(--pico-ins-color);
+}
+.badge.secondary {
+	background: rgba(128, 128, 128, 0.1);
+	color: var(--pico-muted-color);
+}

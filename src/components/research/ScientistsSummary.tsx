@@ -14,12 +14,8 @@ export const ScientistsSummary = ({ myKingdom }: ScientistsSummaryProps) => {
 	const autoAssign = myKingdom.researchAutoAssign || [];
 	const sumWeights = autoAssign.reduce((sum, key) => {
 		const weight =
-			(
-				GAME_PARAMS.research.params as Record<
-					string,
-					{ weight: number }
-				>
-			)[key]?.weight || 0;
+			(GAME_PARAMS.research.params as Record<string, { weight: number }>)[key]
+				?.weight || 0;
 		return sum + weight;
 	}, 0);
 	const scientists = myKingdom.military.sci;
@@ -43,10 +39,8 @@ export const ScientistsSummary = ({ myKingdom }: ScientistsSummaryProps) => {
 				{sumWeights > 0 ? (
 					<div>
 						Covers up to{" "}
-						<strong>
-							{Math.floor(landCoverage).toLocaleString()}
-						</strong>{" "}
-						land / tick
+						<strong>{Math.floor(landCoverage).toLocaleString()}</strong> land /
+						tick
 					</div>
 				) : (
 					"No auto-priority topics selected"

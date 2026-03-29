@@ -125,9 +125,9 @@ const RESEARCH_TECH_TREE: Record<ResearchTechType, ResearchTechConfig> = {
 	r_dr: { requirePoints: 600, requires: "r_long" },
 	r_ft: { requirePoints: 1200, requires: "r_dr" },
 	r_tf: { requirePoints: 3000, requires: "r_f74" },
-	r_f74: { requirePoints: 2000, requires: 'r_core' },
+	r_f74: { requirePoints: 2000, requires: "r_core" },
 
-	r_ld: { requirePoints: 720, requires: 'r_long' },
+	r_ld: { requirePoints: 720, requires: "r_long" },
 	r_lf: { requirePoints: 1500, requires: "r_ld" },
 	r_ht: { requirePoints: 2000 },
 

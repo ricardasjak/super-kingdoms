@@ -429,6 +429,15 @@ function KingdomMilitaryPage() {
 									const isRes = (k: ResearchKey) =>
 										(myKingdom.research[k]?.perc ?? 0) >= 100;
 
+									const count = military[
+										key as keyof typeof military
+									] as number;
+									const inQueueCount = (
+										military.queue[key as keyof typeof military.queue] || []
+									).reduce((a, b) => a + b, 0);
+
+									if (count > 0 || inQueueCount > 0) return true;
+
 									if (key === "tr" && (isRes("r_dr") || isRes("r_ft")))
 										return false;
 									if (key === "dr" && isRes("r_ft")) return false;

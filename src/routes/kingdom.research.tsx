@@ -5,14 +5,15 @@ import { api } from "../../convex/_generated/api";
 import { GAME_PARAMS } from "../../src/constants/game-params";
 import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
 import { MaxButton } from "../components/max-button";
+import { RESEARCH_TOOLTIPS } from "../components/research/ResearchTooltips";
+import { ScientistsSummary } from "../components/research/ScientistsSummary";
+import { TechnicalResearchTree } from "../components/research/TechnicalResearchTree";
 import type {
 	ResearchData,
 	ResearchKey,
 	ResearchTechType,
 	ResearchTopicType,
 } from "../types/game";
-import { RESEARCH_TOOLTIPS } from "../components/research/ResearchTooltips";
-import { ScientistsSummary } from "../components/research/ScientistsSummary";
 
 export const Route = createFileRoute("/kingdom/research")({
 	component: KingdomResearchPage,
@@ -181,7 +182,21 @@ function KingdomResearchPage() {
 		if (newPriority.includes(key)) {
 			newPriority = newPriority.filter((k) => k !== key);
 		} else {
-			newPriority.push(key);
+			const standardKeys = ["pop", "power", "mil", "money", "fdc", "warp"];
+			const isStandard = standardKeys.includes(key);
+
+			if (isStandard) {
+				const firstTechIndex = newPriority.findIndex(
+					(k) => !standardKeys.includes(k),
+				);
+				if (firstTechIndex === -1) {
+					newPriority.push(key);
+				} else {
+					newPriority.splice(firstTechIndex, 0, key);
+				}
+			} else {
+				newPriority.push(key);
+			}
 		}
 		try {
 			await saveAutoAssign({ priority: newPriority });
@@ -430,7 +445,13 @@ function KingdomResearchPage() {
 											style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
 										>
 											<td>
-												<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+												<div
+													style={{
+														display: "flex",
+														alignItems: "center",
+														gap: "0.5rem",
+													}}
+												>
 													{label}
 													{RESEARCH_TOOLTIPS[key]}
 												</div>
@@ -599,6 +620,9 @@ function KingdomResearchPage() {
 					</hgroup>
 
 					{(() => {
+						const kd = myKingdom;
+						if (!kd) return null;
+
 						const allTechDone = techTopics.every(
 							(t) => (t.data?.perc ?? 0) >= 100,
 						);
@@ -629,186 +653,25 @@ function KingdomResearchPage() {
 
 						return (
 							<>
-								<figure>
-									<table className="striped">
-										<thead>
-											<tr>
-												<th scope="col">Technology</th>
-												<th scope="col">Progress</th>
-												<th scope="col">Requires</th>
-												<th scope="col">Auto / Priority</th>
-												<th scope="col">Max</th>
-												<th scope="col">Assign</th>
-											</tr>
-										</thead>
-										<tbody>
-											{techTopics
-												.filter(({ key, data }) => {
-													if (showAllTech) return true;
+								<TechnicalResearchTree
+									myKingdom={kd}
+									handleAutoToggle={handleAutoToggle}
+									showAllTech={showAllTech}
+								/>
 
-													// Hide completed research
-													if ((data?.perc ?? 0) >= 100) return false;
-
-													const prerequisite = techTree[key]?.requires;
-													return (
-														!prerequisite ||
-														(myKingdom.research[prerequisite]?.perc ?? 0) >= 100
-													);
-												})
-												.map(({ key, label, data }) => {
-													const techInfo = techTree[key];
-													const prerequisite = techInfo?.requires;
-													const prerequisiteMet =
-														!prerequisite ||
-														(myKingdom.research[prerequisite]?.perc ?? 0) >=
-															100;
-
-													return (
-														<tr
-															key={key}
-															style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
-														>
-															<td>
-																<div
-																	style={{
-																		display: "flex",
-																		alignItems: "center",
-																		gap: "0.5rem",
-																	}}
-																>
-																	{label}
-																	{RESEARCH_TOOLTIPS[key]}
-																</div>
-																{!prerequisiteMet && (
-																	<div
-																		style={{
-																			fontSize: "0.75rem",
-																			color: "red",
-																		}}
-																	>
-																		Locked: Needs{" "}
-																		{techTopics.find(
-																			(t) => t.key === prerequisite,
-																		)?.label || prerequisite}
-																	</div>
-																)}
-																{(data?.perc ?? 0) >= 100 && (
-																	<div
-																		style={{
-																			fontSize: "0.75rem",
-																			color: "var(--pico-ins-color)",
-																		}}
-																	>
-																		Completed
-																	</div>
-																)}
-															</td>
-															<td>
-																<progress
-																	value={data?.perc ?? 0}
-																	max="100"
-																	style={{ marginBottom: 0 }}
-																></progress>
-																<small>{data?.perc ?? 0}%</small>
-															</td>
-															<td>
-																<small>
-																	{(data?.pts ?? 0).toLocaleString()} /{" "}
-																	{(
-																		techInfo?.requirePoints ?? 0
-																	).toLocaleString()}
-																</small>
-															</td>
-															<td align="center">
-																<div
-																	style={{
-																		display: "flex",
-																		alignItems: "center",
-																		justifyContent: "center",
-																		gap: "0.5rem",
-																	}}
-																>
-																	<input
-																		type="checkbox"
-																		checked={(
-																			myKingdom.researchAutoAssign || []
-																		).includes(key)}
-																		onChange={() => handleAutoToggle(key)}
-																		style={{ margin: 0 }}
-																		disabled={!prerequisiteMet}
-																	/>
-																	{(() => {
-																		const index = (
-																			myKingdom.researchAutoAssign || []
-																		).indexOf(key);
-																		return index !== -1 ? (
-																			<span style={{ fontWeight: "bold" }}>
-																				#{index + 1}
-																			</span>
-																		) : null;
-																	})()}
-																</div>
-															</td>
-															<td>
-																<MaxButton
-																	onClick={() => handleMaxClick(key)}
-																	disabled={
-																		isAssigning ||
-																		myKingdom.researchPts <= 0 ||
-																		!prerequisiteMet ||
-																		(data?.perc ?? 0) >= 100
-																	}
-																	label={
-																		(data?.perc ?? 0) >= 100 ? "Done" : "Max"
-																	}
-																/>
-															</td>
-															<td>
-																<input
-																	type="number"
-																	name={key}
-																	value={
-																		assignQueue[key as keyof typeof assignQueue]
-																	}
-																	onChange={handleInputChange}
-																	min="0"
-																	disabled={
-																		isAssigning ||
-																		!prerequisiteMet ||
-																		(data?.perc ?? 0) >= 100
-																	}
-																	style={{ minWidth: "100px", marginBottom: 0 }}
-																	placeholder={
-																		!prerequisiteMet
-																			? "Locked"
-																			: (data?.perc ?? 0) >= 100
-																				? "Done"
-																				: "0"
-																	}
-																/>
-															</td>
-														</tr>
-													);
-												})}
-										</tbody>
-									</table>
-								</figure>
-
-								<footer>
-									<div style={{ textAlign: "right" }}>
-										<button
-											type="submit"
-											disabled={
-												isAssigning ||
-												requestSum > myKingdom.researchPts ||
-												requestSum <= 0
-											}
-											style={{ width: "auto" }}
-										>
-											{isAssigning ? "Assigning..." : "Assign Points"}
-										</button>
-									</div>
-								</footer>
+								<div style={{ textAlign: "right", marginTop: "1rem" }}>
+									<button
+										type="submit"
+										disabled={
+											isAssigning ||
+											requestSum > kd.researchPts ||
+											requestSum <= 0
+										}
+										style={{ width: "auto" }}
+									>
+										{isAssigning ? "Assigning..." : "Assign Points"}
+									</button>
+								</div>
 							</>
 						);
 					})()}
