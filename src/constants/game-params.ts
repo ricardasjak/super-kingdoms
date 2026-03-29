@@ -25,12 +25,55 @@ export const RACE_TYPES = [
 	"Shadow",
 ] as const;
 
-const MILITARY_UNITS = {
+export type MilitaryUnitType =
+	| "sol"
+	| "sci"
+	| "tr"
+	| "dr"
+	| "ft"
+	| "tf"
+	| "lt"
+	| "ld"
+	| "lf"
+	| "f74"
+	| "t"
+	| "ht";
+
+const MILITARY_UNITS: Record<
+	MilitaryUnitType,
+	{
+		cost: number;
+		sol: number;
+		power: number;
+		housing: number;
+		off: number;
+		def: number;
+		researchRequired?: ResearchTechType;
+		buildingRequired?: BuildingType;
+	}
+> = {
 	sol: { cost: 150, sol: 0, power: 0.7, housing: 1, off: 1, def: 1 },
 	sci: { cost: 1000, sol: 1, power: 0.7, housing: 1, off: 0, def: 0 },
 	tr: { cost: 350, sol: 1, power: 0.7, housing: 1, off: 4, def: 0 },
-	dr: { cost: 450, sol: 1, power: 0.7, housing: 1, off: 5, def: 0 },
-	ft: { cost: 550, sol: 1, power: 0.7, housing: 1, off: 6, def: 0 },
+	dr: {
+		cost: 450,
+		sol: 1,
+		power: 0.7,
+		housing: 1,
+		off: 5,
+		def: 0,
+		researchRequired: "r_dr",
+	},
+	ft: {
+		cost: 550,
+		sol: 1,
+		power: 0.7,
+		housing: 1,
+		off: 6,
+		def: 0,
+		buildingRequired: "asb",
+		researchRequired: "r_ft",
+	},
 	tf: {
 		cost: 1500,
 		sol: 0,
@@ -38,11 +81,28 @@ const MILITARY_UNITS = {
 		housing: 2,
 		off: 12,
 		def: 0,
-		requiresBuilding: "asb",
+		buildingRequired: "asb",
+		researchRequired: "r_tf",
 	},
 	lt: { cost: 375, sol: 1, power: 0.7, housing: 1, off: 0, def: 4 },
-	ld: { cost: 500, sol: 1, power: 0.7, housing: 1, off: 0, def: 5 },
-	lf: { cost: 625, sol: 1, power: 0.7, housing: 1, off: 0, def: 6 },
+	ld: {
+		cost: 500,
+		sol: 1,
+		power: 0.7,
+		housing: 1,
+		off: 0,
+		def: 5,
+		researchRequired: "r_ld",
+	},
+	lf: {
+		cost: 625,
+		sol: 1,
+		power: 0.7,
+		housing: 1,
+		off: 0,
+		def: 6,
+		researchRequired: "r_lf",
+	},
 	f74: {
 		cost: 975,
 		sol: 0,
@@ -50,12 +110,20 @@ const MILITARY_UNITS = {
 		housing: 1,
 		off: 0,
 		def: 8,
-		requiresBuilding: "asb",
+		buildingRequired: "asb",
+		researchRequired: "r_f74",
 	},
 	t: { cost: 1750, sol: 1, power: 1.4, housing: 2, off: 9, def: 9 },
-	hgl: { cost: 9999, sol: 0, power: 0, housing: 0, off: 0, def: 0 },
-	ht: { cost: 2250, sol: 1, power: 1.4, housing: 2, off: 12, def: 12 },
-} as const;
+	ht: {
+		cost: 2250,
+		sol: 1,
+		power: 1.4,
+		housing: 2,
+		off: 12,
+		def: 12,
+		researchRequired: "r_ht",
+	},
+};
 
 export const RESEARCH_PARAMS = {
 	pop: { weight: 0.00475, bonus: 20 },
@@ -63,36 +131,73 @@ export const RESEARCH_PARAMS = {
 	mil: { weight: 0.00291, bonus: 30 },
 	money: { weight: 0.00535, bonus: 25 },
 	fdc: { weight: 0.0004, bonus: 25 },
-	warp: { weight: 0.00173, bonus: 20, requires: "core" },
+	warp: { weight: 0.00173, bonus: 20, requires: "r_core" },
 } as const;
 
-const RESEARCH_TECH_TREE: Partial<
-	Record<
-		string,
-		{
-			requirePoints: number;
-			requires?: string;
-			building?: string;
-			bonus?: number;
-		}
-	>
+export type ResearchTechType =
+	| "r_dr"
+	| "r_ft"
+	| "r_tf"
+	| "r_f74"
+	| "r_ld"
+	| "r_lf"
+	| "r_ht"
+	| "r_fusion"
+	| "r_core"
+	| "r_armor"
+	| "r_long";
+
+const RESEARCH_TECH_TREE: Record<
+	ResearchTechType,
+	{
+		requirePoints: number;
+		requires?: ResearchTechType;
+		bonus?: number;
+	}
 > = {
-	dr: { requirePoints: 60_000 },
-	ft: { requirePoints: 120_000, requires: "dr" },
-	tf: { requirePoints: 600_000, building: "asb" },
+	r_dr: { requirePoints: 60_000 },
+	r_ft: { requirePoints: 120_000, requires: "r_dr" },
+	r_tf: { requirePoints: 3000, requires: "r_ft" },
+	r_f74: { requirePoints: 2000 },
 
-	ld: { requirePoints: 72_000 },
-	lf: { requirePoints: 150_000, requires: "ld" },
-	ht: { requirePoints: 200_000 },
+	r_ld: { requirePoints: 72_000 },
+	r_lf: { requirePoints: 150_000, requires: "r_ld" },
+	r_ht: { requirePoints: 200_000 },
 
-	fusion: { requirePoints: 30_000, bonus: 50 },
-	core: { requirePoints: 50_000, requires: "fusion", bonus: 20 },
-	armor: { requirePoints: 92_000 },
-	long: { requirePoints: 400_000, requires: "core", bonus: 5 },
+	r_fusion: { requirePoints: 30_000, bonus: 50 },
+	r_core: { requirePoints: 50_000, requires: "r_fusion", bonus: 20 },
+	r_armor: { requirePoints: 92_000 },
+	r_long: { requirePoints: 400_000, requires: "r_core", bonus: 5 },
+};
+
+export type BuildingType =
+	| "res"
+	| "plants"
+	| "rax"
+	| "sm"
+	| "pf"
+	| "tc"
+	| "asb";
+
+export const BUILDINGS_LIST: Record<
+	BuildingType,
+	{
+		label: string;
+		researchRequired?: ResearchTechType;
+	}
+> = {
+	res: { label: "Residencies" },
+	plants: { label: "Power Plants" },
+	rax: { label: "Barracks" },
+	sm: { label: "Star Mines" },
+	pf: { label: "Probe Factories" },
+	tc: { label: "Training Camps" },
+	asb: { label: "Air Support Bays", researchRequired: "r_f74" },
 };
 
 export const GAME_PARAMS = {
 	roundLength: 960,
+	buildingsTypes: BUILDINGS_LIST,
 	income: {
 		population: 2,
 		sm: 140,

@@ -168,7 +168,6 @@ function KingdomMilitaryPage() {
 				lf: 0,
 				f74: 0,
 				t: 0,
-				hgl: 0,
 				ht: 0,
 			});
 			setSoldiersToTrain("");
@@ -228,7 +227,6 @@ function KingdomMilitaryPage() {
 					lf: parseInt(trainQueue.lf, 10) || 0,
 					f74: parseInt(trainQueue.f74, 10) || 0,
 					t: parseInt(trainQueue.t, 10) || 0,
-					hgl: parseInt(trainQueue.hgl, 10) || 0,
 					ht: parseInt(trainQueue.ht, 10) || 0,
 				});
 				showMessage("Units successfully disbanded!", "success");
@@ -254,7 +252,6 @@ function KingdomMilitaryPage() {
 					lf: parseInt(trainQueue.lf, 10) || 0,
 					f74: parseInt(trainQueue.f74, 10) || 0,
 					t: parseInt(trainQueue.t, 10) || 0,
-					hgl: parseInt(trainQueue.hgl, 10) || 0,
 					ht: parseInt(trainQueue.ht, 10) || 0,
 				});
 			}
@@ -331,14 +328,28 @@ function KingdomMilitaryPage() {
 											/>
 										</td>
 										<td>
-											<input
-												type="number"
-												min="0"
-												max={remainingSoldierCapacity}
-												placeholder="0"
-												value={soldiersToTrain}
-												onChange={(e) => setSoldiersToTrain(e.target.value)}
-											/>
+											{remainingSoldierCapacityRounded <= 0 ? (
+												<span
+													style={{
+														fontSize: "0.8rem",
+														color: "var(--pico-muted-color)",
+														fontStyle: "italic",
+													}}
+												>
+													{myKingdom.money < soldierCost
+														? "Low funds"
+														: "Training limit reached"}
+												</span>
+											) : (
+												<input
+													type="number"
+													min="0"
+													max={remainingSoldierCapacity}
+													placeholder="0"
+													value={soldiersToTrain}
+													onChange={(e) => setSoldiersToTrain(e.target.value)}
+												/>
+											)}
 										</td>
 									</tr>
 								</tbody>
@@ -633,19 +644,37 @@ function KingdomMilitaryPage() {
 												/>
 											</td>
 											<td>
-												<input
-													type="number"
-													min="0"
-													max={isDisbandMode ? unitCount : maxUnits}
-													placeholder="0"
-													value={trainQueue[key]}
-													onChange={(e) =>
-														setTrainQueue({
-															...trainQueue,
-															[key]: e.target.value,
-														})
-													}
-												/>
+												{maxUnitsRounded <= 0 && !isDisbandMode ? (
+													<span
+														style={{
+															fontSize: "0.8rem",
+															color: "var(--pico-muted-color)",
+															fontStyle: "italic",
+														}}
+													>
+														{maxByMoney < GAME_PARAMS.military.duration
+															? "Low funds"
+															: maxBySoldiers < GAME_PARAMS.military.duration
+																? "Low soldiers"
+																: housingLimit < GAME_PARAMS.military.duration
+																	? "No ASB space"
+																	: "Maximum reached"}
+													</span>
+												) : (
+													<input
+														type="number"
+														min="0"
+														max={isDisbandMode ? unitCount : maxUnits}
+														placeholder="0"
+														value={trainQueue[key]}
+														onChange={(e) =>
+															setTrainQueue({
+																...trainQueue,
+																[key]: e.target.value,
+															})
+														}
+													/>
+												)}
 											</td>
 										</tr>
 									);

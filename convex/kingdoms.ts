@@ -9,6 +9,7 @@ import {
 	GAME_PARAMS,
 	PLANET_TYPES,
 	RACE_TYPES,
+	type ResearchTechType,
 } from "../src/constants/game-params";
 import { calculateNw } from "../src/utils/nwUtils";
 import { internal } from "./_generated/api";
@@ -39,7 +40,6 @@ const STARTING_VALUES = {
 		lf: 0,
 		f74: 0,
 		t: 0,
-		hgl: 0,
 		ht: 0,
 		sci: 100,
 		queue: {
@@ -53,7 +53,6 @@ const STARTING_VALUES = {
 			lf: [],
 			f74: [],
 			t: [],
-			hgl: [],
 			ht: [],
 			sci: [],
 		},
@@ -66,14 +65,17 @@ const STARTING_VALUES = {
 		money: { pts: 0, perc: 0 },
 		fdc: { pts: 0, perc: 0 },
 		warp: { pts: 0, perc: 0 },
-		dr: { pts: 0, perc: 0 },
-		ft: { pts: 0, perc: 0 },
-		tf: { pts: 0, perc: 0 },
-		ld: { pts: 0, perc: 0 },
-		lf: { pts: 0, perc: 0 },
-		f74: { pts: 0, perc: 0 },
-		hgl: { pts: 0, perc: 0 },
-		ht: { pts: 0, perc: 0 },
+		r_dr: { pts: 0, perc: 0 },
+		r_ft: { pts: 0, perc: 0 },
+		r_tf: { pts: 0, perc: 0 },
+		r_ld: { pts: 0, perc: 0 },
+		r_lf: { pts: 0, perc: 0 },
+		r_f74: { pts: 0, perc: 0 },
+		r_ht: { pts: 0, perc: 0 },
+		r_fusion: { pts: 0, perc: 0 },
+		r_core: { pts: 0, perc: 0 },
+		r_armor: { pts: 0, perc: 0 },
+		r_long: { pts: 0, perc: 0 },
 	},
 	researchAutoAssign: [] as string[],
 };
@@ -160,7 +162,6 @@ export const createKingdom = mutation({
 			lf: 0,
 			f74: 0,
 			t: 0,
-			hgl: 0,
 			ht: 0,
 			sci: 100,
 			queue: {
@@ -174,7 +175,6 @@ export const createKingdom = mutation({
 				lf: [],
 				f74: [],
 				t: [],
-				hgl: [],
 				ht: [],
 				sci: [],
 			},
@@ -416,21 +416,19 @@ export const buildBuildings = kingdomMutation({
 			throw new Error("Not enough free land");
 		}
 
-		// Research validation for special buildings
-		for (const [unitKey, techInfo] of Object.entries(
-			GAME_PARAMS.militaryTechTree,
+		// Research validation
+		for (const [bldKey, bldConfig] of Object.entries(
+			GAME_PARAMS.buildingsTypes,
 		)) {
-			if (techInfo?.building) {
-				const buildingKey = techInfo.building as string;
-				if ((args as Record<string, number>)[buildingKey] > 0) {
-					const researchData = (
-						kingdom.research as Record<string, { pts: number; perc: number }>
-					)[unitKey];
-					if (!researchData || researchData.perc < 100) {
-						throw new Error(
-							`Cannot build ${buildingKey}. Research for ${unitKey} must be 100% complete.`,
-						);
-					}
+			const requestedCount = (args as Record<string, number>)[bldKey] || 0;
+			if (requestedCount > 0 && bldConfig.researchRequired) {
+				const researchData = (
+					kingdom.research as Record<string, { pts: number; perc: number }>
+				)[bldConfig.researchRequired];
+				if (!researchData || researchData.perc < 100) {
+					throw new Error(
+						`Cannot build ${bldConfig.label}. Research for ${bldConfig.researchRequired} must be 100% complete.`,
+					);
 				}
 			}
 		}
@@ -544,12 +542,6 @@ export const trainMilitary = kingdomMutation({
 				sol: units.t.sol,
 			},
 			{
-				key: "hgl",
-				value: args.hgl,
-				cost: getDiscountedCost(units.hgl.cost),
-				sol: units.hgl.sol,
-			},
-			{
 				key: "ht",
 				value: args.ht,
 				cost: getDiscountedCost(units.ht.cost),
@@ -574,20 +566,23 @@ export const trainMilitary = kingdomMutation({
 				soldiersToDeduct += unit.value * (unit.sol || 0);
 				hasValidUnit = true;
 
-				const techRequirement =
-					GAME_PARAMS.militaryTechTree[
-						unit.key as keyof typeof GAME_PARAMS.militaryTechTree
-					];
-				if (techRequirement) {
+				const unitConfig = (
+					GAME_PARAMS.military.units as Record<
+						string,
+						{ researchRequired?: ResearchTechType }
+					>
+				)[unit.key];
+				const researchKey = unitConfig?.researchRequired;
+				if (researchKey) {
 					const research = (
 						kingdom.research as Record<
 							string,
 							{ pts: number; perc: number } | undefined
 						>
-					)[unit.key];
+					)[researchKey];
 					if (!research || research.perc < 100) {
 						throw new Error(
-							`Cannot train ${unit.key}. Research must be 100% complete.`,
+							`Cannot train ${unit.key}. Research ${researchKey} must be 100% complete.`,
 						);
 					}
 				}
@@ -681,7 +676,6 @@ export const disbandMilitary = kingdomMutation({
 		lf: v.number(),
 		f74: v.number(),
 		t: v.number(),
-		hgl: v.number(),
 		ht: v.number(),
 	},
 	handler: async (ctx, { kingdom, ...args }) => {
@@ -887,17 +881,16 @@ export const migrateKingdomsBatch = internalMutation({
 					patch.probes = 0;
 				}
 
-				if (!kingdom.research.dr) {
+				if (!kingdom.research.r_dr) {
 					patch.research = {
 						...kingdom.research,
-						dr: { pts: 0, perc: 0 },
-						ft: { pts: 0, perc: 0 },
-						tf: { pts: 0, perc: 0 },
-						ld: { pts: 0, perc: 0 },
-						lf: { pts: 0, perc: 0 },
-						f74: { pts: 0, perc: 0 },
-						hgl: { pts: 0, perc: 0 },
-						ht: { pts: 0, perc: 0 },
+						r_dr: { pts: 0, perc: 0 },
+						r_ft: { pts: 0, perc: 0 },
+						r_tf: { pts: 0, perc: 0 },
+						r_ld: { pts: 0, perc: 0 },
+						r_lf: { pts: 0, perc: 0 },
+						r_f74: { pts: 0, perc: 0 },
+						r_ht: { pts: 0, perc: 0 },
 					};
 				}
 
@@ -1009,18 +1002,17 @@ export const assignResearchPoints = kingdomMutation({
 		money: v.number(),
 		fdc: v.number(),
 		warp: v.number(),
-		dr: v.number(),
-		ft: v.number(),
-		tf: v.number(),
-		ld: v.number(),
-		lf: v.number(),
-		f74: v.number(),
-		hgl: v.number(),
-		ht: v.number(),
-		fusion: v.number(),
-		core: v.number(),
-		armor: v.number(),
-		long: v.number(),
+		r_dr: v.number(),
+		r_ft: v.number(),
+		r_tf: v.number(),
+		r_ld: v.number(),
+		r_lf: v.number(),
+		r_f74: v.number(),
+		r_ht: v.number(),
+		r_fusion: v.number(),
+		r_core: v.number(),
+		r_armor: v.number(),
+		r_long: v.number(),
 	},
 	handler: async (ctx, { kingdom, ...args }) => {
 		const researchKeys = [
@@ -1029,20 +1021,19 @@ export const assignResearchPoints = kingdomMutation({
 			"mil",
 			"money",
 			"fdc",
-			"dr",
-			"ft",
-			"tf",
-			"ld",
-			"lf",
-			"f74",
-			"hgl",
-			"ht",
-			"fusion",
-			"core",
 			"warp",
-			"armor",
-			"long",
-		] as const;
+			"r_dr",
+			"r_ft",
+			"r_tf",
+			"r_ld",
+			"r_lf",
+			"r_f74",
+			"r_ht",
+			"r_fusion",
+			"r_core",
+			"r_armor",
+			"r_long",
+		];
 
 		let totalPoints = 0;
 		for (const key of researchKeys) {

@@ -31,17 +31,17 @@ function KingdomResearchPage() {
 		money: "",
 		fdc: "",
 		warp: "",
-		dr: "",
-		ft: "",
-		tf: "",
-		ld: "",
-		lf: "",
-		hgl: "",
-		ht: "",
-		fusion: "",
-		core: "",
-		armor: "",
-		long: "",
+		r_dr: "",
+		r_ft: "",
+		r_tf: "",
+		r_ld: "",
+		r_lf: "",
+		r_f74: "",
+		r_ht: "",
+		r_fusion: "",
+		r_core: "",
+		r_armor: "",
+		r_long: "",
 	});
 	const [isAssigning, setIsAssigning] = useState(false);
 	const [hireAmount, setHireAmount] = useState("");
@@ -84,16 +84,16 @@ function KingdomResearchPage() {
 	] as const;
 
 	const techTopics = [
-		{ key: "dr", label: "Dragoons", data: research.dr },
-		{ key: "ft", label: "Fighters", data: research.ft },
-		{ key: "tf", label: "Air Supremacy Beacon", data: research.tf },
-		{ key: "ld", label: "Laser Dragoons", data: research.ld },
-		{ key: "lf", label: "Laser Fighters", data: research.lf },
-		{ key: "ht", label: "Hover Tanks", data: research.ht },
-		{ key: "fusion", label: "Fusion Technology", data: research.fusion },
-		{ key: "core", label: "Energy Core", data: research.core },
-		{ key: "armor", label: "Probe Armor", data: research.armor },
-		{ key: "long", label: "Longevity", data: research.long },
+		{ key: "r_dr", label: "Dragoons", data: research.r_dr },
+		{ key: "r_ft", label: "Fighters", data: research.r_ft },
+		{ key: "r_tf", label: "Air Supremacy Beacon", data: research.r_tf },
+		{ key: "r_ld", label: "Laser Dragoons", data: research.r_ld },
+		{ key: "r_lf", label: "Laser Fighters", data: research.r_lf },
+		{ key: "r_ht", label: "Hover Tanks", data: research.r_ht },
+		{ key: "r_fusion", label: "Fusion Technology", data: research.r_fusion },
+		{ key: "r_core", label: "Energy Core", data: research.r_core },
+		{ key: "r_armor", label: "Probe Armor", data: research.r_armor },
+		{ key: "r_long", label: "Longevity", data: research.r_long },
 	] as const;
 
 	const techTree = GAME_PARAMS.militaryTechTree;
@@ -150,17 +150,17 @@ function KingdomResearchPage() {
 				money: "",
 				fdc: "",
 				warp: "",
-				dr: "",
-				ft: "",
-				tf: "",
-				ld: "",
-				lf: "",
-				hgl: "",
-				ht: "",
-				fusion: "",
-				core: "",
-				armor: "",
-				long: "",
+				r_dr: "",
+				r_ft: "",
+				r_tf: "",
+				r_ld: "",
+				r_lf: "",
+				r_f74: "",
+				r_ht: "",
+				r_fusion: "",
+				r_core: "",
+				r_armor: "",
+				r_long: "",
 				[key]: assignable.toString(),
 			};
 		});
@@ -203,18 +203,17 @@ function KingdomResearchPage() {
 				money: parseInt(assignQueue.money, 10) || 0,
 				fdc: parseInt(assignQueue.fdc, 10) || 0,
 				warp: parseInt(assignQueue.warp, 10) || 0,
-				dr: parseInt(assignQueue.dr, 10) || 0,
-				ft: parseInt(assignQueue.ft, 10) || 0,
-				tf: parseInt(assignQueue.tf, 10) || 0,
-				ld: parseInt(assignQueue.ld, 10) || 0,
-				lf: parseInt(assignQueue.lf, 10) || 0,
-				f74: 0,
-				hgl: 0,
-				ht: parseInt(assignQueue.ht, 10) || 0,
-				fusion: parseInt(assignQueue.fusion, 10) || 0,
-				core: parseInt(assignQueue.core, 10) || 0,
-				armor: parseInt(assignQueue.armor, 10) || 0,
-				long: parseInt(assignQueue.long, 10) || 0,
+				r_dr: parseInt(assignQueue.r_dr, 10) || 0,
+				r_ft: parseInt(assignQueue.r_ft, 10) || 0,
+				r_tf: parseInt(assignQueue.r_tf, 10) || 0,
+				r_ld: parseInt(assignQueue.r_ld, 10) || 0,
+				r_lf: parseInt(assignQueue.r_lf, 10) || 0,
+				r_f74: parseInt(assignQueue.r_f74, 10) || 0,
+				r_ht: parseInt(assignQueue.r_ht, 10) || 0,
+				r_fusion: parseInt(assignQueue.r_fusion, 10) || 0,
+				r_core: parseInt(assignQueue.r_core, 10) || 0,
+				r_armor: parseInt(assignQueue.r_armor, 10) || 0,
+				r_long: parseInt(assignQueue.r_long, 10) || 0,
 			});
 			setAssignQueue({
 				pop: "",
@@ -223,17 +222,17 @@ function KingdomResearchPage() {
 				money: "",
 				fdc: "",
 				warp: "",
-				dr: "",
-				ft: "",
-				tf: "",
-				ld: "",
-				lf: "",
-				hgl: "",
-				ht: "",
-				fusion: "",
-				core: "",
-				armor: "",
-				long: "",
+				r_dr: "",
+				r_ft: "",
+				r_tf: "",
+				r_ld: "",
+				r_lf: "",
+				r_f74: "",
+				r_ht: "",
+				r_fusion: "",
+				r_core: "",
+				r_armor: "",
+				r_long: "",
 			});
 			showMessage("Research points successfully assigned!", "success");
 		} catch (error) {
@@ -747,7 +746,7 @@ function KingdomResearchPage() {
 																				unitStats as typeof GAME_PARAMS.military.units.tr
 																			).sol;
 																			let tooltipContent = `Unlocks ${label}: ⚔️ ${unitStats?.off} | 🛡️ ${unitStats?.def} points`;
-																			if (key === "tf") {
+																			if (key === "r_tf") {
 																				tooltipContent =
 																					"Unlocks Air Support Bays (building) and mechanical units (TFs, F74 Drones)";
 																			} else {
@@ -771,11 +770,11 @@ function KingdomResearchPage() {
 																			GAME_PARAMS.militaryTechTree[
 																				key as keyof typeof GAME_PARAMS.militaryTechTree
 																			];
-																		if (techInfo?.bonus || key === "long") {
+																		if (techInfo?.bonus || key === "r_long") {
 																			let content = `Unlocks ${techInfo?.bonus}% better power plants`;
-																			if (key === "core")
+																			if (key === "r_core")
 																				content += " and Warp Drive";
-																			if (key === "long")
+																			if (key === "r_long")
 																				content = `Increases residences base capacity by ${techInfo?.bonus} population`;
 
 																			return (

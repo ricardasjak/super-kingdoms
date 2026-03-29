@@ -13,7 +13,6 @@ export type MilitaryUnits = {
 	lf: number;
 	f74: number;
 	t: number;
-	hgl: number;
 	ht: number;
 	sci: number;
 	queue: {
@@ -27,7 +26,6 @@ export type MilitaryUnits = {
 		lf: number[];
 		f74: number[];
 		t: number[];
-		hgl: number[];
 		ht: number[];
 		sci: number[];
 	};
@@ -53,18 +51,17 @@ export type KingdomSettings = {
 		money: { pts: number; perc: number };
 		fdc: { pts: number; perc: number };
 		warp: { pts: number; perc: number };
-		dr?: { pts: number; perc: number };
-		ft?: { pts: number; perc: number };
-		tf?: { pts: number; perc: number };
-		ld?: { pts: number; perc: number };
-		lf?: { pts: number; perc: number };
-		f74?: { pts: number; perc: number };
-		hgl?: { pts: number; perc: number };
-		ht?: { pts: number; perc: number };
-		fusion?: { pts: number; perc: number };
-		core?: { pts: number; perc: number };
-		armor?: { pts: number; perc: number };
-		long?: { pts: number; perc: number };
+		r_dr?: { pts: number; perc: number };
+		r_ft?: { pts: number; perc: number };
+		r_tf?: { pts: number; perc: number };
+		r_ld?: { pts: number; perc: number };
+		r_lf?: { pts: number; perc: number };
+		r_f74?: { pts: number; perc: number };
+		r_ht?: { pts: number; perc: number };
+		r_fusion?: { pts: number; perc: number };
+		r_core?: { pts: number; perc: number };
+		r_armor?: { pts: number; perc: number };
+		r_long?: { pts: number; perc: number };
 	};
 	state?: "dead" | "newbiemode";
 };
@@ -118,12 +115,12 @@ export function processKingdomTick(
 		military.sol * GAME_PARAMS.power.consumption.soldiers;
 	const powerBonus = (kingdom.research.power?.perc ?? 0) / 100;
 	const fusionBonus =
-		(kingdom.research.fusion?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.fusion?.bonus ?? 0) / 100
+		(kingdom.research.r_fusion?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_fusion?.bonus ?? 0) / 100
 			: 0;
 	const coreBonus =
-		(kingdom.research.core?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.core?.bonus ?? 0) / 100
+		(kingdom.research.r_core?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_core?.bonus ?? 0) / 100
 			: 0;
 
 	const powerIncome =
@@ -148,8 +145,8 @@ export function processKingdomTick(
 
 	const popBonus = (kingdom.research.pop?.perc ?? 0) / 100;
 	const longBonus =
-		(kingdom.research.long?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.long?.bonus ?? 0)
+		(kingdom.research.r_long?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_long?.bonus ?? 0)
 			: 0;
 	const resCapacityBoosted =
 		(GAME_PARAMS.buildings.resCapacity + longBonus) * (1 + popBonus);
@@ -377,7 +374,6 @@ export function processKingdomTick(
 			lf: [...military.queue.lf],
 			f74: [...military.queue.f74],
 			t: [...military.queue.t],
-			hgl: [...military.queue.hgl],
 			ht: [...military.queue.ht],
 			sci: [...(military.queue.sci || [])],
 		},
@@ -395,7 +391,6 @@ export function processKingdomTick(
 		"lf",
 		"f74",
 		"t",
-		"hgl",
 		"ht",
 		"sci",
 	] as const;
@@ -410,8 +405,8 @@ export function processKingdomTick(
 	}
 
 	// Instant conversion/promotion of defensive units if researched
-	const isLdResearched = (newKingdom.research.ld?.perc ?? 0) >= 100;
-	const isLfResearched = (newKingdom.research.lf?.perc ?? 0) >= 100;
+	const isLdResearched = (newKingdom.research.r_ld?.perc ?? 0) >= 100;
+	const isLfResearched = (newKingdom.research.r_lf?.perc ?? 0) >= 100;
 
 	if (isLdResearched && newMilitary.lt > 0) {
 		const ltPoints = newMilitary.lt * 4;
@@ -435,8 +430,8 @@ export function processKingdomTick(
 	}
 
 	// Instant conversion/promotion of offensive units if researched
-	const isDrResearched = (newKingdom.research.dr?.perc ?? 0) >= 100;
-	const isFtResearched = (newKingdom.research.ft?.perc ?? 0) >= 100;
+	const isDrResearched = (newKingdom.research.r_dr?.perc ?? 0) >= 100;
+	const isFtResearched = (newKingdom.research.r_ft?.perc ?? 0) >= 100;
 
 	if (isDrResearched && newMilitary.tr > 0) {
 		const trPoints = newMilitary.tr * 4;
@@ -537,19 +532,17 @@ export function processKingdomTick(
 	}
 
 	const techResearchKeys = [
-		"dr",
-		"ft",
-		"tf",
-		"ld",
-		"lf",
-		"f74",
-		"hgl",
-		"ht",
-		"fusion",
-		"core",
-		"warp",
-		"armor",
-		"long",
+		"r_dr",
+		"r_ft",
+		"r_tf",
+		"r_ld",
+		"r_lf",
+		"r_f74",
+		"r_ht",
+		"r_fusion",
+		"r_core",
+		"r_armor",
+		"r_long",
 	] as const;
 	for (const key of techResearchKeys) {
 		const researchData = (

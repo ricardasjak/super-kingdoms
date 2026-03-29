@@ -146,17 +146,17 @@ function KingdomGrowthPage() {
 	}
 
 	const isBuildingUnlocked = (buildingKey: string) => {
-		for (const [unitKey, techInfo] of Object.entries(
-			GAME_PARAMS.militaryTechTree,
-		)) {
-			if (techInfo && techInfo.building === buildingKey) {
-				const researchData = (
-					myKingdom.research as Record<string, { pts: number; perc: number }>
-				)[unitKey];
-				return (researchData?.perc ?? 0) >= 100;
-			}
-		}
-		return true; // No requirement means unlocked
+		const building =
+			GAME_PARAMS.buildingsTypes[
+				buildingKey as keyof typeof GAME_PARAMS.buildingsTypes
+			];
+		if (!building?.researchRequired) return true;
+
+		const researchData = (
+			myKingdom.research as Record<string, { pts: number; perc: number }>
+		)[building.researchRequired];
+
+		return (researchData?.perc ?? 0) >= 100;
 	};
 
 	const freeLand = calculateFreeLand(
@@ -306,12 +306,12 @@ function KingdomGrowthPage() {
 
 	const powerBonus = (myKingdom.research.power?.perc ?? 0) / 100;
 	const fusionBonus =
-		(myKingdom.research.fusion?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.fusion?.bonus ?? 0) / 100
+		(myKingdom.research.r_fusion?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_fusion?.bonus ?? 0) / 100
 			: 0;
 	const coreBonus =
-		(myKingdom.research.core?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.core?.bonus ?? 0) / 100
+		(myKingdom.research.r_core?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_core?.bonus ?? 0) / 100
 			: 0;
 	const powerProductionPerPlant = Math.floor(
 		GAME_PARAMS.buildings.plantProduction *
