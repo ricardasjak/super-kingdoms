@@ -5,7 +5,7 @@ import { v } from "convex/values";
 const schema = defineSchema({
 	...authTables,
 	kingdoms: defineTable({
-		userId: v.string(),
+		userId: v.optional(v.string()),
 		kdName: v.string(),
 		rulerName: v.string(),
 		planetType: v.string(),

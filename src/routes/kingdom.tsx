@@ -4,9 +4,16 @@ import {
 	Outlet,
 	useNavigate,
 } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { PlayButton } from "../components/play-button";
+import {
+	calculateLevel,
+	calculateMaxDefPotential,
+	calculateMaxOffPotential,
+	calculateMinDefPotential,
+	SpyReportSOK,
+} from "../components/spy-report-sok";
 import {
 	KingdomMessageProvider,
 	useKingdomMessage,
@@ -18,8 +25,18 @@ export const Route = createFileRoute("/kingdom")({
 function KingdomLayoutContent() {
 	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
+	const releaseKingdom = useMutation(api.kingdoms.releaseKingdom);
 	const gameStatus = useQuery(api.game.getGameStatus);
 	const { message, messageType } = useKingdomMessage();
+
+	const handleQuickRelease = async () => {
+		try {
+			await releaseKingdom();
+			navigate({ to: "/create" });
+		} catch (error) {
+			console.error("Failed to release kingdom", error);
+		}
+	};
 
 	if (myKingdom === undefined) {
 		return <p aria-busy="true">Loading kingdom data...</p>;
@@ -32,28 +49,61 @@ function KingdomLayoutContent() {
 
 	if (myKingdom.state === "dead") {
 		return (
-			<div className="container" style={{ textAlign: "center", marginTop: "5rem" }}>
+			<div
+				className="container"
+				style={{ textAlign: "center", marginTop: "5rem" }}
+			>
 				<article style={{ borderColor: "var(--pico-del-color)" }}>
-					<header style={{ backgroundColor: "var(--pico-del-color)", color: "white" }}>
+					<header
+						style={{ backgroundColor: "var(--pico-del-color)", color: "white" }}
+					>
 						<h2 style={{ margin: 0 }}>OFFICIAL NOTICE</h2>
 					</header>
-					<h1 style={{ color: "var(--pico-del-color)", fontSize: "3rem", margin: "2rem 0" }}>
+					<h1
+						style={{
+							color: "var(--pico-del-color)",
+							fontSize: "3rem",
+							margin: "2rem 0",
+						}}
+					>
 						YOUR KINGDOM HAS FALLEN
 					</h1>
 					<p style={{ fontSize: "1.2rem" }}>
-						The population of <strong>{myKingdom.kdName}</strong> has been completely eradicated.
-						A kingdom cannot exist without its people.
+						The population of <strong>{myKingdom.kdName}</strong> has been
+						completely eradicated. A kingdom cannot exist without its people.
 					</p>
 					<footer style={{ marginTop: "2rem" }}>
 						<button
 							type="button"
-							onClick={() => navigate({ to: "/kingdom/delete" })}
+							onClick={handleQuickRelease}
 							className="secondary"
 						>
-							Release Land & Start Over
+							Abdicate & Start Over
 						</button>
 					</footer>
 				</article>
+				<div style={{ textAlign: "left", maxWidth: "800px", margin: "0 auto" }}>
+					<SpyReportSOK
+						kdName={myKingdom.kdName}
+						rulerName={myKingdom.rulerName}
+						planetType={myKingdom.planetType}
+						raceType={myKingdom.raceType}
+						level={calculateLevel(myKingdom.land)}
+						land={myKingdom.land}
+						networth={myKingdom.nw}
+						honor={0}
+						money={myKingdom.money}
+						population={myKingdom.population}
+						power={myKingdom.power}
+						probes={myKingdom.probes}
+						scientists={myKingdom.military.sci || 0}
+						maProtection={0}
+						military={myKingdom.military}
+						maxDefPotential={calculateMaxDefPotential(myKingdom.military)}
+						maxOffPotential={calculateMaxOffPotential(myKingdom.military)}
+						minDefPotential={calculateMinDefPotential(myKingdom.military)}
+					/>
+				</div>
 			</div>
 		);
 	}
@@ -84,7 +134,16 @@ function KingdomLayoutContent() {
 								Land: {myKingdom.land.toLocaleString()} (
 								{myKingdom.nw.toLocaleString()} NW)
 							</li>
-							<li>Pop: {myKingdom.population.toLocaleString()}</li>
+							<li
+								style={
+									myKingdom.popChange < 0 &&
+									myKingdom.population + 3 * myKingdom.popChange <= 0
+										? { color: "var(--pico-del-color)", fontWeight: "bold" }
+										: {}
+								}
+							>
+								Pop: {myKingdom.population.toLocaleString()}
+							</li>
 							<li>Power: {myKingdom.power.toLocaleString()}</li>
 							<li>Money: ${myKingdom.money.toLocaleString()}</li>
 						</ul>

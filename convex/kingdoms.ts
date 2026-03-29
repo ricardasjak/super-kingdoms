@@ -9,6 +9,7 @@ import { calculateNw } from "../src/utils/nwUtils";
 import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { action, internalMutation, mutation, query } from "./_generated/server";
+import { kingdomMutation } from "./functions";
 
 const STARTING_VALUES = {
 	population: 2250,
@@ -204,6 +205,25 @@ export const createKingdom = mutation({
 	},
 });
 
+export const releaseKingdom = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		const existing = await ctx.db
+			.query("kingdoms")
+			.withIndex("by_userId", (q) => q.eq("userId", userId))
+			.unique();
+
+		if (existing) {
+			await ctx.db.patch(existing._id, {
+				userId: undefined,
+			});
+		}
+	},
+});
+
 export const deleteKingdom = mutation({
 	args: {},
 	handler: async (ctx) => {
@@ -229,24 +249,13 @@ export const getKingdomsCount = query({
 	},
 });
 
-export const updateRulerName = mutation({
+export const updateRulerName = kingdomMutation({
 	args: {
 		rulerName: v.string(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const existing = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!existing) throw new Error("Kingdom not found");
-		if (existing.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { rulerName, kingdom: existing }) => {
 		await ctx.db.patch(existing._id, {
-			rulerName: args.rulerName,
+			rulerName,
 		});
 	},
 });
@@ -289,7 +298,7 @@ import {
 	calculateNewQueue,
 } from "../src/utils/buildingUtils";
 
-export const buildBuildings = mutation({
+export const buildBuildings = kingdomMutation({
 	args: {
 		res: v.number(),
 		plants: v.number(),
@@ -300,32 +309,8 @@ export const buildBuildings = mutation({
 		asb: v.number(),
 		ach: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { kingdom, ...args }) => {
 		if (!kingdom.buildings) throw new Error("Buildings not found");
-
-		if (
-			args.res < 0 ||
-			args.plants < 0 ||
-			args.rax < 0 ||
-			args.sm < 0 ||
-			args.pf < 0 ||
-			args.tc < 0 ||
-			args.asb < 0 ||
-			args.ach < 0
-		) {
-			throw new Error("Invalid request: negative building counts");
-		}
 
 		const requestSum =
 			args.res +
@@ -355,8 +340,8 @@ export const buildBuildings = mutation({
 			GAME_PARAMS.militaryTechTree,
 		)) {
 			if (techInfo?.building) {
-				const buildingKey = techInfo.building as keyof typeof args;
-				if (args[buildingKey] > 0) {
+				const buildingKey = techInfo.building as string;
+				if ((args as Record<string, number>)[buildingKey] > 0) {
 					const researchData = (
 						kingdom.research as Record<string, { pts: number; perc: number }>
 					)[unitKey];
@@ -389,7 +374,7 @@ export const buildBuildings = mutation({
 	},
 });
 
-export const trainMilitary = mutation({
+export const trainMilitary = kingdomMutation({
 	args: {
 		sol: v.number(),
 		sci: v.number(),
@@ -405,18 +390,7 @@ export const trainMilitary = mutation({
 		hgl: v.number(),
 		ht: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { kingdom, ...args }) => {
 		if (!kingdom.military) throw new Error("Military not found");
 
 		const buildings = kingdom.buildings;
@@ -524,8 +498,12 @@ export const trainMilitary = mutation({
 						unit.key as keyof typeof GAME_PARAMS.militaryTechTree
 					];
 				if (techRequirement) {
-					const research =
-						kingdom.research[unit.key as keyof typeof kingdom.research];
+					const research = (
+						kingdom.research as Record<
+							string,
+							{ pts: number; perc: number } | undefined
+						>
+					)[unit.key];
 					if (!research || research.perc < 100) {
 						throw new Error(
 							`Cannot train ${unit.key}. Research must be 100% complete.`,
@@ -550,7 +528,7 @@ export const trainMilitary = mutation({
 
 		if (args.sol > 0) {
 			const soldiersInQueue = (kingdom.military.queue.sol || []).reduce(
-				(a, b) => a + b,
+				(a: number, b: number) => a + b,
 				0,
 			);
 			const maxByPop = Math.floor(
@@ -567,12 +545,12 @@ export const trainMilitary = mutation({
 			kingdom.buildings.asb * GAME_PARAMS.buildings.asbCapacity;
 		const currentTf = kingdom.military.tf || 0;
 		const tfInQueue = (kingdom.military.queue.tf || []).reduce(
-			(a, b) => a + b,
+			(a: number, b: number) => a + b,
 			0,
 		);
 		const currentF74 = kingdom.military.f74 || 0;
 		const f74InQueue = (kingdom.military.queue.f74 || []).reduce(
-			(a, b) => a + b,
+			(a: number, b: number) => a + b,
 			0,
 		);
 
@@ -609,7 +587,7 @@ export const trainMilitary = mutation({
 
 import { calculateExplorationQueue } from "../src/utils/landUtils";
 
-export const disbandMilitary = mutation({
+export const disbandMilitary = kingdomMutation({
 	args: {
 		sol: v.number(),
 		sci: v.number(),
@@ -625,18 +603,7 @@ export const disbandMilitary = mutation({
 		hgl: v.number(),
 		ht: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { kingdom, ...args }) => {
 		const military = kingdom.military;
 		const units = GAME_PARAMS.military.units;
 		let moneyRefund = 0;
@@ -646,7 +613,7 @@ export const disbandMilitary = mutation({
 		const newMilitary = { ...military };
 
 		for (const [key, count] of Object.entries(args)) {
-			if (count <= 0) continue;
+			if (typeof count !== "number" || count <= 0) continue;
 
 			const unitKey = key as keyof typeof units;
 			const currentCount = (military[unitKey] as number) || 0;
@@ -687,39 +654,31 @@ export const disbandMilitary = mutation({
 	},
 });
 
-export const exploreLand = mutation({
+export const exploreLand = kingdomMutation({
 	args: {
 		amount: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
-		if (args.amount <= 0) {
+	handler: async (ctx, { kingdom, amount }) => {
+		if (amount <= 0) {
 			throw new Error("Invalid exploration amount");
 		}
 
-		const currentQueueSum = kingdom.landQueue.reduce((a, b) => a + b, 0);
+		const currentQueueSum = kingdom.landQueue.reduce(
+			(a: number, b: number) => a + b,
+			0,
+		);
 		const maxPossibleExplore = Math.floor(kingdom.land * 0.1);
 
 		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
 
-		if (args.amount > maxExplore) {
+		if (amount > maxExplore) {
 			throw new Error(
 				`Cannot explore more than 10% of current land combined with the current queue (${maxExplore} max available to request)`,
 			);
 		}
 
 		const costPerLand = GAME_PARAMS.explore.cost(kingdom.land);
-		const totalCost = costPerLand * args.amount;
+		const totalCost = costPerLand * amount;
 
 		if (kingdom.money < totalCost) {
 			throw new Error("Not enough money for exploration");
@@ -728,7 +687,7 @@ export const exploreLand = mutation({
 		const currentQueue = kingdom.landQueue;
 		const newQueue = calculateExplorationQueue(
 			currentQueue,
-			args.amount,
+			amount,
 			GAME_PARAMS.explore.duration,
 		);
 
@@ -739,7 +698,7 @@ export const exploreLand = mutation({
 	},
 });
 
-export const razeBuildings = mutation({
+export const razeBuildings = kingdomMutation({
 	args: {
 		res: v.number(),
 		plants: v.number(),
@@ -750,18 +709,7 @@ export const razeBuildings = mutation({
 		asb: v.number(),
 		ach: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { kingdom, ...args }) => {
 		const currentBuildings = kingdom.buildings;
 		const buildingCost = GAME_PARAMS.buildings.cost(kingdom.land);
 		let refund = 0;
@@ -792,29 +740,18 @@ export const razeBuildings = mutation({
 	},
 });
 
-export const toggleAutoExplore = mutation({
+export const toggleAutoExplore = kingdomMutation({
 	args: {
 		autoExplore: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { kingdom, autoExplore }) => {
 		await ctx.db.patch(kingdom._id, {
-			autoExplore: args.autoExplore,
+			autoExplore,
 		});
 	},
 });
 
-export const saveAutoBuildSettings = mutation({
+export const saveAutoBuildSettings = kingdomMutation({
 	args: {
 		autoBuild: v.boolean(),
 		target: v.object({
@@ -828,37 +765,26 @@ export const saveAutoBuildSettings = mutation({
 			ach: v.number(),
 		}),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
-		console.log("args.target", args.target);
+	handler: async (ctx, { kingdom, autoBuild, target }) => {
+		console.log("args.target", target);
 
 		const sum =
-			args.target.res +
-			args.target.plants +
-			args.target.rax +
-			args.target.sm +
-			args.target.pf +
-			args.target.tc +
-			args.target.asb +
-			args.target.ach;
+			target.res +
+			target.plants +
+			target.rax +
+			target.sm +
+			target.pf +
+			target.tc +
+			target.asb +
+			target.ach;
 
 		if (sum > 100) {
 			throw new Error("Target percentages cannot exceed 100%");
 		}
 
 		await ctx.db.patch(kingdom._id, {
-			autoBuild: args.autoBuild,
-			buildings: { ...kingdom.buildings, target: args.target },
+			autoBuild: autoBuild,
+			buildings: { ...kingdom.buildings, target: target },
 		});
 	},
 });
@@ -994,7 +920,7 @@ export const saveSpyReport = mutation({
 	},
 });
 
-export const assignResearchPoints = mutation({
+export const assignResearchPoints = kingdomMutation({
 	args: {
 		pop: v.number(),
 		power: v.number(),
@@ -1015,17 +941,7 @@ export const assignResearchPoints = mutation({
 		armor: v.number(),
 		long: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { kingdom, ...args }) => {
 		const researchKeys = [
 			"pop",
 			"power",
@@ -1154,43 +1070,23 @@ export const assignResearchPoints = mutation({
 	},
 });
 
-export const saveResearchAutoAssign = mutation({
+export const saveResearchAutoAssign = kingdomMutation({
 	args: {
 		priority: v.array(v.string()),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
+	handler: async (ctx, { kingdom, priority }) => {
 		await ctx.db.patch(kingdom._id, {
-			researchAutoAssign: args.priority,
+			researchAutoAssign: priority,
 		});
 	},
 });
 
-export const buyScientists = mutation({
+export const buyScientists = kingdomMutation({
 	args: {
 		amount: v.number(),
 	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Not authenticated");
-
-		const kingdom = await ctx.db
-			.query("kingdoms")
-			.withIndex("by_userId", (q) => q.eq("userId", userId))
-			.unique();
-		if (!kingdom) throw new Error("Kingdom not found");
-		if (kingdom.state === "dead") throw new Error("Kingdom is dead");
-
-		const amount = Math.floor(args.amount);
+	handler: async (ctx, { kingdom, amount: rawAmount }) => {
+		const amount = Math.floor(rawAmount);
 		if (amount <= 0) {
 			throw new Error("Amount must be greater than zero.");
 		}
