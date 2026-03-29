@@ -56,7 +56,6 @@ const MILITARY_UNITS: Record<MilitaryUnitType, MilitaryUnitConfig> = {
 		housing: 1,
 		off: 6,
 		def: 0,
-		buildingRequired: "asb",
 		researchRequired: "r_ft",
 	},
 	tf: {
@@ -123,19 +122,19 @@ export const RESEARCH_PARAMS = {
 >;
 
 const RESEARCH_TECH_TREE: Record<ResearchTechType, ResearchTechConfig> = {
-	r_dr: { requirePoints: 60_000 },
-	r_ft: { requirePoints: 120_000, requires: "r_dr" },
-	r_tf: { requirePoints: 3000, requires: "r_ft" },
-	r_f74: { requirePoints: 2000 },
+	r_dr: { requirePoints: 600, requires: "r_long" },
+	r_ft: { requirePoints: 1200, requires: "r_dr" },
+	r_tf: { requirePoints: 3000, requires: "r_f74" },
+	r_f74: { requirePoints: 2000, requires: 'r_core' },
 
-	r_ld: { requirePoints: 72_000 },
-	r_lf: { requirePoints: 150_000, requires: "r_ld" },
-	r_ht: { requirePoints: 200_000 },
+	r_ld: { requirePoints: 720, requires: 'r_long' },
+	r_lf: { requirePoints: 1500, requires: "r_ld" },
+	r_ht: { requirePoints: 2000 },
 
-	r_fusion: { requirePoints: 30_000, bonus: 50 },
-	r_core: { requirePoints: 50_000, requires: "r_fusion", bonus: 20 },
-	r_armor: { requirePoints: 92_000 },
-	r_long: { requirePoints: 400_000, requires: "r_core", bonus: 5 },
+	r_fusion: { requirePoints: 300, bonus: 50 },
+	r_core: { requirePoints: 500, requires: "r_fusion", bonus: 20 },
+	r_armor: { requirePoints: 92000, requires: "r_core" },
+	r_long: { requirePoints: 400, bonus: 5 },
 };
 
 export const BUILDINGS_LIST: Record<BuildingType, BuildingConfig> = {
@@ -252,7 +251,6 @@ export const GAME_PARAMS = {
 			lf: 10,
 			f74: 12,
 			t: 22,
-			hgl: 15,
 			ht: 31,
 			sci: 8,
 		},

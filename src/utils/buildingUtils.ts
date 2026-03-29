@@ -73,7 +73,6 @@ type MilitaryQueue = {
 	lf: number[];
 	f74: number[];
 	t: number[];
-	hgl: number[];
 	ht: number[];
 	sci: number[];
 };
@@ -91,7 +90,6 @@ export function calculateMilitaryQueue(
 		lf: number;
 		f74: number;
 		t: number;
-		hgl: number;
 		ht: number;
 		sci: number;
 	},
@@ -108,7 +106,6 @@ export function calculateMilitaryQueue(
 		lf: [],
 		f74: [],
 		t: [],
-		hgl: [],
 		ht: [],
 		sci: [],
 	};
@@ -124,7 +121,6 @@ export function calculateMilitaryQueue(
 		"lf",
 		"f74",
 		"t",
-		"hgl",
 		"ht",
 		"sci",
 	] as const;
@@ -140,7 +136,6 @@ export function calculateMilitaryQueue(
 		lf: [...(safeQueue.lf || [])],
 		f74: [...(safeQueue.f74 || [])],
 		t: [...(safeQueue.t || [])],
-		hgl: [...(safeQueue.hgl || [])],
 		ht: [...(safeQueue.ht || [])],
 		sci: [...(safeQueue.sci || [])],
 	};

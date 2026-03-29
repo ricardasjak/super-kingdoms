@@ -435,6 +435,7 @@ function KingdomMilitaryPage() {
 									if (key === "lt" && (isRes("r_ld") || isRes("r_lf")))
 										return false;
 									if (key === "ld" && isRes("r_lf")) return false;
+									if (key === "t" && isRes("r_ht")) return false;
 
 									return true;
 								}).map((key) => {

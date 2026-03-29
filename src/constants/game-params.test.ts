@@ -112,7 +112,6 @@ describe("calculateMaxOffPotential", () => {
 			lf: 0,
 			f74: 0,
 			t: 20,
-			hgl: 0,
 			ht: 0,
 			sci: 0,
 		};
@@ -133,7 +132,6 @@ describe("calculateMaxOffPotential", () => {
 			lf: 0,
 			f74: 0,
 			t: 0,
-			hgl: 0,
 			ht: 5,
 			sci: 0,
 		};
@@ -173,7 +171,6 @@ describe("calculateMaxOffPotential", () => {
 			lf: 0,
 			f74: 0,
 			t: 20,
-			hgl: 0,
 			ht: 5,
 			sci: 0,
 		};

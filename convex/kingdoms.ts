@@ -470,7 +470,6 @@ export const trainMilitary = kingdomMutation({
 		lf: v.number(),
 		f74: v.number(),
 		t: v.number(),
-		hgl: v.number(),
 		ht: v.number(),
 	},
 	handler: async (ctx, { kingdom, ...args }) => {
@@ -982,7 +981,6 @@ export const saveSpyReport = mutation({
 			lf: v.number(),
 			f74: v.number(),
 			t: v.number(),
-			hgl: v.number(),
 			ht: v.number(),
 		}),
 		maxDefPotential: v.number(),
@@ -1175,7 +1173,6 @@ export const buyScientists = kingdomMutation({
 				lf: 0,
 				f74: 0,
 				t: 0,
-				hgl: 0,
 				ht: 0,
 				sci: amount,
 			},

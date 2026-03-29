@@ -442,6 +442,20 @@ export function processKingdomTick(
 		militaryChanged = true;
 	}
 
+	// Instant conversion/promotion of elite units if researched
+	const isHtResearched = (newKingdom.research.r_ht?.perc ?? 0) >= 100;
+
+	if (isHtResearched && newMilitary.t > 0) {
+		const tPoints = newMilitary.t * 9;
+		const htFromT = Math.floor(tPoints / 12);
+		const remPointsFromT = tPoints % 12;
+
+		newMilitary.t = 0;
+		newMilitary.ht += htFromT;
+		newMilitary.sol += remPointsFromT;
+		militaryChanged = true;
+	}
+
 	// Auto Assign Research Points
 	const autoAssign = kingdom.researchAutoAssign || [];
 	if (autoAssign.length > 0 && newKingdom.researchPts > 0) {

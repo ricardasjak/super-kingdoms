@@ -5,13 +5,14 @@ import { api } from "../../convex/_generated/api";
 import { GAME_PARAMS } from "../../src/constants/game-params";
 import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
 import { MaxButton } from "../components/max-button";
-import { Tooltip } from "../components/Tooltip";
 import type {
 	ResearchData,
 	ResearchKey,
 	ResearchTechType,
 	ResearchTopicType,
 } from "../types/game";
+import { RESEARCH_TOOLTIPS } from "../components/research/ResearchTooltips";
+import { ScientistsSummary } from "../components/research/ScientistsSummary";
 
 export const Route = createFileRoute("/kingdom/research")({
 	component: KingdomResearchPage,
@@ -91,16 +92,19 @@ function KingdomResearchPage() {
 		label: string;
 		data: ResearchData | undefined;
 	}> = [
-		{ key: "r_dr", label: "Dragoons", data: research.r_dr },
-		{ key: "r_ft", label: "Fighters", data: research.r_ft },
-		{ key: "r_tf", label: "Air Supremacy Beacon", data: research.r_tf },
-		{ key: "r_ld", label: "Laser Dragoons", data: research.r_ld },
-		{ key: "r_lf", label: "Laser Fighters", data: research.r_lf },
-		{ key: "r_ht", label: "Hover Tanks", data: research.r_ht },
 		{ key: "r_fusion", label: "Fusion Technology", data: research.r_fusion },
 		{ key: "r_core", label: "Energy Core", data: research.r_core },
 		{ key: "r_armor", label: "Probe Armor", data: research.r_armor },
+
 		{ key: "r_long", label: "Longevity", data: research.r_long },
+		{ key: "r_dr", label: "Dragoons", data: research.r_dr },
+		{ key: "r_ft", label: "Fighters", data: research.r_ft },
+		{ key: "r_ld", label: "Laser Dragoons", data: research.r_ld },
+		{ key: "r_lf", label: "Laser Fighters", data: research.r_lf },
+
+		{ key: "r_f74", label: "Air Supremacy Beacon", data: research.r_f74 },
+		{ key: "r_tf", label: "Air Supremacy Beacon II", data: research.r_tf },
+		{ key: "r_ht", label: "Hover Tanks", data: research.r_ht },
 	];
 
 	const techTree = GAME_PARAMS.militaryTechTree;
@@ -313,53 +317,7 @@ function KingdomResearchPage() {
 								</small>
 							</hgroup>
 						</div>
-						<div style={{ textAlign: "center" }}>
-							{(() => {
-								const autoAssign = myKingdom.researchAutoAssign || [];
-								const sumWeights = autoAssign.reduce((sum, key) => {
-									const weight =
-										(
-											GAME_PARAMS.research.params as Record<
-												string,
-												{ weight: number }
-											>
-										)[key]?.weight || 0;
-									return sum + weight;
-								}, 0);
-								const scientists = myKingdom.military.sci;
-								const pointsFor1PercLand =
-									(myKingdom.land * 1.01) ** 2 * sumWeights -
-									myKingdom.land ** 2 * sumWeights;
-								const landCoverage =
-									(scientists / pointsFor1PercLand) * myKingdom.land * 0.01;
-
-								return (
-									<>
-										<h6 style={{ marginBottom: 0 }}>
-											Scientists: {scientists.toLocaleString()}
-										</h6>
-										<small
-											style={{
-												color: "var(--pico-muted-color)",
-												fontSize: "0.85rem",
-											}}
-										>
-											{sumWeights > 0 ? (
-												<div>
-													Covers up to{" "}
-													<strong>
-														{Math.floor(landCoverage).toLocaleString()}
-													</strong>{" "}
-													land / tick
-												</div>
-											) : (
-												"No auto-priority topics selected"
-											)}
-										</small>
-									</>
-								);
-							})()}
-						</div>
+						<ScientistsSummary myKingdom={myKingdom} />
 						<div
 							style={{
 								display: "flex",
@@ -472,7 +430,10 @@ function KingdomResearchPage() {
 											style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
 										>
 											<td>
-												{label}
+												<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+													{label}
+													{RESEARCH_TOOLTIPS[key]}
+												</div>
 												{!prerequisiteMet && (
 													<div style={{ fontSize: "0.75rem", color: "red" }}>
 														Locked: Needs{" "}
@@ -716,65 +677,7 @@ function KingdomResearchPage() {
 																	}}
 																>
 																	{label}
-																	{(() => {
-																		const unitStats = Object.values(
-																			GAME_PARAMS.military.units,
-																		).find((u) => u.researchRequired === key);
-
-																		if (unitStats) {
-																			const tcDiscount =
-																				GAME_PARAMS.military.calculateTcDiscount(
-																					myKingdom.buildings.tc || 0,
-																					myKingdom.land,
-																				);
-																			const discountedCost = Math.floor(
-																				(unitStats.cost * (100 - tcDiscount)) /
-																					100,
-																			);
-																			const solCost = unitStats.sol;
-																			let tooltipContent = `Unlocks ${label}: ⚔️ ${unitStats.off} | 🛡️ ${unitStats.def} points`;
-																			if (key === "r_tf") {
-																				tooltipContent =
-																					"Unlocks Air Support Bays (building) and mechanical units (TFs, F74 Drones)";
-																			} else {
-																				// Append cost info as well for more detail
-																				tooltipContent += ` | Cost: $${discountedCost.toLocaleString()}${
-																					solCost > 0
-																						? ` | Soldiers: ${solCost}`
-																						: ""
-																				}`;
-																			}
-																			return (
-																				<Tooltip
-																					content={tooltipContent}
-																					position="right"
-																					showIcon
-																				/>
-																			);
-																		}
-
-																		const techInfo =
-																			GAME_PARAMS.militaryTechTree[
-																				key as keyof typeof GAME_PARAMS.militaryTechTree
-																			];
-																		if (techInfo?.bonus || key === "r_long") {
-																			let content = `Unlocks ${techInfo?.bonus}% better power plants`;
-																			if (key === "r_core")
-																				content += " and Warp Drive";
-																			if (key === "r_long")
-																				content = `Increases residences base capacity by ${techInfo?.bonus} population`;
-
-																			return (
-																				<Tooltip
-																					content={content}
-																					position="right"
-																					showIcon
-																				/>
-																			);
-																		}
-
-																		return null;
-																	})()}
+																	{RESEARCH_TOOLTIPS[key]}
 																</div>
 																{!prerequisiteMet && (
 																	<div
