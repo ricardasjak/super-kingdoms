@@ -1051,15 +1051,17 @@ function KingdomGrowthPage() {
 								)}
 
 								{/* Rubble */}
-								<tr>
-									<td>Rubble</td>
-									<td>{actualPercent(buildings.rubble)}</td>
-									<td>{buildings.rubble}</td>
-									<td>-</td>
-									{myKingdom.autoBuild && !isRazeMode && <td>-</td>}
-									<td>-</td>
-									<td>-</td>
-								</tr>
+								{buildings.rubble > 0 && (
+									<tr>
+										<td>Rubble</td>
+										<td>{actualPercent(buildings.rubble)}</td>
+										<td>{buildings.rubble}</td>
+										<td>-</td>
+										{myKingdom.autoBuild && !isRazeMode && <td>-</td>}
+										<td>-</td>
+										<td>-</td>
+									</tr>
+								)}
 							</tbody>
 						</table>
 					</figure>
