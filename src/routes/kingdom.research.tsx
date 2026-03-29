@@ -6,16 +6,16 @@ import { GAME_PARAMS } from "../../src/constants/game-params";
 import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
 import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
-import type { ResearchTechType, ResearchTopicType } from "../types/game";
+import type {
+	ResearchData,
+	ResearchKey,
+	ResearchTechType,
+	ResearchTopicType,
+} from "../types/game";
 
 export const Route = createFileRoute("/kingdom/research")({
 	component: KingdomResearchPage,
 });
-
-interface ResearchDisc {
-	pts: number;
-	perc: number;
-}
 
 function KingdomResearchPage() {
 	const navigate = useNavigate();
@@ -86,7 +86,11 @@ function KingdomResearchPage() {
 		{ key: "fdc", label: "Frequency Decryption", data: research.fdc },
 	] as const;
 
-	const techTopics = [
+	const techTopics: Array<{
+		key: ResearchTechType;
+		label: string;
+		data: ResearchData | undefined;
+	}> = [
 		{ key: "r_dr", label: "Dragoons", data: research.r_dr },
 		{ key: "r_ft", label: "Fighters", data: research.r_ft },
 		{ key: "r_tf", label: "Air Supremacy Beacon", data: research.r_tf },
@@ -97,7 +101,7 @@ function KingdomResearchPage() {
 		{ key: "r_core", label: "Energy Core", data: research.r_core },
 		{ key: "r_armor", label: "Probe Armor", data: research.r_armor },
 		{ key: "r_long", label: "Longevity", data: research.r_long },
-	] as const;
+	];
 
 	const techTree = GAME_PARAMS.militaryTechTree;
 
@@ -114,7 +118,7 @@ function KingdomResearchPage() {
 		0,
 	);
 
-	const handleMaxClick = (key: string) => {
+	const handleMaxClick = (key: ResearchKey) => {
 		const techInfo = techTree[key as keyof typeof techTree];
 		let required = 0;
 		if (techInfo) {
@@ -126,9 +130,7 @@ function KingdomResearchPage() {
 			);
 		}
 
-		const currentPts =
-			(myKingdom.research as Record<string, ResearchDisc | undefined>)[key]
-				?.pts || 0;
+		const currentPts = myKingdom.research[key]?.pts || 0;
 		const needed = Math.max(0, required - currentPts);
 
 		if (needed <= 0) return;
@@ -458,20 +460,11 @@ function KingdomResearchPage() {
 							</thead>
 							<tbody>
 								{standardResearchTopics.map(({ key, label, data }) => {
-									const prerequisiteKey = (
-										GAME_PARAMS.research.params as Record<
-											string,
-											{ requires?: string }
-										>
-									)[key]?.requires;
-									const prerequisiteMet = prerequisiteKey
-										? ((
-												myKingdom.research as Record<
-													string,
-													ResearchDisc | undefined
-												>
-											)[prerequisiteKey]?.perc ?? 0) >= 100
-										: true;
+									const prerequisiteKey =
+										GAME_PARAMS.research.params[key].requires;
+									const prerequisiteMet =
+										!prerequisiteKey ||
+										(myKingdom.research[prerequisiteKey]?.perc ?? 0) >= 100;
 
 									return (
 										<tr
@@ -560,8 +553,10 @@ function KingdomResearchPage() {
 													disabled={
 														isAssigning ||
 														myKingdom.researchPts <= 0 ||
-														!prerequisiteMet
+														!prerequisiteMet ||
+														(data?.perc ?? 0) >= 100
 													}
+													label={(data?.perc ?? 0) >= 100 ? "Done" : "Max"}
 												/>
 											</td>
 											<td>
@@ -571,7 +566,11 @@ function KingdomResearchPage() {
 													value={assignQueue[key as keyof typeof assignQueue]}
 													onChange={handleInputChange}
 													min="0"
-													disabled={isAssigning}
+													disabled={
+														isAssigning ||
+														!prerequisiteMet ||
+														(data?.perc ?? 0) >= 100
+													}
 													style={{ minWidth: "100px", marginBottom: 0 }}
 												/>
 											</td>
@@ -689,32 +688,19 @@ function KingdomResearchPage() {
 													// Hide completed research
 													if ((data?.perc ?? 0) >= 100) return false;
 
-													// Hide locked research
-													const techInfo =
-														techTree[key as keyof typeof techTree];
-													if (!techInfo) return true;
-
-													const prerequisite = techInfo?.requires;
-													if (!prerequisite) return true;
-
+													const prerequisite = techTree[key]?.requires;
 													return (
-														((
-															myKingdom.research as Record<string, ResearchDisc>
-														)[prerequisite]?.perc ?? 0) >= 100
+														!prerequisite ||
+														(myKingdom.research[prerequisite]?.perc ?? 0) >= 100
 													);
 												})
 												.map(({ key, label, data }) => {
-													const techInfo =
-														techTree[key as keyof typeof techTree];
+													const techInfo = techTree[key];
 													const prerequisite = techInfo?.requires;
-													const prerequisiteMet = prerequisite
-														? ((
-																myKingdom.research as Record<
-																	string,
-																	ResearchDisc
-																>
-															)[prerequisite]?.perc ?? 0) >= 100
-														: true;
+													const prerequisiteMet =
+														!prerequisite ||
+														(myKingdom.research[prerequisite]?.perc ?? 0) >=
+															100;
 
 													return (
 														<tr
@@ -731,10 +717,10 @@ function KingdomResearchPage() {
 																>
 																	{label}
 																	{(() => {
-																		const unitStats =
-																			GAME_PARAMS.military.units[
-																				key as keyof typeof GAME_PARAMS.military.units
-																			];
+																		const unitStats = Object.values(
+																			GAME_PARAMS.military.units,
+																		).find((u) => u.researchRequired === key);
+
 																		if (unitStats) {
 																			const tcDiscount =
 																				GAME_PARAMS.military.calculateTcDiscount(
@@ -745,10 +731,8 @@ function KingdomResearchPage() {
 																				(unitStats.cost * (100 - tcDiscount)) /
 																					100,
 																			);
-																			const solCost = (
-																				unitStats as typeof GAME_PARAMS.military.units.tr
-																			).sol;
-																			let tooltipContent = `Unlocks ${label}: ⚔️ ${unitStats?.off} | 🛡️ ${unitStats?.def} points`;
+																			const solCost = unitStats.sol;
+																			let tooltipContent = `Unlocks ${label}: ⚔️ ${unitStats.off} | 🛡️ ${unitStats.def} points`;
 																			if (key === "r_tf") {
 																				tooltipContent =
 																					"Unlocks Air Support Bays (building) and mechanical units (TFs, F74 Drones)";

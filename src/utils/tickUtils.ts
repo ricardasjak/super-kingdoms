@@ -1,6 +1,8 @@
 import { GAME_PARAMS } from "../constants/game-params";
 import type {
 	BuildingType,
+	KingdomResearch,
+	ResearchKey,
 	ResearchTechType,
 	ResearchTopicType,
 } from "../types/game";
@@ -49,25 +51,7 @@ export type KingdomSettings = {
 	autoBuild?: boolean;
 	researchPts: number;
 	researchAutoAssign?: string[];
-	research: {
-		pop: { pts: number; perc: number };
-		power: { pts: number; perc: number };
-		mil: { pts: number; perc: number };
-		money: { pts: number; perc: number };
-		fdc: { pts: number; perc: number };
-		warp: { pts: number; perc: number };
-		r_dr?: { pts: number; perc: number };
-		r_ft?: { pts: number; perc: number };
-		r_tf?: { pts: number; perc: number };
-		r_ld?: { pts: number; perc: number };
-		r_lf?: { pts: number; perc: number };
-		r_f74?: { pts: number; perc: number };
-		r_ht?: { pts: number; perc: number };
-		r_fusion?: { pts: number; perc: number };
-		r_core?: { pts: number; perc: number };
-		r_armor?: { pts: number; perc: number };
-		r_long?: { pts: number; perc: number };
-	};
+	research: KingdomResearch;
 	state?: "dead" | "newbiemode";
 };
 
@@ -464,7 +448,7 @@ export function processKingdomTick(
 		for (const key of autoAssign) {
 			if (newKingdom.researchPts <= 0) break;
 
-			const researchKey = key as keyof typeof newKingdom.research;
+			const researchKey = key as ResearchKey;
 			const currentPts = newKingdom.research[researchKey]?.pts ?? 0;
 
 			let required = 0;
@@ -475,9 +459,9 @@ export function processKingdomTick(
 			if (techInfo) {
 				// Prerequisite check for military research
 				if (techInfo.requires) {
-					const prerequisite = (
-						newKingdom.research as Record<string, { pts: number; perc: number }>
-					)[techInfo.requires];
+					const prerequisite = techInfo.requires
+						? newKingdom.research[techInfo.requires]
+						: undefined;
 					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue; // Skip if prerequisite not completed
 				}
 				required = techInfo.requirePoints;
@@ -525,8 +509,7 @@ export function processKingdomTick(
 		"warp",
 	];
 	for (const key of standardResearchKeys) {
-		const resData =
-			newKingdom.research[key as keyof typeof newKingdom.research];
+		const resData = newKingdom.research[key];
 		if (!resData) continue;
 		const pts = resData.pts;
 		const required = GAME_PARAMS.research.required(key, newKingdom.land);
@@ -552,9 +535,7 @@ export function processKingdomTick(
 		"r_long",
 	];
 	for (const key of techResearchKeys) {
-		const researchData = (
-			newKingdom.research as Record<string, { pts: number; perc: number }>
-		)[key];
+		const researchData = newKingdom.research[key];
 		const pts = researchData?.pts ?? 0;
 		const techInfo =
 			GAME_PARAMS.militaryTechTree[

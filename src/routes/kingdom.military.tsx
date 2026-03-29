@@ -6,7 +6,7 @@ import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
-import type { MilitaryUnitType } from "../types/game";
+import type { MilitaryUnitType, ResearchKey } from "../types/game";
 
 export const Route = createFileRoute("/kingdom/military")({
 	component: KingdomMilitaryPage,
@@ -14,19 +14,7 @@ export const Route = createFileRoute("/kingdom/military")({
 
 const UNITS = GAME_PARAMS.military.units;
 
-const UNIT_KEYS: MilitaryUnitType[] = [
-	"tr",
-	"dr",
-	"ft",
-	"tf",
-	"lt",
-	"ld",
-	"lf",
-	"f74",
-	"t",
-	"ht",
-	"sci",
-];
+const UNIT_KEYS = Object.keys(UNITS) as MilitaryUnitType[];
 
 const UNIT_LABELS: Record<MilitaryUnitType, string> = {
 	sol: "Soldiers",
@@ -43,25 +31,13 @@ const UNIT_LABELS: Record<MilitaryUnitType, string> = {
 	sci: "Scientists",
 };
 
-const INITIAL_TRAIN_QUEUE: Record<MilitaryUnitType, string> = {
-	sol: "",
-	tr: "",
-	dr: "",
-	ft: "",
-	tf: "",
-	lt: "",
-	ld: "",
-	lf: "",
-	f74: "",
-	t: "",
-	ht: "",
-	sci: "",
-};
+const INITIAL_TRAIN_QUEUE = Object.fromEntries(
+	UNIT_KEYS.map((k) => [k, ""]),
+) as Record<MilitaryUnitType, string>;
 
-const getUnitTooltip = (key: string) => {
-	const unit = UNITS[key as keyof typeof UNITS];
-	const nwValue =
-		GAME_PARAMS.nw.units[key as keyof typeof GAME_PARAMS.nw.units];
+const getUnitTooltip = (key: MilitaryUnitType) => {
+	const unit = UNITS[key];
+	const nwValue = GAME_PARAMS.nw.units[key];
 	if (!unit) return "";
 	const row1 = `⚔️ Offense: ${unit.off} | 🛡️ Defense: ${unit.def} | `;
 	const row2 = `🏠 Space: ${unit.housing} | ⚡ Power: ${unit.power} | `;
@@ -118,7 +94,7 @@ function KingdomMilitaryPage() {
 	const soldiersCount = parseInt(soldiersToTrain, 10) || 0;
 	const soldiersCost = soldiersCount * getUnitCost("sol", tcCount, land);
 
-	const currentSoldiers = military.sol as number;
+	const currentSoldiers = military.sol;
 	const soldiersInQueue = (military.queue.sol || []).reduce((a, b) => a + b, 0);
 	const soldierCost = getUnitCost("sol", tcCount, land);
 	const maxByPop = Math.floor(
@@ -158,19 +134,9 @@ function KingdomMilitaryPage() {
 		setIsTraining(true);
 		try {
 			await trainMilitary({
+				...Object.fromEntries(UNIT_KEYS.map((k) => [k, 0])),
 				sol: soldiersCount,
-				sci: 0,
-				tr: 0,
-				dr: 0,
-				ft: 0,
-				tf: 0,
-				lt: 0,
-				ld: 0,
-				lf: 0,
-				f74: 0,
-				t: 0,
-				ht: 0,
-			});
+			} as Record<MilitaryUnitType, number>);
 			setSoldiersToTrain("");
 		} catch (error) {
 			console.error(error);
@@ -215,21 +181,12 @@ function KingdomMilitaryPage() {
 
 		setIsTraining(true);
 		try {
+			const trainArgs = Object.fromEntries(
+				UNIT_KEYS.map((k) => [k, parseInt(trainQueue[k], 10) || 0]),
+			) as Record<MilitaryUnitType, number>;
+
 			if (isDisbandMode) {
-				await disbandMilitary({
-					sol: parseInt(trainQueue.sol, 10) || 0,
-					sci: parseInt(trainQueue.sci, 10) || 0,
-					tr: parseInt(trainQueue.tr, 10) || 0,
-					dr: parseInt(trainQueue.dr, 10) || 0,
-					ft: parseInt(trainQueue.ft, 10) || 0,
-					tf: parseInt(trainQueue.tf, 10) || 0,
-					lt: parseInt(trainQueue.lt, 10) || 0,
-					ld: parseInt(trainQueue.ld, 10) || 0,
-					lf: parseInt(trainQueue.lf, 10) || 0,
-					f74: parseInt(trainQueue.f74, 10) || 0,
-					t: parseInt(trainQueue.t, 10) || 0,
-					ht: parseInt(trainQueue.ht, 10) || 0,
-				});
+				await disbandMilitary(trainArgs);
 				showMessage("Units successfully disbanded!", "success");
 			} else {
 				if (myKingdom.money < totalCost) {
@@ -242,18 +199,8 @@ function KingdomMilitaryPage() {
 				}
 
 				await trainMilitary({
+					...trainArgs,
 					sol: 0,
-					sci: parseInt(trainQueue.sci, 10) || 0,
-					tr: parseInt(trainQueue.tr, 10) || 0,
-					dr: parseInt(trainQueue.dr, 10) || 0,
-					ft: parseInt(trainQueue.ft, 10) || 0,
-					tf: parseInt(trainQueue.tf, 10) || 0,
-					lt: parseInt(trainQueue.lt, 10) || 0,
-					ld: parseInt(trainQueue.ld, 10) || 0,
-					lf: parseInt(trainQueue.lf, 10) || 0,
-					f74: parseInt(trainQueue.f74, 10) || 0,
-					t: parseInt(trainQueue.t, 10) || 0,
-					ht: parseInt(trainQueue.ht, 10) || 0,
 				});
 			}
 			setTrainQueue(INITIAL_TRAIN_QUEUE);
@@ -466,92 +413,63 @@ function KingdomMilitaryPage() {
 									</tr>
 								)}
 								{UNIT_KEYS.filter((key) => {
+									if (key === "sol") return false;
 									if (isDisbandMode) return true;
 
-									// Research check for basic unlocking
-									const techInfo =
-										GAME_PARAMS.militaryTechTree[
-											key as keyof typeof GAME_PARAMS.militaryTechTree
-										];
+									const unitConfig = UNITS[key];
+									const { researchRequired: resReq, buildingRequired: bldReq } =
+										unitConfig;
 
-									const researchData = (
-										myKingdom.research as Record<
-											string,
-											{ pts: number; perc: number }
-										>
-									)[key];
-
-									const isUnlocked =
-										!techInfo || (researchData?.perc ?? 0) >= 100;
-									if (!isUnlocked) return false;
-
-									// Obsolete unit check (hide lower tiers if higher ones researched)
-									const isResearched = (k: string) =>
-										((
-											myKingdom.research as Record<
-												string,
-												{ pts: number; perc: number }
-											>
-										)[k]?.perc ?? 0) >= 100;
-
-									if (
-										key === "tr" &&
-										(isResearched("dr") || isResearched("ft"))
-									)
+									if (resReq && (myKingdom.research[resReq]?.perc ?? 0) < 100)
 										return false;
-									if (key === "dr" && isResearched("ft")) return false;
-									if (
-										key === "lt" &&
-										(isResearched("ld") || isResearched("lf"))
-									)
+									if (bldReq && (myKingdom.buildings[bldReq] || 0) <= 0)
 										return false;
-									if (key === "ld" && isResearched("lf")) return false;
+
+									// Obsolete unit check
+									const isRes = (k: ResearchKey) =>
+										(myKingdom.research[k]?.perc ?? 0) >= 100;
+
+									if (key === "tr" && (isRes("r_dr") || isRes("r_ft")))
+										return false;
+									if (key === "dr" && isRes("r_ft")) return false;
+									if (key === "lt" && (isRes("r_ld") || isRes("r_lf")))
+										return false;
+									if (key === "ld" && isRes("r_lf")) return false;
 
 									return true;
 								}).map((key) => {
-									const queueCount = (
-										military.queue[key as keyof typeof military.queue] || []
-									).reduce((a: number, b: number) => a + b, 0);
-									const unitCount = military[
-										key as keyof typeof military
-									] as number;
+									const queueCount = (military.queue[key] || []).reduce(
+										(a: number, b: number) => a + b,
+										0,
+									);
+									const unitCount = military[key];
 									const unitCost = getUnitCost(key, tcCount, land);
+
+									const unitSolCost = UNITS[key].sol || 0;
 									const maxByMoney = Math.floor(myKingdom.money / unitCost);
-									const unitSolCost =
-										(UNITS[key] as (typeof UNITS)["tr"]).sol || 0;
 									const maxBySoldiers =
 										unitSolCost > 0
 											? Math.floor(currentSoldiers / unitSolCost)
 											: Infinity;
-									const tfCount = military.tf || 0;
-									const f74Count = military.f74 || 0;
-									const tfQueue = (military.queue.tf || []).reduce(
-										(a, b) => a + b,
-										0,
-									);
-									const f74Queue = (military.queue.f74 || []).reduce(
-										(a, b) => a + b,
-										0,
-									);
 
-									const tfHousing = GAME_PARAMS.military.units.tf.housing;
-									const f74Housing = GAME_PARAMS.military.units.f74.housing;
-
-									const asbUsed =
-										(tfCount + tfQueue) * tfHousing +
-										(f74Count + f74Queue) * f74Housing;
-									const asbTotalCapacity =
-										myKingdom.buildings.asb * GAME_PARAMS.buildings.asbCapacity;
-									const asbAvailableSpace = Math.max(
-										0,
-										asbTotalCapacity - asbUsed,
-									);
-
+									// ASB Space check
 									let housingLimit = Infinity;
-									if (key === "tf") {
-										housingLimit = Math.floor(asbAvailableSpace / tfHousing);
-									} else if (key === "f74") {
-										housingLimit = Math.floor(asbAvailableSpace / f74Housing);
+									if (UNITS[key].buildingRequired === "asb") {
+										const asbTotal =
+											myKingdom.buildings.asb *
+											GAME_PARAMS.buildings.asbCapacity;
+										const asbUsed = UNIT_KEYS.reduce((sum, k) => {
+											if (UNITS[k].buildingRequired !== "asb") return sum;
+											const count = military[k];
+											const inQueue = (military.queue[k] || []).reduce(
+												(a, b) => a + b,
+												0,
+											);
+											return sum + (count + inQueue) * UNITS[k].housing;
+										}, 0);
+										housingLimit = Math.floor(
+											Math.max(0, asbTotal - asbUsed) / UNITS[key].housing,
+										);
 									}
 
 									const maxUnits = Math.min(
@@ -568,11 +486,8 @@ function KingdomMilitaryPage() {
 											? unitCount
 											: maxUnitsRounded;
 										if (targetMax <= 0) return;
-										const clearedQueue: Record<MilitaryUnitType, string> = {
-											...INITIAL_TRAIN_QUEUE,
-										};
 										setTrainQueue({
-											...clearedQueue,
+											...INITIAL_TRAIN_QUEUE,
 											[key]: targetMax.toString(),
 										});
 									};
@@ -603,7 +518,7 @@ function KingdomMilitaryPage() {
 															?.filter((x) => x > 0)
 															.join(", ")}`}
 													>
-														+{queueCount}
+														+{queueCount.toLocaleString()}
 													</Tooltip>
 												) : (
 													"-"
@@ -621,7 +536,7 @@ function KingdomMilitaryPage() {
 													</>
 												) : (
 													<>
-														${unitCost}{" "}
+														${unitCost.toLocaleString()}{" "}
 														{unitSolCost > 0 && (
 															<span style={{ fontSize: "0.8rem" }}>
 																(+ {unitSolCost} 🪖)

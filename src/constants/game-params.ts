@@ -3,6 +3,7 @@ import type {
 	BuildingType,
 	MilitaryUnitConfig,
 	MilitaryUnitType,
+	ResearchKey,
 	ResearchTechConfig,
 	ResearchTechType,
 	ResearchTopicType,
@@ -107,16 +108,19 @@ const MILITARY_UNITS: Record<MilitaryUnitType, MilitaryUnitConfig> = {
 		def: 12,
 		researchRequired: "r_ht",
 	},
-};
+} as const satisfies Record<MilitaryUnitType, MilitaryUnitConfig>;
 
 export const RESEARCH_PARAMS = {
-	pop: { weight: 0.00475, bonus: 20 },
-	power: { weight: 0.00311, bonus: 50 },
-	mil: { weight: 0.00291, bonus: 30 },
-	money: { weight: 0.00535, bonus: 25 },
-	fdc: { weight: 0.0004, bonus: 25 },
-	warp: { weight: 0.00173, bonus: 20, requires: "r_core" },
-} as const;
+	pop: { weight: 0.00475, bonus: 20, requires: undefined },
+	power: { weight: 0.00311, bonus: 50, requires: undefined },
+	mil: { weight: 0.00291, bonus: 30, requires: undefined },
+	money: { weight: 0.00535, bonus: 25, requires: undefined },
+	fdc: { weight: 0.0004, bonus: 25, requires: undefined },
+	warp: { weight: 0.00173, bonus: 20, requires: "r_core" as ResearchKey },
+} as const satisfies Record<
+	ResearchTopicType,
+	{ weight: number; bonus: number; requires?: ResearchKey }
+>;
 
 const RESEARCH_TECH_TREE: Record<ResearchTechType, ResearchTechConfig> = {
 	r_dr: { requirePoints: 60_000 },

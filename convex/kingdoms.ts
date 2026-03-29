@@ -10,7 +10,11 @@ import {
 	PLANET_TYPES,
 	RACE_TYPES,
 } from "../src/constants/game-params";
-import type { ResearchTechType, ResearchTopicType } from "../src/types/game";
+import type {
+	MilitaryUnitConfig,
+	ResearchTechType,
+	ResearchTopicType,
+} from "../src/types/game";
 import {
 	calculateFreeLand,
 	calculateMilitaryQueue,
@@ -567,22 +571,26 @@ export const trainMilitary = kingdomMutation({
 				hasValidUnit = true;
 
 				const unitConfig = (
-					GAME_PARAMS.military.units as Record<
-						string,
-						{ researchRequired?: ResearchTechType }
-					>
+					GAME_PARAMS.military.units as Record<string, MilitaryUnitConfig>
 				)[unit.key];
 				const researchKey = unitConfig?.researchRequired;
 				if (researchKey) {
-					const research = (
-						kingdom.research as Record<
-							string,
-							{ pts: number; perc: number } | undefined
-						>
-					)[researchKey];
+					const research =
+						kingdom.research[researchKey as keyof typeof kingdom.research];
 					if (!research || research.perc < 100) {
 						throw new Error(
 							`Cannot train ${unit.key}. Research ${researchKey} must be 100% complete.`,
+						);
+					}
+				}
+
+				const buildingKey = unitConfig?.buildingRequired;
+				if (buildingKey) {
+					const buildingCount =
+						kingdom.buildings[buildingKey as keyof typeof kingdom.buildings];
+					if ((buildingCount || 0) <= 0) {
+						throw new Error(
+							`Cannot train ${unit.key}. Must have at least one ${buildingKey} building.`,
 						);
 					}
 				}

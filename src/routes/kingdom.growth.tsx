@@ -6,11 +6,14 @@ import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
 import { GAME_PARAMS } from "../constants/game-params";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
-import type { BuildingType } from "../types/game";
+import type { BuildingType, MilitaryUnitType } from "../types/game";
 import {
 	calculateFreeLand,
 	calculateIncomeMultiplier,
 } from "../utils/buildingUtils";
+
+const BUILDINGS_DESC = GAME_PARAMS.buildingsTypes;
+const BUILDING_KEYS = Object.keys(BUILDINGS_DESC) as BuildingType[];
 
 export const Route = createFileRoute("/kingdom/growth")({
 	component: KingdomGrowthPage,
@@ -46,26 +49,12 @@ function KingdomGrowthPage() {
 	const saveAutoBuildSettings = useMutation(api.kingdoms.saveAutoBuildSettings);
 	const toggleAutoExplore = useMutation(api.kingdoms.toggleAutoExplore);
 
-	const INITIAL_BUILD_QUEUE: Record<BuildingType, string> = {
-		res: "",
-		sm: "",
-		plants: "",
-		rax: "",
-		pf: "",
-		tc: "",
-		asb: "",
-	};
+	const INITIAL_BUILD_QUEUE = Object.fromEntries(
+		BUILDING_KEYS.map((k) => [k, ""]),
+	) as Record<BuildingType, string>;
 
 	const [buildQueue, setBuildQueue] = useState(INITIAL_BUILD_QUEUE);
-	const [targetQueue, setTargetQueue] = useState({
-		res: "",
-		plants: "",
-		rax: "",
-		sm: "",
-		pf: "",
-		tc: "",
-		asb: "",
-	});
+	const [targetQueue, setTargetQueue] = useState(INITIAL_BUILD_QUEUE);
 	const [targetInitialized, setTargetInitialized] = useState(false);
 	const [isBuilding, setIsBuilding] = useState(false);
 	const [isRazeMode, setIsRazeMode] = useState(false);
@@ -73,49 +62,25 @@ function KingdomGrowthPage() {
 
 	useEffect(() => {
 		if (buildings && !targetInitialized) {
-			if (buildings.target) {
-				setTargetQueue({
-					res: buildings.target.res.toString(),
-					plants: buildings.target.plants.toString(),
-					rax: buildings.target.rax.toString(),
-					sm: buildings.target.sm.toString(),
-					pf: buildings.target.pf.toString(),
-					tc: buildings.target.tc.toString(),
-					asb: buildings.target.asb.toString(),
-				});
-			} else {
-				const total =
-					buildings.res +
-					buildings.plants +
-					buildings.rax +
-					buildings.sm +
-					buildings.pf +
-					buildings.tc +
-					buildings.asb +
-					buildings.ach;
+			const target = buildings.target;
+			if (target) {
+				setTargetQueue(
+					Object.fromEntries(
+						BUILDING_KEYS.map((k) => [k, target[k].toString()]),
+					) as Record<BuildingType, string>,
+				);
+			} else if (myKingdom?.land) {
+				const total = BUILDING_KEYS.reduce((sum, k) => sum + buildings[k], 0);
 
-				if (total > 0 && myKingdom?.land) {
-					setTargetQueue({
-						res: Math.round((buildings.res / myKingdom.land) * 100).toString(),
-						plants: Math.round(
-							(buildings.plants / myKingdom.land) * 100,
-						).toString(),
-						rax: Math.round((buildings.rax / myKingdom.land) * 100).toString(),
-						sm: Math.round((buildings.sm / myKingdom.land) * 100).toString(),
-						pf: Math.round((buildings.pf / myKingdom.land) * 100).toString(),
-						tc: Math.round((buildings.tc / myKingdom.land) * 100).toString(),
-						asb: Math.round((buildings.asb / myKingdom.land) * 100).toString(),
-					});
-				} else {
-					setTargetQueue({
-						res: "0",
-						plants: "0",
-						rax: "0",
-						sm: "0",
-						pf: "0",
-						tc: "0",
-						asb: "0",
-					});
+				if (total > 0) {
+					setTargetQueue(
+						Object.fromEntries(
+							BUILDING_KEYS.map((k) => [
+								k,
+								Math.round((buildings[k] / myKingdom.land) * 100).toString(),
+							]),
+						) as Record<BuildingType, string>,
+					);
 				}
 			}
 			setTargetInitialized(true);
@@ -146,16 +111,11 @@ function KingdomGrowthPage() {
 		);
 	}
 
-	const isBuildingUnlocked = (buildingKey: string) => {
-		const building =
-			GAME_PARAMS.buildingsTypes[
-				buildingKey as keyof typeof GAME_PARAMS.buildingsTypes
-			];
+	const isBuildingUnlocked = (buildingKey: BuildingType) => {
+		const building = GAME_PARAMS.buildingsTypes[buildingKey];
 		if (!building?.researchRequired) return true;
 
-		const researchData = (
-			myKingdom.research as Record<string, { pts: number; perc: number }>
-		)[building.researchRequired];
+		const researchData = myKingdom.research[building.researchRequired];
 
 		return (researchData?.perc ?? 0) >= 100;
 	};
@@ -166,26 +126,12 @@ function KingdomGrowthPage() {
 		buildings.queue,
 	);
 
-	const queuedCounts: Record<string, number> = {
-		res: 0,
-		plants: 0,
-		rax: 0,
-		sm: 0,
-		pf: 0,
-		tc: 0,
-		asb: 0,
-	};
-	if (buildings.queue) {
-		const keys = ["res", "plants", "rax", "sm", "pf", "tc", "asb"] as const;
-		for (const key of keys) {
-			if (buildings.queue[key]) {
-				queuedCounts[key] = buildings.queue[key].reduce(
-					(sum: number, val: number) => sum + val,
-					0,
-				);
-			}
-		}
-	}
+	const queuedCounts = Object.fromEntries(
+		BUILDING_KEYS.map((k) => [
+			k,
+			(buildings.queue?.[k] || []).reduce((sum, val) => sum + val, 0),
+		]),
+	) as Record<BuildingType, number>;
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -290,17 +236,19 @@ function KingdomGrowthPage() {
 			? Math.min(100, (projectExpenseValue / myKingdom.moneyIncome) * 100)
 			: 0;
 
-	const raxUsage =
-		myKingdom.military.sol +
-		myKingdom.military.tr +
-		myKingdom.military.dr +
-		myKingdom.military.ft +
-		myKingdom.military.lt +
-		myKingdom.military.ld +
-		myKingdom.military.lf +
-		myKingdom.military.sci +
-		myKingdom.military.t * 2 +
-		myKingdom.military.ht * 2;
+	const unitConfigs = GAME_PARAMS.military.units;
+	const UNIT_KEYS = Object.keys(unitConfigs) as MilitaryUnitType[];
+
+	const raxUsage = UNIT_KEYS.reduce((sum, key) => {
+		const config = unitConfigs[key];
+		const count =
+			(myKingdom.military[key as keyof typeof myKingdom.military] as number) ||
+			0;
+		// Special case: asb units don't use rax space
+		if (config.buildingRequired === "asb") return sum;
+		return sum + count * config.housing;
+	}, 0);
+
 	const raxCapacity = buildings.rax * GAME_PARAMS.buildings.raxCapacity;
 	const raxUtilization =
 		raxCapacity > 0 ? Math.floor((raxUsage / raxCapacity) * 100) : 0;
@@ -354,15 +302,13 @@ function KingdomGrowthPage() {
 
 		setIsBuilding(true);
 		try {
+			const buildingArgs = Object.fromEntries(
+				BUILDING_KEYS.map((k) => [k, parseInt(buildQueue[k], 10) || 0]),
+			) as Record<BuildingType, number>;
+
 			if (isRazeMode) {
 				await razeBuildings({
-					res: parseInt(buildQueue.res, 10) || 0,
-					plants: parseInt(buildQueue.plants, 10) || 0,
-					rax: parseInt(buildQueue.rax, 10) || 0,
-					sm: parseInt(buildQueue.sm, 10) || 0,
-					pf: parseInt(buildQueue.pf, 10) || 0,
-					tc: parseInt(buildQueue.tc, 10) || 0,
-					asb: parseInt(buildQueue.asb, 10) || 0,
+					...buildingArgs,
 					ach: 0,
 				});
 				showMessage("Buildings successfully razed!", "success");
@@ -375,13 +321,7 @@ function KingdomGrowthPage() {
 				}
 
 				await buildBuildings({
-					res: parseInt(buildQueue.res, 10) || 0,
-					plants: parseInt(buildQueue.plants, 10) || 0,
-					rax: parseInt(buildQueue.rax, 10) || 0,
-					sm: parseInt(buildQueue.sm, 10) || 0,
-					pf: parseInt(buildQueue.pf, 10) || 0,
-					tc: parseInt(buildQueue.tc, 10) || 0,
-					asb: parseInt(buildQueue.asb, 10) || 0,
+					...buildingArgs,
 					ach: 0,
 				});
 				showMessage(
@@ -636,420 +576,106 @@ function KingdomGrowthPage() {
 								</tr>
 							</thead>
 							<tbody>
-								{/* Residences */}
-								<tr>
-									<td>
-										Residences{" "}
-										<Tooltip
-											showIcon
-											content={`Pop capacity: ${resCapacityBoosted} | Income: $${resIncome.toLocaleString()} | Population is used to train units`}
-										/>
-									</td>
-									<td>{actualPercent(buildings.res)}</td>
-									<td>{buildings.res}</td>
-									<td>
-										<QueueTooltip
-											isRazeMode={isRazeMode}
-											count={queuedCounts.res}
-											queueArray={buildings.queue?.res || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && !isRazeMode && (
-										<td>
-											<input
-												type="number"
-												name="res"
-												value={targetQueue.res}
-												onChange={handleTargetChange}
-												min="0"
-												max="100"
-											/>
-										</td>
-									)}
-									<td>
-										<MaxButton
-											onClick={() => handleMaxClick("res")}
-											disabled={
-												isRazeMode
-													? buildings.res <= 0
-													: maxBuildingsRounded <= 0
-											}
-											label={(isRazeMode
-												? buildings.res
-												: maxBuildingsRounded
-											).toLocaleString()}
-										/>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="res"
-											value={buildQueue.res}
-											onChange={handleInputChange}
-											min="0"
-											max={isRazeMode ? buildings.res : undefined}
-											disabled={isBuilding}
-											style={{ marginBottom: 0 }}
-										/>
-									</td>
-								</tr>
-								{/* Star Mines */}
-								<tr>
-									<td>
-										Star Mines{" "}
-										<Tooltip
-											showIcon
-											content={`Income per mine: $${smIncome.toLocaleString()}`}
-										/>
-									</td>
-									<td>{actualPercent(buildings.sm)}</td>
-									<td>{buildings.sm}</td>
-									<td>
-										<QueueTooltip
-											isRazeMode={isRazeMode}
-											count={queuedCounts.sm}
-											queueArray={buildings.queue?.sm || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && !isRazeMode && (
-										<td>
-											<input
-												type="number"
-												name="sm"
-												value={targetQueue.sm}
-												onChange={handleTargetChange}
-												min="0"
-												max="100"
-											/>
-										</td>
-									)}
-									<td>
-										<MaxButton
-											onClick={() => handleMaxClick("sm")}
-											disabled={
-												isRazeMode
-													? buildings.sm <= 0
-													: maxBuildingsRounded <= 0
-											}
-											label={(isRazeMode
-												? buildings.sm
-												: maxBuildingsRounded
-											).toLocaleString()}
-										/>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="sm"
-											value={buildQueue.sm}
-											onChange={handleInputChange}
-											min="0"
-											max={isRazeMode ? buildings.sm : undefined}
-											disabled={isBuilding}
-											style={{ marginBottom: 0 }}
-										/>
-									</td>
-								</tr>
-								{/* Power Plants */}
-								<tr>
-									<td>
-										Power Plants{" "}
-										<Tooltip
-											showIcon
-											content={`Production: ${powerProductionPerPlant.toLocaleString()} power | Total Net: ${myKingdom.powerIncome.toLocaleString()} power/tick`}
-										/>
-									</td>
-									<td>{actualPercent(buildings.plants)}</td>
-									<td>{buildings.plants}</td>
-									<td>
-										<QueueTooltip
-											isRazeMode={isRazeMode}
-											count={queuedCounts.plants}
-											queueArray={buildings.queue?.plants || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && !isRazeMode && (
-										<td>
-											<input
-												type="number"
-												name="plants"
-												value={targetQueue.plants}
-												onChange={handleTargetChange}
-												min="0"
-												max="100"
-											/>
-										</td>
-									)}
-									<td>
-										<MaxButton
-											onClick={() => handleMaxClick("plants")}
-											disabled={
-												isRazeMode
-													? buildings.plants <= 0
-													: maxBuildingsRounded <= 0
-											}
-											label={(isRazeMode
-												? buildings.plants
-												: maxBuildingsRounded
-											).toLocaleString()}
-										/>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="plants"
-											value={buildQueue.plants}
-											onChange={handleInputChange}
-											min="0"
-											max={isRazeMode ? buildings.plants : undefined}
-											disabled={isBuilding}
-											style={{ marginBottom: 0 }}
-										/>
-									</td>
-								</tr>
-								{/* Barracks */}
-								<tr>
-									<td>
-										Barracks{" "}
-										<Tooltip
-											showIcon
-											content={`Mil space: ${
-												GAME_PARAMS.buildings.raxCapacity
-											} | ${
-												raxCapacity - raxUsage >= 0 ? "Surplus" : "Deficit"
-											}: ${Math.abs(
-												(raxCapacity - raxUsage) /
-													GAME_PARAMS.buildings.raxCapacity,
-											).toFixed(1)} | Capacity: ${raxUtilization}%`}
-										/>
-									</td>
-									<td>{actualPercent(buildings.rax)}</td>
-									<td>{buildings.rax}</td>
-									<td>
-										<QueueTooltip
-											isRazeMode={isRazeMode}
-											count={queuedCounts.rax}
-											queueArray={buildings.queue?.rax || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && !isRazeMode && (
-										<td>
-											<input
-												type="number"
-												name="rax"
-												value={targetQueue.rax}
-												onChange={handleTargetChange}
-												min="0"
-												max="100"
-											/>
-										</td>
-									)}
-									<td>
-										<MaxButton
-											onClick={() => handleMaxClick("rax")}
-											disabled={
-												isRazeMode
-													? buildings.rax <= 0
-													: maxBuildingsRounded <= 0
-											}
-											label={(isRazeMode
-												? buildings.rax
-												: maxBuildingsRounded
-											).toLocaleString()}
-										/>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="rax"
-											value={buildQueue.rax}
-											onChange={handleInputChange}
-											min="0"
-											max={isRazeMode ? buildings.rax : undefined}
-											disabled={isBuilding}
-											style={{ marginBottom: 0 }}
-										/>
-									</td>
-								</tr>
-								{/* Probe Factories */}
-								<tr>
-									<td>
-										Probe Factories{" "}
-										<Tooltip showIcon content="Probes production: 1 probe" />
-									</td>
-									<td>{actualPercent(buildings.pf)}</td>
-									<td>{buildings.pf}</td>
-									<td>
-										<QueueTooltip
-											isRazeMode={isRazeMode}
-											count={queuedCounts.pf}
-											queueArray={buildings.queue?.pf || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && !isRazeMode && (
-										<td>
-											<input
-												type="number"
-												name="pf"
-												value={targetQueue.pf}
-												onChange={handleTargetChange}
-												min="0"
-												max="100"
-											/>
-										</td>
-									)}
-									<td>
-										<MaxButton
-											onClick={() => handleMaxClick("pf")}
-											disabled={
-												isRazeMode
-													? buildings.pf <= 0
-													: maxBuildingsRounded <= 0
-											}
-											label={(isRazeMode
-												? buildings.pf
-												: maxBuildingsRounded
-											).toLocaleString()}
-										/>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="pf"
-											value={buildQueue.pf}
-											onChange={handleInputChange}
-											min="0"
-											max={isRazeMode ? buildings.pf : undefined}
-											disabled={isBuilding}
-											style={{ marginBottom: 0 }}
-										/>
-									</td>
-								</tr>
-								{/* Training Camps */}
-								<tr>
-									<td>
-										Training Camps{" "}
-										<Tooltip
-											showIcon
-											content={`Military discount: ${tcDiscount}%${
-												tcDiscount >= 30 ? " (Maximum reached)" : ""
-											}`}
-										/>
-									</td>
-									<td>{actualPercent(buildings.tc)}</td>
-									<td>{buildings.tc}</td>
-									<td>
-										<QueueTooltip
-											isRazeMode={isRazeMode}
-											count={queuedCounts.tc}
-											queueArray={buildings.queue?.tc || []}
-										/>
-									</td>
-									{myKingdom.autoBuild && !isRazeMode && (
-										<td>
-											<input
-												type="number"
-												name="tc"
-												value={targetQueue.tc}
-												onChange={handleTargetChange}
-												min="0"
-												max="100"
-											/>
-										</td>
-									)}
-									<td>
-										<MaxButton
-											onClick={() => handleMaxClick("tc")}
-											disabled={
-												isRazeMode
-													? buildings.tc <= 0
-													: maxBuildingsRounded <= 0
-											}
-											label={(isRazeMode
-												? buildings.tc
-												: maxBuildingsRounded
-											).toLocaleString()}
-										/>
-									</td>
-									<td>
-										<input
-											type="number"
-											name="tc"
-											value={buildQueue.tc}
-											onChange={handleInputChange}
-											min="0"
-											max={isRazeMode ? buildings.tc : undefined}
-											disabled={isBuilding}
-											style={{ marginBottom: 0 }}
-										/>
-									</td>
-								</tr>
-								{/* Air Support Bays */}
-								{isBuildingUnlocked("asb") && (
-									<tr>
-										<td>
-											Air Support Bays{" "}
-											<Tooltip
-												showIcon
-												content={`Capacity per bay: ${
+								{BUILDING_KEYS.filter(isBuildingUnlocked).map((key) => {
+									const label = BUILDINGS_DESC[key].label;
+									const count = buildings[key];
+
+									const getTooltip = () => {
+										switch (key) {
+											case "res":
+												return `Pop capacity: ${resCapacityBoosted} | Income: $${resIncome.toLocaleString()} | Population is used to train units`;
+											case "sm":
+												return `Income per mine: $${smIncome.toLocaleString()}`;
+											case "plants":
+												return `Production: ${powerProductionPerPlant.toLocaleString()} power | Total Net: ${myKingdom.powerIncome.toLocaleString()} power/tick`;
+											case "rax":
+												return `Mil space: ${
+													GAME_PARAMS.buildings.raxCapacity
+												} | ${
+													raxCapacity - raxUsage >= 0 ? "Surplus" : "Deficit"
+												}: ${Math.abs(
+													(raxCapacity - raxUsage) /
+														GAME_PARAMS.buildings.raxCapacity,
+												).toFixed(1)} | Capacity: ${raxUtilization}%`;
+											case "pf":
+												return "Probes production: 1 probe";
+											case "tc":
+												return `Military discount: ${tcDiscount}%${
+													tcDiscount >= 30 ? " (Maximum reached)" : ""
+												}`;
+											case "asb":
+												return `Capacity per bay: ${
 													GAME_PARAMS.buildings.asbCapacity
 												} space | Total: ${
 													buildings.asb * GAME_PARAMS.buildings.asbCapacity
 												} | Used: ${
 													(myKingdom.military.tf || 0) * 2 +
 													(myKingdom.military.f74 || 0)
-												}`}
-											/>
-										</td>
-										<td>{actualPercent(buildings.asb)}</td>
-										<td>{buildings.asb}</td>
-										<td>
-											<QueueTooltip
-												isRazeMode={isRazeMode}
-												count={queuedCounts.asb}
-												queueArray={buildings.queue?.asb || []}
-											/>
-										</td>
-										{myKingdom.autoBuild && !isRazeMode && (
+												}`;
+											default:
+												return "";
+										}
+									};
+
+									return (
+										<tr
+											key={key}
+											style={{ opacity: isRazeMode && count <= 0 ? 0.5 : 1 }}
+										>
+											<td>
+												{label}{" "}
+												{getTooltip() && (
+													<Tooltip showIcon content={getTooltip()} />
+												)}
+											</td>
+											<td>{actualPercent(count)}</td>
+											<td>{count}</td>
+											<td>
+												<QueueTooltip
+													isRazeMode={isRazeMode}
+													count={queuedCounts[key]}
+													queueArray={buildings.queue?.[key] || []}
+												/>
+											</td>
+											{myKingdom.autoBuild && !isRazeMode && (
+												<td>
+													<input
+														type="number"
+														name={key}
+														value={targetQueue[key]}
+														onChange={handleTargetChange}
+														min="0"
+														max="100"
+													/>
+												</td>
+											)}
+											<td>
+												<MaxButton
+													onClick={() => handleMaxClick(key)}
+													disabled={
+														isRazeMode ? count <= 0 : maxBuildingsRounded <= 0
+													}
+													label={(isRazeMode
+														? count
+														: maxBuildingsRounded
+													).toLocaleString()}
+												/>
+											</td>
 											<td>
 												<input
 													type="number"
-													name="asb"
-													value={targetQueue.asb}
-													onChange={handleTargetChange}
+													name={key}
+													value={buildQueue[key]}
+													onChange={handleInputChange}
 													min="0"
-													max="100"
+													max={isRazeMode ? count : undefined}
+													disabled={isBuilding}
+													style={{ marginBottom: 0 }}
 												/>
 											</td>
-										)}
-										<td>
-											<MaxButton
-												onClick={() => handleMaxClick("asb")}
-												disabled={
-													isRazeMode
-														? buildings.asb <= 0
-														: maxBuildingsRounded <= 0
-												}
-												label={(isRazeMode
-													? buildings.asb
-													: maxBuildingsRounded
-												).toLocaleString()}
-											/>
-										</td>
-										<td>
-											<input
-												type="number"
-												name="asb"
-												value={buildQueue.asb}
-												onChange={handleInputChange}
-												min="0"
-												max={isRazeMode ? buildings.asb : undefined}
-												disabled={isBuilding}
-												style={{ marginBottom: 0 }}
-											/>
-										</td>
-									</tr>
-								)}
+										</tr>
+									);
+								})}
 
 								{/* Rubble */}
 								{buildings.rubble > 0 && (
@@ -1143,13 +769,12 @@ function KingdomGrowthPage() {
 								await saveAutoBuildSettings({
 									autoBuild: isChecked,
 									target: {
-										res: parseInt(targetQueue.res, 10) || 0,
-										plants: parseInt(targetQueue.plants, 10) || 0,
-										rax: parseInt(targetQueue.rax, 10) || 0,
-										sm: parseInt(targetQueue.sm, 10) || 0,
-										pf: parseInt(targetQueue.pf, 10) || 0,
-										tc: parseInt(targetQueue.tc, 10) || 0,
-										asb: parseInt(targetQueue.asb, 10) || 0,
+										...(Object.fromEntries(
+											BUILDING_KEYS.map((k) => [
+												k,
+												parseInt(targetQueue[k], 10) || 0,
+											]),
+										) as Record<BuildingType, number>),
 										ach: 0,
 									},
 								});
