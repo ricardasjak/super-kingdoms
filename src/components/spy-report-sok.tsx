@@ -221,10 +221,10 @@ export function SpyReportSOK({
 				]
 					.filter((u) => u.value > 0)
 					.map((u) => (
-						<>
+						<Fragment key={u.label}>
 							<span>{u.label}:</span>
 							<span>{u.value.toLocaleString()}</span>
-						</>
+						</Fragment>
 					))}
 			</div>
 			<hr style={{ margin: "0.4rem 0" }} />
@@ -477,12 +477,12 @@ export function SpyReportSOB({
 					const count = buildings[key];
 					const pct = totalBuildings > 0 ? (count / totalBuildings) * 100 : 0;
 					return (
-						<>
-							<span key={`name-${key}`}>{BUILDING_NAMES[key]}</span>
-							<span key={`count-${key}`}>{count.toLocaleString()}</span>
-							<span key={`pct-${key}`}>{pct.toFixed(0)}%</span>
+						<Fragment key={key}>
+							<span>{BUILDING_NAMES[key]}</span>
+							<span>{count.toLocaleString()}</span>
+							<span>{pct.toFixed(0)}%</span>
 							{renderQueueRow(key)}
-						</>
+						</Fragment>
 					);
 				})}
 
