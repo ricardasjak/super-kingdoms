@@ -233,12 +233,16 @@ function KingdomResearchPage() {
 					</form>
 				</article>
 
-				<p>
-					<strong>Available Research Points:</strong>{" "}
-					<span>{myKingdom.researchPts.toLocaleString()}</span> |{" "}
-					<strong>Points Produced:</strong>{" "}
-					{myKingdom.military.sci.toLocaleString()} / tick
-				</p>
+				<div style={{ marginBottom: "1rem" }}>
+					<p style={{ margin: 0 }}>
+						<strong>Points Produced:</strong> {myKingdom.military.sci.toLocaleString()} / tick
+					</p>
+					{myKingdom.researchPts > 0 && (
+						<p style={{ fontSize: "0.8rem", color: "var(--pico-muted-color)", margin: 0 }}>
+							Spare points collected: {myKingdom.researchPts.toLocaleString()}
+						</p>
+					)}
+				</div>
 				<p>
 					As your kingdom grows, you have to spend more research points to keep
 					up

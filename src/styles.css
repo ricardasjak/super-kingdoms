@@ -238,8 +238,10 @@ article {
 	transition: background 0.2s;
 }
 
-.nav-links li a:hover {
-	background: var(--pico-secondary-hover-background);
+.nav-links li a:hover,
+.nav-actions li a:hover {
+	background: rgba(120, 120, 120, 0.1);
+	color: var(--pico-primary);
 }
 
 .mobile-toggle-wrap {

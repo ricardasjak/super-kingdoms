@@ -324,10 +324,6 @@ function KingdomGrowthPage() {
 					...buildingArgs,
 					ach: 0,
 				});
-				showMessage(
-					"Buildings successfully queued for construction!",
-					"success",
-				);
 			}
 			setBuildQueue(INITIAL_BUILD_QUEUE);
 		} catch (error) {
