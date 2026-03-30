@@ -4,7 +4,7 @@ import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { GAME_PARAMS } from "../../src/constants/game-params";
 import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
-import { MaxButton } from "../components/max-button";
+
 import { RESEARCH_TOOLTIPS } from "../components/research/ResearchTooltips";
 import { ScientistsSummary } from "../components/research/ScientistsSummary";
 import { TechnicalResearchTree } from "../components/research/TechnicalResearchTree";
@@ -22,33 +22,10 @@ export const Route = createFileRoute("/kingdom/research")({
 function KingdomResearchPage() {
 	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
-	const assignPoints = useMutation(api.kingdoms.assignResearchPoints);
 	const saveAutoAssign = useMutation(api.kingdoms.saveResearchAutoAssign);
 	const hireScientists = useMutation(api.kingdoms.buyScientists);
 	const { showMessage } = useKingdomMessage();
 
-	const [assignQueue, setAssignQueue] = useState<
-		Record<ResearchTopicType | ResearchTechType, string>
-	>({
-		pop: "",
-		power: "",
-		mil: "",
-		money: "",
-		fdc: "",
-		warp: "",
-		r_dr: "",
-		r_ft: "",
-		r_tf: "",
-		r_ld: "",
-		r_lf: "",
-		r_f74: "",
-		r_ht: "",
-		r_fusion: "",
-		r_core: "",
-		r_armor: "",
-		r_long: "",
-	});
-	const [isAssigning, setIsAssigning] = useState(false);
 	const [hireAmount, setHireAmount] = useState("");
 	const [isHiring, setIsHiring] = useState(false);
 	const [showAllTech, setShowAllTech] = useState(false);
@@ -108,73 +85,6 @@ function KingdomResearchPage() {
 		{ key: "r_ht", label: "Hover Tanks", data: research.r_ht },
 	];
 
-	const techTree = GAME_PARAMS.militaryTechTree;
-
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		setAssignQueue((prev) => ({
-			...prev,
-			[name]: value,
-		}));
-	};
-
-	const requestSum = Object.values(assignQueue).reduce(
-		(sum, val) => sum + (parseInt(val, 10) || 0),
-		0,
-	);
-
-	const handleMaxClick = (key: ResearchKey) => {
-		const techInfo = techTree[key as keyof typeof techTree];
-		let required = 0;
-		if (techInfo) {
-			required = techInfo.requirePoints;
-		} else {
-			required = GAME_PARAMS.research.required(
-				key as keyof typeof GAME_PARAMS.research.params,
-				myKingdom.land,
-			);
-		}
-
-		const currentPts = myKingdom.research[key]?.pts || 0;
-		const needed = Math.max(0, required - currentPts);
-
-		if (needed <= 0) return;
-
-		setAssignQueue((prev) => {
-			const otherPoints = Object.entries(prev).reduce(
-				(sum, [k, val]) => (k !== key ? sum + (parseInt(val, 10) || 0) : sum),
-				0,
-			);
-
-			// If we have enough points to satisfy 'needed' plus whatever is typed in others
-			if (myKingdom.researchPts >= needed + otherPoints) {
-				return { ...prev, [key]: Math.floor(needed).toString() };
-			}
-
-			// Not enough points for everything: clear others and prioritize this discipline
-			const assignable = Math.min(myKingdom.researchPts, needed);
-			return {
-				pop: "",
-				power: "",
-				mil: "",
-				money: "",
-				fdc: "",
-				warp: "",
-				r_dr: "",
-				r_ft: "",
-				r_tf: "",
-				r_ld: "",
-				r_lf: "",
-				r_f74: "",
-				r_ht: "",
-				r_fusion: "",
-				r_core: "",
-				r_armor: "",
-				r_long: "",
-				[key]: assignable.toString(),
-			};
-		});
-	};
 
 	const handleAutoToggle = async (key: string) => {
 		const currentAuto = myKingdom.researchAutoAssign || [];
@@ -206,69 +116,6 @@ function KingdomResearchPage() {
 		}
 	};
 
-	const handleAssign = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (requestSum > myKingdom.researchPts) {
-			showMessage("Not enough research points available!", "error");
-			return;
-		}
-		if (requestSum <= 0) {
-			showMessage("Please allocate at least some points.", "warning");
-			return;
-		}
-
-		setIsAssigning(true);
-		try {
-			await assignPoints({
-				pop: parseInt(assignQueue.pop, 10) || 0,
-				power: parseInt(assignQueue.power, 10) || 0,
-				mil: parseInt(assignQueue.mil, 10) || 0,
-				money: parseInt(assignQueue.money, 10) || 0,
-				fdc: parseInt(assignQueue.fdc, 10) || 0,
-				warp: parseInt(assignQueue.warp, 10) || 0,
-				r_dr: parseInt(assignQueue.r_dr, 10) || 0,
-				r_ft: parseInt(assignQueue.r_ft, 10) || 0,
-				r_tf: parseInt(assignQueue.r_tf, 10) || 0,
-				r_ld: parseInt(assignQueue.r_ld, 10) || 0,
-				r_lf: parseInt(assignQueue.r_lf, 10) || 0,
-				r_f74: parseInt(assignQueue.r_f74, 10) || 0,
-				r_ht: parseInt(assignQueue.r_ht, 10) || 0,
-				r_fusion: parseInt(assignQueue.r_fusion, 10) || 0,
-				r_core: parseInt(assignQueue.r_core, 10) || 0,
-				r_armor: parseInt(assignQueue.r_armor, 10) || 0,
-				r_long: parseInt(assignQueue.r_long, 10) || 0,
-			});
-			setAssignQueue({
-				pop: "",
-				power: "",
-				mil: "",
-				money: "",
-				fdc: "",
-				warp: "",
-				r_dr: "",
-				r_ft: "",
-				r_tf: "",
-				r_ld: "",
-				r_lf: "",
-				r_f74: "",
-				r_ht: "",
-				r_fusion: "",
-				r_core: "",
-				r_armor: "",
-				r_long: "",
-			});
-			showMessage("Research points successfully assigned!", "success");
-		} catch (error) {
-			console.error(error);
-			showMessage(
-				error instanceof Error ? error.message : "Failed to assign points.",
-				"error",
-			);
-		} finally {
-			setIsAssigning(false);
-		}
-	};
 
 	const handleHireScientists = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -393,18 +240,10 @@ function KingdomResearchPage() {
 					</form>
 				</article>
 
-				<form onSubmit={handleAssign}>
 					<p>
 						<strong>Available Research Points:</strong>{" "}
-						<span
-							style={{
-								color:
-									requestSum > myKingdom.researchPts
-										? "var(--pico-del-color)"
-										: "inherit",
-							}}
-						>
-							{(myKingdom.researchPts - requestSum).toLocaleString()}
+						<span>
+							{myKingdom.researchPts.toLocaleString()}
 						</span>{" "}
 						| <strong>Points Produced:</strong>{" "}
 						{myKingdom.military.sci.toLocaleString()} / tick
@@ -417,178 +256,78 @@ function KingdomResearchPage() {
 						<h4>Standard Research</h4>
 						<p>Land based scaling research topics</p>
 					</hgroup>
-					<figure>
-						<table className="striped">
-							<thead>
-								<tr>
-									<th scope="col">Research Area</th>
-									<th scope="col">Bonus (%)</th>
-									<th scope="col">Points Balance</th>
-									<th scope="col" style={{ textAlign: "center" }}>
-										Auto / Priority
-									</th>
-									<th scope="col">Max</th>
-									<th scope="col">Assign</th>
-								</tr>
-							</thead>
-							<tbody>
-								{standardResearchTopics.map(({ key, label, data }) => {
-									const prerequisiteKey =
-										GAME_PARAMS.research.params[key].requires;
-									const prerequisiteMet =
-										!prerequisiteKey ||
-										(myKingdom.research[prerequisiteKey]?.perc ?? 0) >= 100;
+					
+					<div className="technical-research-list" style={{ marginTop: 0, marginBottom: "2rem" }}>
+						{standardResearchTopics.map(({ key, label, data }) => {
+							const prerequisiteKey = GAME_PARAMS.research.params[key].requires;
+							const prerequisiteMet =
+								!prerequisiteKey ||
+								(myKingdom.research[prerequisiteKey]?.perc ?? 0) >= 100;
 
-									return (
-										<tr
-											key={key}
-											style={{ opacity: prerequisiteMet ? 1 : 0.5 }}
-										>
-											<td>
-												<div
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: "0.5rem",
-													}}
-												>
-													{label}
-													{RESEARCH_TOOLTIPS[key]}
-												</div>
-												{!prerequisiteMet && (
-													<div style={{ fontSize: "0.75rem", color: "red" }}>
-														Locked: Needs{" "}
-														{techTopics.find((t) => t.key === prerequisiteKey)
-															?.label || prerequisiteKey}
-													</div>
+							const required = GAME_PARAMS.research.required(
+								key as keyof typeof GAME_PARAMS.research.params,
+								myKingdom.land,
+							);
+							const maxBonus = GAME_PARAMS.research.params[key as keyof typeof GAME_PARAMS.research.params].bonus;
+							const currentPts = data?.pts ?? 0;
+							const delta = currentPts - required;
+							const isSurplus = delta >= 0;
+							const isCompleted = currentPts >= required;
+							const index = (myKingdom.researchAutoAssign || []).indexOf(key);
+							const isAutoAssigning = index !== -1;
+
+							return (
+								<div key={key} className="tech-list-item">
+									<div
+										className={`tech-node-content ${isCompleted ? "completed" : ""} ${!prerequisiteMet ? "locked" : ""}`}
+									>
+										<div className={`tech-node-header ${isCompleted ? "completed" : ""}`}>
+											<div className="tech-title-wrap">
+												<strong style={{ fontSize: "0.85rem" }}>{label}</strong>
+												{RESEARCH_TOOLTIPS[key]}
+												{isAutoAssigning && (
+													<span className="active-badge">#{index + 1} Active</span>
 												)}
-												{(data?.perc ?? 0) >= 100 && (
-													<div
+											</div>
+
+											<div className="tech-node-progress-compact">
+												<progress
+													value={data?.perc ?? 0}
+													max={maxBonus}
+												/>
+												<span className="progress-text">
+													{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()} / {required.toLocaleString()} pts)
+													<span
 														style={{
-															fontSize: "0.75rem",
-															color: "var(--pico-ins-color)",
+															color: isSurplus ? "var(--pico-ins-color)" : "var(--pico-del-color)",
+															marginLeft: "0.5rem"
 														}}
 													>
-														Completed
-													</div>
+														[{isSurplus ? "+" : ""}{delta.toLocaleString()}]
+													</span>
+												</span>
+											</div>
+
+											<div className="tech-node-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+												{prerequisiteMet ? (
+													<button
+														type="button"
+														className={`outline ${isAutoAssigning ? "secondary" : ""}`}
+														onClick={() => handleAutoToggle(key)}
+													>
+														{isAutoAssigning ? "Stop" : "Start"}
+													</button>
+												) : (
+													<span className="badge secondary">
+														🔒 Locked ({techTopics.find((t) => t.key === prerequisiteKey)?.label || prerequisiteKey})
+													</span>
 												)}
-											</td>
-											<td>{data?.perc ?? 0}%</td>
-											<td>
-												{(() => {
-													const required = GAME_PARAMS.research.required(
-														key as keyof typeof GAME_PARAMS.research.params,
-														myKingdom.land,
-													);
-													const current = data?.pts ?? 0;
-													const delta = current - required;
-													const isSurplus = delta >= 0;
-													return (
-														<span>
-															<small
-																style={{
-																	color: isSurplus
-																		? "var(--pico-ins-color)"
-																		: "var(--pico-del-color)",
-																}}
-															>
-																{isSurplus ? "+" : ""}
-																{delta.toLocaleString()}
-															</small>
-														</span>
-													);
-												})()}
-											</td>
-											<td align="center">
-												<div
-													style={{
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "center",
-														gap: "0.5rem",
-													}}
-												>
-													<input
-														type="checkbox"
-														checked={(
-															myKingdom.researchAutoAssign || []
-														).includes(key)}
-														onChange={() => handleAutoToggle(key)}
-														style={{ margin: 0 }}
-														disabled={!prerequisiteMet}
-													/>
-													{(() => {
-														const index = (
-															myKingdom.researchAutoAssign || []
-														).indexOf(key);
-														return index !== -1 ? (
-															<span style={{ fontWeight: "bold" }}>
-																#{index + 1}
-															</span>
-														) : null;
-													})()}
-												</div>
-											</td>
-											<td>
-												{(() => {
-													const required = GAME_PARAMS.research.required(
-														key as keyof typeof GAME_PARAMS.research.params,
-														myKingdom.land,
-													);
-													const isCompleted = (data?.pts ?? 0) >= required;
-													return (
-														<MaxButton
-															onClick={() => handleMaxClick(key)}
-															disabled={
-																isAssigning ||
-																myKingdom.researchPts <= 0 ||
-																!prerequisiteMet ||
-																isCompleted
-															}
-															label={isCompleted ? "Done" : "Max"}
-														/>
-													);
-												})()}
-											</td>
-											<td>
-												<input
-													type="number"
-													name={key}
-													value={assignQueue[key as keyof typeof assignQueue]}
-													onChange={handleInputChange}
-													min="0"
-													disabled={
-														isAssigning ||
-														!prerequisiteMet ||
-														(data?.perc ?? 0) >= 100
-													}
-													style={{ minWidth: "100px", marginBottom: 0 }}
-												/>
-											</td>
-										</tr>
-									);
-								})}
-							</tbody>
-						</table>
-					</figure>
-					<div
-						style={{
-							textAlign: "right",
-							marginBottom: "1.5rem",
-							marginTop: "-0.5rem",
-						}}
-					>
-						<button
-							type="submit"
-							disabled={
-								isAssigning ||
-								requestSum > myKingdom.researchPts ||
-								requestSum <= 0
-							}
-							style={{ width: "auto" }}
-						>
-							{isAssigning ? "Assigning..." : "Assign Points"}
-						</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							);
+						})}
 					</div>
 
 					<hgroup
@@ -670,7 +409,6 @@ function KingdomResearchPage() {
 							</>
 						);
 					})()}
-				</form>
 			</article>
 		</main>
 	);

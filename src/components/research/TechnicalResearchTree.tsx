@@ -47,7 +47,8 @@ export function TechnicalResearchTree({
 			!prerequisite ||
 			(myKingdom.research[prerequisite as ResearchKey]?.perc ?? 0) >= 100;
 		const isCompleted = (data?.perc ?? 0) >= 100;
-		const isAutoAssigning = (myKingdom.researchAutoAssign || []).includes(key);
+		const index = (myKingdom.researchAutoAssign || []).indexOf(key);
+		const isAutoAssigning = index !== -1;
 
 		if (!showAllTech && !prerequisiteMet) return null;
 
@@ -67,27 +68,23 @@ export function TechnicalResearchTree({
 								{depth > 0 && <span className="tech-tree-elbow">↳</span>}
 								<strong style={{ fontSize: "0.85rem" }}>{TECH_LABELS[key]}</strong>
 								{RESEARCH_TOOLTIPS[key]}
-								{isAutoAssigning && !isCompleted && (
-									<span className="active-badge">Active</span>
+								{isAutoAssigning && (
+									<span className="active-badge">#{index + 1} Active</span>
 								)}
 							</div>
 
-							{!isCompleted && (
-								<div className="tech-node-progress-compact">
-									<progress
-										value={data?.perc ?? 0}
-										max="100"
-									/>
-									<span className="progress-text">
-										{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()} / {techInfo.requirePoints.toLocaleString()} pts)
-									</span>
-								</div>
-							)}
+							<div className="tech-node-progress-compact">
+								<progress
+									value={data?.perc ?? 0}
+									max="100"
+								/>
+								<span className="progress-text">
+									{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()} / {techInfo.requirePoints.toLocaleString()} pts)
+								</span>
+							</div>
 
 							<div className="tech-node-actions">
-								{isCompleted ? (
-									<span className="badge success">✔️ Completed</span>
-								) : prerequisiteMet ? (
+								{prerequisiteMet ? (
 									<button
 										type="button"
 										className={`outline ${isAutoAssigning ? "secondary" : ""}`}
