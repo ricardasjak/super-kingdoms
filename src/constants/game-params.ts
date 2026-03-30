@@ -38,7 +38,7 @@ export const RACE_TYPES = [
 
 const MILITARY_UNITS: Record<MilitaryUnitType, MilitaryUnitConfig> = {
 	sol: { cost: 150, sol: 0, power: 0.7, housing: 1, off: 1, def: 1 },
-	sci: { cost: 1000, sol: 1, power: 0.7, housing: 1, off: 0, def: 0 },
+	sci: { cost: 1000, sol: 0, power: 0.7, housing: 1, off: 0, def: 0 },
 	tr: { cost: 350, sol: 1, power: 0.7, housing: 1, off: 4, def: 0 },
 	dr: {
 		cost: 450,

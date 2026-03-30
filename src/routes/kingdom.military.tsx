@@ -202,6 +202,7 @@ function KingdomMilitaryPage() {
 					...trainArgs,
 					sol: 0,
 				});
+				showMessage("Units successfully queued for training!", "success");
 			}
 			setTrainQueue(INITIAL_TRAIN_QUEUE);
 		} catch (error) {
@@ -482,10 +483,13 @@ function KingdomMilitaryPage() {
 										);
 									}
 
+									const incomeCap = key === "sci" ? myKingdom.moneyIncome * 3 : Infinity;
+
 									const maxUnits = Math.min(
 										maxByMoney,
-										maxBySoldiers,
+										key === "sci" ? Infinity : maxBySoldiers,
 										housingLimit,
+										incomeCap,
 									);
 									const maxUnitsRounded = roundToDuration(
 										maxUnits,

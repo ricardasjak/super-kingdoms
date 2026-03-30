@@ -605,6 +605,13 @@ export const trainMilitary = kingdomMutation({
 			throw new Error("Not enough soldiers");
 		}
 
+		if (args.sci > 0) {
+			const incomeCap = kingdom.moneyIncome * 3;
+			if (args.sci > incomeCap) {
+				throw new Error(`Cannot hire more than ${incomeCap.toLocaleString()} scientists (3x your money income limit).`);
+			}
+		}
+
 		if (args.sol > 0) {
 			const soldiersInQueue = (kingdom.military.queue.sol || []).reduce(
 				(a: number, b: number) => a + b,
@@ -1041,6 +1048,11 @@ export const buyScientists = kingdomMutation({
 		const soldiersRequired = amount * (GAME_PARAMS.military.units.sci.sol || 0);
 		if (kingdom.military.sol < soldiersRequired) {
 			throw new Error("Not enough soldiers to convert to scientists.");
+		}
+
+		const incomeCap = kingdom.moneyIncome * 3;
+		if (amount > incomeCap) {
+			throw new Error(`Cannot hire more than ${incomeCap.toLocaleString()} scientists at once (3x your money income).`);
 		}
 
 		const updatedQueue = calculateMilitaryQueue(

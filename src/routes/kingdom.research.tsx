@@ -21,7 +21,6 @@ function KingdomResearchPage() {
 	const hireScientists = useMutation(api.kingdoms.buyScientists);
 	const { showMessage } = useKingdomMessage();
 
-	const [hireAmount, setHireAmount] = useState("");
 	const [isHiring, setIsHiring] = useState(false);
 	const [showAllTech, setShowAllTech] = useState(false);
 
@@ -110,31 +109,12 @@ function KingdomResearchPage() {
 		}
 	};
 
-	const handleHireScientists = async (e: React.FormEvent) => {
-		e.preventDefault();
-		const amount = parseInt(hireAmount, 10);
-		if (Number.isNaN(amount) || amount <= 0) {
-			showMessage("Please enter a valid amount of scientists.", "warning");
-			return;
-		}
-
-		if (myKingdom.money < amount * 1000) {
-			showMessage("Not enough money to buy scientists.", "error");
-			return;
-		}
-		if (myKingdom.military.sol < amount) {
-			showMessage("Not enough soldiers to convert to scientists.", "error");
-			return;
-		}
+	const handleHireScientists = async (amount: number) => {
+		if (amount <= 0) return;
 
 		setIsHiring(true);
 		try {
 			await hireScientists({ amount });
-			setHireAmount("");
-			showMessage(
-				`Successfully hired ${amount.toLocaleString()} scientists!`,
-				"success",
-			);
 		} catch (error) {
 			console.error(error);
 			showMessage(
@@ -157,8 +137,7 @@ function KingdomResearchPage() {
 				</header>
 
 				<article style={{ marginBottom: "2rem" }}>
-					<form
-						onSubmit={handleHireScientists}
+					<div
 						className="grid"
 						style={{ alignItems: "center", marginBottom: 0 }}
 					>
@@ -181,56 +160,36 @@ function KingdomResearchPage() {
 								justifyContent: "flex-end",
 							}}
 						>
-							<button
-								type="button"
-								className="secondary outline"
-								style={{
-									padding: "0.4rem 0.8rem",
-									width: "auto",
-									fontSize: "0.9rem",
-									marginBottom: 0,
-								}}
-								disabled={isHiring}
-								onClick={() => {
-									const maxByMoney = Math.floor(myKingdom.money / 1000);
-									const maxBySoldiers = myKingdom.military.sol;
-									const rawMax = Math.min(maxByMoney, maxBySoldiers);
-									const duration = GAME_PARAMS.military.duration;
-									const cleanMax = Math.floor(rawMax / duration) * duration;
-									setHireAmount(cleanMax.toString());
-								}}
-							>
-								Max
-							</button>
-							<input
-								type="number"
-								value={hireAmount}
-								onChange={(e) => setHireAmount(e.target.value)}
-								min="0"
-								placeholder="Amount"
-								style={{
-									marginBottom: 0,
-									maxWidth: "150px",
-									fontSize: "1rem",
-								}}
-							/>
-							<button
-								type="submit"
-								className="outline"
-								disabled={
-									isHiring || !hireAmount || parseInt(hireAmount, 10) <= 0
-								}
-								style={{
-									width: "auto",
-									marginBottom: 0,
-									padding: "0.4rem 1rem",
-									fontSize: "1rem",
-								}}
-							>
-								{isHiring ? "..." : "Hire"}
-							</button>
+							{(() => {
+								const cost = GAME_PARAMS.military.units.sci.cost;
+								const maxByMoney = Math.floor(myKingdom.money / cost);
+								const maxByIncome = Math.floor(myKingdom.moneyIncome * 3 / cost);
+								const rawMax = Math.min(maxByMoney, maxByIncome);
+
+								const duration = GAME_PARAMS.military.duration;
+								const cleanMax = Math.floor(rawMax / duration) * duration;
+
+								return (
+									<button
+										type="button"
+										className="outline"
+										style={{
+											width: "auto",
+											marginBottom: 0,
+											padding: "0.5rem 1.5rem",
+											fontSize: "1rem",
+										}}
+										disabled={isHiring || cleanMax <= 0}
+										onClick={() => handleHireScientists(cleanMax)}
+									>
+										{isHiring
+											? "..."
+											: `Hire ${cleanMax.toLocaleString()} scientists`}
+									</button>
+								);
+							})()}
 						</div>
-					</form>
+					</div>
 				</article>
 
 				<div style={{ marginBottom: "1rem" }}>
