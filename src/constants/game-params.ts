@@ -133,7 +133,7 @@ const RESEARCH_TECH_TREE: Record<ResearchTechType, ResearchTechConfig> = {
 
 	r_fusion: { requirePoints: 300, bonus: 50 },
 	r_core: { requirePoints: 500, requires: "r_fusion", bonus: 20 },
-	r_armor: { requirePoints: 92000, requires: "r_core" },
+	r_armor: { requirePoints: 3000, requires: "r_core" },
 	r_long: { requirePoints: 400, bonus: 5 },
 	r_ht: { requirePoints: 2000 },
 };

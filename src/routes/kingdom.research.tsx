@@ -667,20 +667,6 @@ function KingdomResearchPage() {
 									handleAutoToggle={handleAutoToggle}
 									showAllTech={showAllTech}
 								/>
-
-								<div style={{ textAlign: "right", marginTop: "1rem" }}>
-									<button
-										type="submit"
-										disabled={
-											isAssigning ||
-											requestSum > kd.researchPts ||
-											requestSum <= 0
-										}
-										style={{ width: "auto" }}
-									>
-										{isAssigning ? "Assigning..." : "Assign Points"}
-									</button>
-								</div>
 							</>
 						);
 					})()}

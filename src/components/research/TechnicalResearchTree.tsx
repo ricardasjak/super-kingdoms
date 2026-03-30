@@ -51,70 +51,64 @@ export function TechnicalResearchTree({
 
 		if (!showAllTech && !prerequisiteMet) return null;
 
+		const hideNode = !showAllTech && isCompleted;
+
 		const children = getChildren(key);
 
 		return (
 			<div key={key} className="tech-list-item">
-				<div
-					className={`tech-node-content ${isCompleted ? "completed" : ""} ${!prerequisiteMet ? "locked" : ""}`}
-					style={{ marginLeft: `${depth * 2}rem` }}
-				>
-					<div className={`tech-node-header ${isCompleted ? "completed" : ""}`}>
-						<div className="tech-title-wrap">
-							{depth > 0 && <span className="tech-tree-elbow">↳</span>}
-							<strong>{TECH_LABELS[key]}</strong>
-							{RESEARCH_TOOLTIPS[key]}
-							{isAutoAssigning && !isCompleted && (
-								<span className="active-badge">Active</span>
-							)}
-						</div>
+				{!hideNode && (
+					<div
+						className={`tech-node-content ${isCompleted ? "completed" : ""} ${!prerequisiteMet ? "locked" : ""}`}
+						style={{ marginLeft: `${depth * 2}rem` }}
+					>
+						<div className={`tech-node-header ${isCompleted ? "completed" : ""}`}>
+							<div className="tech-title-wrap">
+								{depth > 0 && <span className="tech-tree-elbow">↳</span>}
+								<strong style={{ fontSize: "0.85rem" }}>{TECH_LABELS[key]}</strong>
+								{RESEARCH_TOOLTIPS[key]}
+								{isAutoAssigning && !isCompleted && (
+									<span className="active-badge">Active</span>
+								)}
+							</div>
 
-						{isCompleted ? (
-							<span className="badge success">✔️ Completed</span>
-						) : prerequisiteMet ? (
-							<button
-								type="button"
-								className={`outline ${isAutoAssigning ? "secondary" : ""}`}
-								onClick={() => handleAutoToggle(key)}
-								style={{
-									padding: "0.2rem 0.5rem",
-									width: "auto",
-									margin: 0,
-									fontSize: "0.8rem",
-									height: "auto",
-								}}
-							>
-								{isAutoAssigning ? "Stop" : "Start"}
-							</button>
-						) : (
-							<span className="badge secondary">
-								🔒 Locked (
-								{TECH_LABELS[prerequisite as ResearchTechType] || prerequisite})
-							</span>
-						)}
-					</div>
-					{!isCompleted && (
-						<div className="tech-node-progress">
-							<progress
-								value={data?.perc ?? 0}
-								max="100"
-								style={{ marginBottom: "0.2rem", height: "0.5rem" }}
-							/>
-							<div className="progress-labels">
-								<span>{data?.perc ?? 0}%</span>
-								<span>
-									{(data?.pts ?? 0).toLocaleString()} /{" "}
-									{techInfo.requirePoints.toLocaleString()} pts
-								</span>
+							{!isCompleted && (
+								<div className="tech-node-progress-compact">
+									<progress
+										value={data?.perc ?? 0}
+										max="100"
+									/>
+									<span className="progress-text">
+										{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()} / {techInfo.requirePoints.toLocaleString()} pts)
+									</span>
+								</div>
+							)}
+
+							<div className="tech-node-actions">
+								{isCompleted ? (
+									<span className="badge success">✔️ Completed</span>
+								) : prerequisiteMet ? (
+									<button
+										type="button"
+										className={`outline ${isAutoAssigning ? "secondary" : ""}`}
+										onClick={() => handleAutoToggle(key)}
+									>
+										{isAutoAssigning ? "Stop" : "Start"}
+									</button>
+								) : (
+									<span className="badge secondary">
+										🔒 Locked ({TECH_LABELS[prerequisite as ResearchTechType] || prerequisite})
+									</span>
+								)}
 							</div>
 						</div>
-					)}
-				</div>
+					</div>
+				)}
 
 				{/* Recursively render children */}
 				{children.length > 0 && (
 					<div className="tech-children">
-						{children.map((childKey) => renderNode(childKey, depth + 1))}
+						{children.map((childKey) => renderNode(childKey, hideNode ? depth : depth + 1))}
 					</div>
 				)}
 			</div>
@@ -123,17 +117,9 @@ export function TechnicalResearchTree({
 
 	return (
 		<div className="technical-research-list">
-			<div className="tech-columns">
-				<div className="tech-column">
-					{renderNode("r_fusion", 0)}
-				</div>
-				<div className="tech-column">
-					{renderNode("r_long", 0)}
-				</div>
-			</div>
-			<div className="tech-bottom-row">
-				{renderNode("r_ht", 0)}
-			</div>
+			{renderNode("r_fusion", 0)}
+			{renderNode("r_long", 0)}
+			{renderNode("r_ht", 0)}
 		</div>
 	);
 }
