@@ -58,8 +58,8 @@ article {
 .tech-node-content {
 	display: flex;
 	flex-direction: column;
-	padding: 0.75rem 1rem;
-	margin-bottom: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	margin-bottom: 0.4rem;
 	background: rgba(120, 120, 120, 0.05);
 	border-left: 3px solid var(--pico-muted-border-color);
 	border-radius: 0 var(--pico-border-radius) var(--pico-border-radius) 0;
@@ -71,6 +71,7 @@ article {
 .tech-node-content.completed {
 	border-left-color: var(--pico-ins-color);
 	background: rgba(0, 255, 100, 0.05);
+	padding: 0.25rem 1rem;
 }
 
 .tech-node-content.locked {
@@ -83,8 +84,12 @@ article {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 0.5rem;
+	margin-bottom: 0.3rem;
 	gap: 1rem;
+}
+
+.tech-node-header.completed {
+	margin-bottom: 0;
 }
 
 .tech-title-wrap {
@@ -115,8 +120,8 @@ article {
 }
 
 .tech-node-progress progress {
-	margin-bottom: 0.2rem;
-	height: 0.5rem;
+	margin-bottom: 0.1rem;
+	height: 0.35rem;
 }
 
 .progress-labels {
@@ -139,4 +144,25 @@ article {
 .badge.secondary {
 	background: rgba(128, 128, 128, 0.1);
 	color: var(--pico-muted-color);
+}
+
+/* Grid layout for research tree */
+.tech-columns {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.5rem;
+	margin-bottom: 0.5rem;
+}
+
+@media (max-width: 900px) {
+	.tech-columns {
+		grid-template-columns: 1fr;
+		gap: 0.5rem;
+	}
+}
+
+.tech-bottom-row {
+	border-top: 1px dashed var(--pico-muted-border-color);
+	padding-top: 1rem;
+	margin-top: 0.5rem;
 }

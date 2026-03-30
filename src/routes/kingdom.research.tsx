@@ -530,16 +530,25 @@ function KingdomResearchPage() {
 												</div>
 											</td>
 											<td>
-												<MaxButton
-													onClick={() => handleMaxClick(key)}
-													disabled={
-														isAssigning ||
-														myKingdom.researchPts <= 0 ||
-														!prerequisiteMet ||
-														(data?.perc ?? 0) >= 100
-													}
-													label={(data?.perc ?? 0) >= 100 ? "Done" : "Max"}
-												/>
+												{(() => {
+													const required = GAME_PARAMS.research.required(
+														key as keyof typeof GAME_PARAMS.research.params,
+														myKingdom.land,
+													);
+													const isCompleted = (data?.pts ?? 0) >= required;
+													return (
+														<MaxButton
+															onClick={() => handleMaxClick(key)}
+															disabled={
+																isAssigning ||
+																myKingdom.researchPts <= 0 ||
+																!prerequisiteMet ||
+																isCompleted
+															}
+															label={isCompleted ? "Done" : "Max"}
+														/>
+													);
+												})()}
 											</td>
 											<td>
 												<input

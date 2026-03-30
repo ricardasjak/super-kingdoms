@@ -12,6 +12,7 @@ import {
 } from "../src/constants/game-params";
 import type {
 	MilitaryUnitConfig,
+	ResearchKey,
 	ResearchTechType,
 	ResearchTopicType,
 } from "../src/types/game";
@@ -173,7 +174,7 @@ export const createKingdom = mutation({
 			f74: 0,
 			t: 0,
 			ht: 0,
-			sci: 100,
+			sci: 300,
 			queue: {
 				sol: [],
 				tr: [],
@@ -1118,9 +1119,23 @@ export const assignResearchPoints = kingdomMutation({
 			}
 		}
 
+		const finalAutoAssign = (kingdom.researchAutoAssign || []).filter((key: string) => {
+			const isStandard = _standardKeys.includes(key as ResearchTopicType);
+			if (isStandard) return true; // Standard never cleaned
+			
+			const resData = newResearch[key as ResearchKey];
+			if (!resData) return false;
+			
+			const techInfo = GAME_PARAMS.militaryTechTree[key as keyof typeof GAME_PARAMS.militaryTechTree];
+			if (techInfo) return resData.pts < techInfo.requirePoints;
+			
+			return true;
+		});
+
 		await ctx.db.patch(kingdom._id, {
 			researchPts: kingdom.researchPts - totalPoints,
 			research: newResearch,
+			researchAutoAssign: finalAutoAssign,
 		});
 
 		return { success: true };
@@ -1132,8 +1147,21 @@ export const saveResearchAutoAssign = kingdomMutation({
 		priority: v.array(v.string()),
 	},
 	handler: async (ctx, { kingdom, priority }) => {
+		const cleanPriority = priority.filter((key: string) => {
+			const standardKeys = ["pop", "power", "mil", "money", "fdc", "warp"];
+			const isStandard = standardKeys.includes(key);
+			if (isStandard) return true;
+			
+			const resData = kingdom.research[key as keyof typeof kingdom.research];
+			if (!resData) return false;
+			
+			const techInfo = GAME_PARAMS.militaryTechTree[key as keyof typeof GAME_PARAMS.militaryTechTree];
+			if (techInfo) return resData.pts < techInfo.requirePoints;
+			return true;
+		});
+
 		await ctx.db.patch(kingdom._id, {
-			researchAutoAssign: priority,
+			researchAutoAssign: cleanPriority,
 		});
 	},
 });

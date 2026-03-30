@@ -567,6 +567,26 @@ export function processKingdomTick(
 		] = { pts, perc };
 	}
 
+	const autoAssignQueue = newKingdom.researchAutoAssign || [];
+	if (autoAssignQueue.length > 0) {
+		const newQueue = autoAssignQueue.filter(key => {
+			const isStandard = standardResearchKeys.includes(key as ResearchTopicType);
+			if (isStandard) return true; // Never clean standard research
+			const resData = newKingdom.research[key as ResearchKey];
+			if (!resData) return false;
+			
+			const techInfo = GAME_PARAMS.militaryTechTree[key as keyof typeof GAME_PARAMS.militaryTechTree];
+			if (techInfo) return resData.pts < techInfo.requirePoints;
+			
+			return true;
+		});
+
+		if (newQueue.length !== autoAssignQueue.length) {
+			newKingdom.researchAutoAssign = newQueue;
+			kingdomChanged = true;
+		}
+	}
+
 	return {
 		updatedKingdom:
 			kingdomChanged || moneyIncome !== 0 || powerIncome !== 0

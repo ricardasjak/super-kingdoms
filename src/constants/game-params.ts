@@ -129,12 +129,13 @@ const RESEARCH_TECH_TREE: Record<ResearchTechType, ResearchTechConfig> = {
 
 	r_ld: { requirePoints: 720, requires: "r_long" },
 	r_lf: { requirePoints: 1500, requires: "r_ld" },
-	r_ht: { requirePoints: 2000 },
+
 
 	r_fusion: { requirePoints: 300, bonus: 50 },
 	r_core: { requirePoints: 500, requires: "r_fusion", bonus: 20 },
 	r_armor: { requirePoints: 92000, requires: "r_core" },
 	r_long: { requirePoints: 400, bonus: 5 },
+	r_ht: { requirePoints: 2000 },
 };
 
 export const BUILDINGS_LIST: Record<BuildingType, BuildingConfig> = {

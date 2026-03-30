@@ -1,6 +1,7 @@
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { GAME_PARAMS } from "../../constants/game-params";
 import type { ResearchKey, ResearchTechType } from "../../types/game";
+import { RESEARCH_TOOLTIPS } from "./ResearchTooltips";
 
 interface TechnicalResearchTreeProps {
 	myKingdom: Doc<"kingdoms">;
@@ -36,7 +37,7 @@ export function TechnicalResearchTree({
 		);
 	};
 
-	const rootNodes = getChildren(undefined);
+
 
 	const renderNode = (key: ResearchTechType, depth: number) => {
 		const techInfo = techTree[key];
@@ -48,7 +49,6 @@ export function TechnicalResearchTree({
 		const isCompleted = (data?.perc ?? 0) >= 100;
 		const isAutoAssigning = (myKingdom.researchAutoAssign || []).includes(key);
 
-		if (!showAllTech && isCompleted) return null;
 		if (!showAllTech && !prerequisiteMet) return null;
 
 		const children = getChildren(key);
@@ -59,11 +59,14 @@ export function TechnicalResearchTree({
 					className={`tech-node-content ${isCompleted ? "completed" : ""} ${!prerequisiteMet ? "locked" : ""}`}
 					style={{ marginLeft: `${depth * 2}rem` }}
 				>
-					<div className="tech-node-header">
+					<div className={`tech-node-header ${isCompleted ? "completed" : ""}`}>
 						<div className="tech-title-wrap">
 							{depth > 0 && <span className="tech-tree-elbow">↳</span>}
 							<strong>{TECH_LABELS[key]}</strong>
-							{isAutoAssigning && <span className="active-badge">Active</span>}
+							{RESEARCH_TOOLTIPS[key]}
+							{isAutoAssigning && !isCompleted && (
+								<span className="active-badge">Active</span>
+							)}
 						</div>
 
 						{isCompleted ? (
@@ -90,20 +93,22 @@ export function TechnicalResearchTree({
 							</span>
 						)}
 					</div>
-					<div className="tech-node-progress">
-						<progress
-							value={data?.perc ?? 0}
-							max="100"
-							style={{ marginBottom: "0.2rem", height: "0.5rem" }}
-						/>
-						<div className="progress-labels">
-							<span>{data?.perc ?? 0}%</span>
-							<span>
-								{(data?.pts ?? 0).toLocaleString()} /{" "}
-								{techInfo.requirePoints.toLocaleString()} pts
-							</span>
+					{!isCompleted && (
+						<div className="tech-node-progress">
+							<progress
+								value={data?.perc ?? 0}
+								max="100"
+								style={{ marginBottom: "0.2rem", height: "0.5rem" }}
+							/>
+							<div className="progress-labels">
+								<span>{data?.perc ?? 0}%</span>
+								<span>
+									{(data?.pts ?? 0).toLocaleString()} /{" "}
+									{techInfo.requirePoints.toLocaleString()} pts
+								</span>
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 
 				{/* Recursively render children */}
@@ -118,7 +123,17 @@ export function TechnicalResearchTree({
 
 	return (
 		<div className="technical-research-list">
-			{rootNodes.map((key) => renderNode(key, 0))}
+			<div className="tech-columns">
+				<div className="tech-column">
+					{renderNode("r_fusion", 0)}
+				</div>
+				<div className="tech-column">
+					{renderNode("r_long", 0)}
+				</div>
+			</div>
+			<div className="tech-bottom-row">
+				{renderNode("r_ht", 0)}
+			</div>
 		</div>
 	);
 }

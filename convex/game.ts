@@ -104,6 +104,7 @@ export const processBatch = internalMutation({
 					landQueue: updatedKingdom.landQueue,
 					researchPts: updatedKingdom.researchPts,
 					research: updatedKingdom.research,
+					researchAutoAssign: updatedKingdom.researchAutoAssign,
 					state: updatedKingdom.state,
 				};
 
