@@ -8,12 +8,7 @@ import { useKingdomMessage } from "../../src/contexts/KingdomMessageContext";
 import { RESEARCH_TOOLTIPS } from "../components/research/ResearchTooltips";
 import { ScientistsSummary } from "../components/research/ScientistsSummary";
 import { TechnicalResearchTree } from "../components/research/TechnicalResearchTree";
-import type {
-	ResearchData,
-	ResearchKey,
-	ResearchTechType,
-	ResearchTopicType,
-} from "../types/game";
+import type { ResearchData, ResearchTechType } from "../types/game";
 
 export const Route = createFileRoute("/kingdom/research")({
 	component: KingdomResearchPage,
@@ -32,9 +27,9 @@ function KingdomResearchPage() {
 
 	if (myKingdom === undefined) {
 		return (
-			<main className="container">
+			<section>
 				<article aria-busy="true">Loading kingdom...</article>
-			</main>
+			</section>
 		);
 	}
 
@@ -47,12 +42,12 @@ function KingdomResearchPage() {
 
 	if (!research) {
 		return (
-			<main className="container">
+			<section>
 				<article>
 					<header>Error</header>
 					<p>Could not locate research data for your kingdom.</p>
 				</article>
-			</main>
+			</section>
 		);
 	}
 
@@ -85,7 +80,6 @@ function KingdomResearchPage() {
 		{ key: "r_ht", label: "Hover Tanks", data: research.r_ht },
 	];
 
-
 	const handleAutoToggle = async (key: string) => {
 		const currentAuto = myKingdom.researchAutoAssign || [];
 		let newPriority = [...currentAuto];
@@ -115,7 +109,6 @@ function KingdomResearchPage() {
 			showMessage("Failed to update auto-assign priority.", "error");
 		}
 	};
-
 
 	const handleHireScientists = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -154,7 +147,7 @@ function KingdomResearchPage() {
 	};
 
 	return (
-		<main className="container">
+		<section>
 			<article>
 				<header>
 					<hgroup>
@@ -240,176 +233,188 @@ function KingdomResearchPage() {
 					</form>
 				</article>
 
-					<p>
-						<strong>Available Research Points:</strong>{" "}
-						<span>
-							{myKingdom.researchPts.toLocaleString()}
-						</span>{" "}
-						| <strong>Points Produced:</strong>{" "}
-						{myKingdom.military.sci.toLocaleString()} / tick
-					</p>
-					<p>
-						As your kingdom grows, you have to spend more research points to
-						keep up
-					</p>
-					<hgroup>
-						<h4>Standard Research</h4>
-						<p>Land based scaling research topics</p>
-					</hgroup>
-					
-					<div className="technical-research-list" style={{ marginTop: 0, marginBottom: "2rem" }}>
-						{standardResearchTopics.map(({ key, label, data }) => {
-							const prerequisiteKey = GAME_PARAMS.research.params[key].requires;
-							const prerequisiteMet =
-								!prerequisiteKey ||
-								(myKingdom.research[prerequisiteKey]?.perc ?? 0) >= 100;
+				<p>
+					<strong>Available Research Points:</strong>{" "}
+					<span>{myKingdom.researchPts.toLocaleString()}</span> |{" "}
+					<strong>Points Produced:</strong>{" "}
+					{myKingdom.military.sci.toLocaleString()} / tick
+				</p>
+				<p>
+					As your kingdom grows, you have to spend more research points to keep
+					up
+				</p>
+				<hgroup>
+					<h4>Standard Research</h4>
+					<p>Land based scaling research topics</p>
+				</hgroup>
 
-							const required = GAME_PARAMS.research.required(
-								key as keyof typeof GAME_PARAMS.research.params,
-								myKingdom.land,
-							);
-							const maxBonus = GAME_PARAMS.research.params[key as keyof typeof GAME_PARAMS.research.params].bonus;
-							const currentPts = data?.pts ?? 0;
-							const delta = currentPts - required;
-							const isSurplus = delta >= 0;
-							const isCompleted = currentPts >= required;
-							const index = (myKingdom.researchAutoAssign || []).indexOf(key);
-							const isAutoAssigning = index !== -1;
+				<div
+					className="technical-research-list"
+					style={{ marginTop: 0, marginBottom: "2rem" }}
+				>
+					{standardResearchTopics.map(({ key, label, data }) => {
+						const prerequisiteKey = GAME_PARAMS.research.params[key].requires;
+						const prerequisiteMet =
+							!prerequisiteKey ||
+							(myKingdom.research[prerequisiteKey]?.perc ?? 0) >= 100;
 
-							return (
-								<div key={key} className="tech-list-item">
+						const required = GAME_PARAMS.research.required(
+							key as keyof typeof GAME_PARAMS.research.params,
+							myKingdom.land,
+						);
+						const maxBonus =
+							GAME_PARAMS.research.params[
+								key as keyof typeof GAME_PARAMS.research.params
+							].bonus;
+						const currentPts = data?.pts ?? 0;
+						const delta = currentPts - required;
+						const isSurplus = delta >= 0;
+						const isCompleted = currentPts >= required;
+						const index = (myKingdom.researchAutoAssign || []).indexOf(key);
+						const isAutoAssigning = index !== -1;
+
+						return (
+							<div key={key} className="tech-list-item">
+								<div
+									className={`tech-node-content ${isCompleted ? "completed" : ""} ${!prerequisiteMet ? "locked" : ""}`}
+								>
 									<div
-										className={`tech-node-content ${isCompleted ? "completed" : ""} ${!prerequisiteMet ? "locked" : ""}`}
+										className={`tech-node-header ${isCompleted ? "completed" : ""}`}
 									>
-										<div className={`tech-node-header ${isCompleted ? "completed" : ""}`}>
-											<div className="tech-title-wrap">
-												<strong style={{ fontSize: "0.85rem" }}>{label}</strong>
-												{RESEARCH_TOOLTIPS[key]}
-												{isAutoAssigning && (
-													<span className="active-badge">#{index + 1} Active</span>
-												)}
-											</div>
-
-											<div className="tech-node-progress-compact">
-												<progress
-													value={data?.perc ?? 0}
-													max={maxBonus}
-												/>
-												<span className="progress-text">
-													{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()} / {required.toLocaleString()} pts)
-													<span
-														style={{
-															color: isSurplus ? "var(--pico-ins-color)" : "var(--pico-del-color)",
-															marginLeft: "0.5rem"
-														}}
-													>
-														[{isSurplus ? "+" : ""}{delta.toLocaleString()}]
-													</span>
+										<div className="tech-title-wrap">
+											<strong style={{ fontSize: "0.85rem" }}>{label}</strong>
+											{RESEARCH_TOOLTIPS[key]}
+											{isAutoAssigning && (
+												<span className="active-badge">
+													#{index + 1} Active
 												</span>
-											</div>
+											)}
+										</div>
 
-											<div className="tech-node-actions" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-												{prerequisiteMet ? (
-													<button
-														type="button"
-														className={`outline ${isAutoAssigning ? "secondary" : ""}`}
-														onClick={() => handleAutoToggle(key)}
-													>
-														{isAutoAssigning ? "Stop" : "Start"}
-													</button>
-												) : (
-													<span className="badge secondary">
-														🔒 Locked ({techTopics.find((t) => t.key === prerequisiteKey)?.label || prerequisiteKey})
-													</span>
-												)}
-											</div>
+										<div className="tech-node-progress-compact">
+											<progress value={data?.perc ?? 0} max={maxBonus} />
+											<span className="progress-text">
+												{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()}{" "}
+												/ {required.toLocaleString()} pts)
+												<span
+													style={{
+														color: isSurplus
+															? "var(--pico-ins-color)"
+															: "var(--pico-del-color)",
+														marginLeft: "0.5rem",
+													}}
+												>
+													[{isSurplus ? "+" : ""}
+													{delta.toLocaleString()}]
+												</span>
+											</span>
+										</div>
+
+										<div
+											className="tech-node-actions"
+											style={{
+												display: "flex",
+												alignItems: "center",
+												gap: "0.5rem",
+											}}
+										>
+											{prerequisiteMet ? (
+												<button
+													type="button"
+													className={`outline ${isAutoAssigning ? "secondary" : ""}`}
+													onClick={() => handleAutoToggle(key)}
+												>
+													{isAutoAssigning ? "Stop" : "Start"}
+												</button>
+											) : (
+												<span className="badge secondary">
+													🔒 Locked (
+													{techTopics.find((t) => t.key === prerequisiteKey)
+														?.label || prerequisiteKey}
+													)
+												</span>
+											)}
 										</div>
 									</div>
 								</div>
-							);
-						})}
-					</div>
+							</div>
+						);
+					})}
+				</div>
 
-					<hgroup
-						style={{
-							display: "flex",
-							justifyContent: "space-between",
-							alignItems: "center",
-						}}
-					>
-						<div>
-							<h4>Technical Research</h4>
-							<p>Fixed required points for advanced technology</p>
-						</div>
-						<div
-							style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
+				<hgroup
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}
+				>
+					<div>
+						<h4>Technical Research</h4>
+						<p>Fixed required points for advanced technology</p>
+					</div>
+					<div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+						<label
+							htmlFor="showAllTech"
+							style={{
+								marginBottom: 0,
+								fontSize: "0.85rem",
+								color: "var(--pico-muted-color)",
+							}}
 						>
-							<label
-								htmlFor="showAllTech"
+							Show all tech
+						</label>
+						<input
+							type="checkbox"
+							id="showAllTech"
+							name="showAllTech"
+							role="switch"
+							aria-checked={showAllTech}
+							checked={showAllTech}
+							onChange={(e) => setShowAllTech(e.target.checked)}
+							style={{ margin: 0 }}
+						/>
+					</div>
+				</hgroup>
+
+				{(() => {
+					const kd = myKingdom;
+					if (!kd) return null;
+
+					const allTechDone = techTopics.every(
+						(t) => (t.data?.perc ?? 0) >= 100,
+					);
+
+					if (allTechDone && !showAllTech) {
+						return (
+							<article
 								style={{
-									marginBottom: 0,
-									fontSize: "0.85rem",
-									color: "var(--pico-muted-color)",
+									textAlign: "center",
+									padding: "2rem",
+									backgroundColor: "rgba(0, 255, 100, 0.05)",
+									border: "1px dashed var(--pico-ins-color)",
 								}}
 							>
-								Show all tech
-							</label>
-							<input
-								type="checkbox"
-								id="showAllTech"
-								name="showAllTech"
-								role="switch"
-								aria-checked={showAllTech}
-								checked={showAllTech}
-								onChange={(e) => setShowAllTech(e.target.checked)}
-								style={{ margin: 0 }}
-							/>
-						</div>
-					</hgroup>
-
-					{(() => {
-						const kd = myKingdom;
-						if (!kd) return null;
-
-						const allTechDone = techTopics.every(
-							(t) => (t.data?.perc ?? 0) >= 100,
+								<h5 style={{ color: "var(--pico-ins-color)", marginBottom: 0 }}>
+									🌟 All Technical Research Completed! 🌟
+								</h5>
+								<p style={{ marginBottom: 0, opacity: 0.8 }}>
+									Your scientists have unlocked every possible technological
+									breakthrough. Focus your points on scaling standard research.
+								</p>
+							</article>
 						);
+					}
 
-						if (allTechDone && !showAllTech) {
-							return (
-								<article
-									style={{
-										textAlign: "center",
-										padding: "2rem",
-										backgroundColor: "rgba(0, 255, 100, 0.05)",
-										border: "1px dashed var(--pico-ins-color)",
-									}}
-								>
-									<h5
-										style={{ color: "var(--pico-ins-color)", marginBottom: 0 }}
-									>
-										🌟 All Technical Research Completed! 🌟
-									</h5>
-									<p style={{ marginBottom: 0, opacity: 0.8 }}>
-										Your scientists have unlocked every possible technological
-										breakthrough. Focus your points on scaling standard
-										research.
-									</p>
-								</article>
-							);
-						}
-
-						return (
-							<>
-								<TechnicalResearchTree
-									myKingdom={kd}
-									handleAutoToggle={handleAutoToggle}
-									showAllTech={showAllTech}
-								/>
-							</>
-						);
-					})()}
+					return (
+						<TechnicalResearchTree
+							myKingdom={kd}
+							handleAutoToggle={handleAutoToggle}
+							showAllTech={showAllTech}
+						/>
+					);
+				})()}
 			</article>
-		</main>
+		</section>
 	);
 }

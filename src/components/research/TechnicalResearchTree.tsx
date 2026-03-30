@@ -37,8 +37,6 @@ export function TechnicalResearchTree({
 		);
 	};
 
-
-
 	const renderNode = (key: ResearchTechType, depth: number) => {
 		const techInfo = techTree[key];
 		const data = myKingdom.research[key];
@@ -63,10 +61,14 @@ export function TechnicalResearchTree({
 						className={`tech-node-content ${isCompleted ? "completed" : ""} ${!prerequisiteMet ? "locked" : ""}`}
 						style={{ marginLeft: `${depth * 2}rem` }}
 					>
-						<div className={`tech-node-header ${isCompleted ? "completed" : ""}`}>
+						<div
+							className={`tech-node-header ${isCompleted ? "completed" : ""}`}
+						>
 							<div className="tech-title-wrap">
 								{depth > 0 && <span className="tech-tree-elbow">↳</span>}
-								<strong style={{ fontSize: "0.85rem" }}>{TECH_LABELS[key]}</strong>
+								<strong style={{ fontSize: "0.85rem" }}>
+									{TECH_LABELS[key]}
+								</strong>
 								{RESEARCH_TOOLTIPS[key]}
 								{isAutoAssigning && (
 									<span className="active-badge">#{index + 1} Active</span>
@@ -74,12 +76,10 @@ export function TechnicalResearchTree({
 							</div>
 
 							<div className="tech-node-progress-compact">
-								<progress
-									value={data?.perc ?? 0}
-									max="100"
-								/>
+								<progress value={data?.perc ?? 0} max="100" />
 								<span className="progress-text">
-									{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()} / {techInfo.requirePoints.toLocaleString()} pts)
+									{data?.perc ?? 0}% ({(data?.pts ?? 0).toLocaleString()} /{" "}
+									{techInfo.requirePoints.toLocaleString()} pts)
 								</span>
 							</div>
 
@@ -94,7 +94,10 @@ export function TechnicalResearchTree({
 									</button>
 								) : (
 									<span className="badge secondary">
-										🔒 Locked ({TECH_LABELS[prerequisite as ResearchTechType] || prerequisite})
+										🔒 Locked (
+										{TECH_LABELS[prerequisite as ResearchTechType] ||
+											prerequisite}
+										)
 									</span>
 								)}
 							</div>
@@ -105,7 +108,9 @@ export function TechnicalResearchTree({
 				{/* Recursively render children */}
 				{children.length > 0 && (
 					<div className="tech-children">
-						{children.map((childKey) => renderNode(childKey, hideNode ? depth : depth + 1))}
+						{children.map((childKey) =>
+							renderNode(childKey, hideNode ? depth : depth + 1),
+						)}
 					</div>
 				)}
 			</div>

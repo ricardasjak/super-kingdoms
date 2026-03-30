@@ -89,9 +89,9 @@ function KingdomGrowthPage() {
 
 	if (myKingdom === undefined) {
 		return (
-			<main className="container">
+			<section>
 				<article aria-busy="true">Loading kingdom...</article>
-			</main>
+			</section>
 		);
 	}
 
@@ -102,12 +102,12 @@ function KingdomGrowthPage() {
 
 	if (!buildings) {
 		return (
-			<main className="container">
+			<section>
 				<article>
 					<header>Error</header>
 					<p>Could not locate buildings data for your kingdom.</p>
 				</article>
-			</main>
+			</section>
 		);
 	}
 
@@ -342,7 +342,7 @@ function KingdomGrowthPage() {
 	};
 
 	return (
-		<main className="container">
+		<section className="container">
 			<article>
 				<header>
 					<hgroup>
@@ -865,6 +865,6 @@ function KingdomGrowthPage() {
 					</div>
 				</footer>
 			</article>
-		</main>
+		</section>
 	);
 }

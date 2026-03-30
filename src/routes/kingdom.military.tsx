@@ -216,7 +216,7 @@ function KingdomMilitaryPage() {
 	};
 
 	return (
-		<main className="container">
+		<section>
 			<article>
 				<header>
 					<hgroup>
@@ -671,6 +671,6 @@ function KingdomMilitaryPage() {
 					</div>
 				</footer>
 			</article>
-		</main>
+		</section>
 	);
 }

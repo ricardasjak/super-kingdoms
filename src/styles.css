@@ -162,3 +162,261 @@ article {
 	color: var(--pico-muted-color);
 }
 
+/* Kingdom Header & Navigation */
+.kingdom-header {
+	border-bottom: 1px solid var(--pico-muted-border-color);
+	margin-bottom: 1rem;
+	padding: 0.25rem 0;
+}
+
+.kingdom-header nav {
+	--pico-nav-element-spacing-vertical: 0;
+	--pico-nav-link-spacing-vertical: 0;
+}
+
+.top-stats-nav {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0;
+}
+
+.kingdom-header li {
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+.kd-name-brand {
+	font-size: 1.25rem;
+	color: var(--pico-primary);
+}
+
+.stats-list {
+	display: flex;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	gap: 1.5rem;
+	font-size: 0.9rem;
+}
+
+.danger-text {
+	color: var(--pico-del-color);
+	font-weight: bold;
+}
+
+.game-tick-info {
+	color: var(--pico-muted-color);
+	border-right: 1px solid var(--pico-muted-border-color);
+	padding-right: 1.5rem;
+}
+
+.main-nav {
+	display: flex;
+	justify-content: space-between;
+	transition: all 0.3s ease;
+}
+
+.mobile-only-footer-stats {
+	display: none;
+}
+
+.nav-links,
+.nav-actions {
+	display: flex;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	gap: 1rem;
+}
+
+.nav-links li a {
+	padding: 0.5rem 0.75rem;
+	border-radius: var(--pico-border-radius);
+	text-decoration: none;
+	color: var(--pico-color);
+	transition: background 0.2s;
+}
+
+.nav-links li a:hover {
+	background: var(--pico-secondary-hover-background);
+}
+
+.mobile-toggle-wrap {
+	display: none;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.hamburger-button {
+	padding: 0.5rem;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background: transparent;
+}
+
+.hamburger-icon {
+	position: relative;
+	width: 20px;
+	height: 2px;
+	background: var(--pico-color);
+	display: block;
+	transition: all 0.3s ease;
+}
+
+.hamburger-icon::before,
+.hamburger-icon::after {
+	content: "";
+	position: absolute;
+	width: 20px;
+	height: 2px;
+	background: var(--pico-color);
+	display: block;
+	transition: all 0.3s ease;
+}
+
+.hamburger-icon::before {
+	top: -6px;
+}
+.hamburger-icon::after {
+	bottom: -6px;
+}
+
+.hamburger-icon.open {
+	background: transparent;
+}
+.hamburger-icon.open::before {
+	transform: rotate(45deg);
+	top: 0;
+}
+.hamburger-icon.open::after {
+	transform: rotate(-45deg);
+	bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+	.stats-list {
+		gap: 0.75rem;
+		font-size: 0.85rem;
+	}
+	.game-tick-info {
+		padding-right: 0.75rem;
+	}
+}
+
+@media (max-width: 768px) {
+	.kingdom-header {
+		margin-bottom: 1rem;
+	}
+
+	.mobile-toggle-wrap {
+		display: block;
+	}
+
+	.brand-container {
+		display: none;
+	}
+
+	.desktop-only-stat {
+		display: none;
+	}
+
+	.stats-list {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.15rem 0.5rem;
+		font-size: 0.75rem;
+		flex-grow: 1;
+		justify-content: center;
+		text-align: center;
+		margin: 0;
+	}
+
+	.game-tick-info {
+		grid-column: span 3;
+		border-right: none;
+		border-bottom: 1px solid var(--pico-muted-border-color);
+		padding-right: 0;
+		padding-bottom: 0.1rem;
+		margin-bottom: 0.1rem;
+	}
+
+	/* Sticky Footer Nav for Mobile */
+	.main-nav {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: var(--pico-card-background-color);
+		border-top: 1px solid var(--pico-muted-border-color);
+		box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+		z-index: 1000;
+		padding: 0 1rem;
+		flex-direction: row; /* Keep standard layout but compact */
+		height: 50px;
+		align-items: center;
+		max-height: 50px; /* Force compact */
+		opacity: 1;
+		overflow: visible;
+	}
+
+	/* The hamburger menu should now be in the footer */
+	.top-stats-nav {
+		padding: 0.25rem 0;
+	}
+
+	/* Toggle button inside the footer */
+	.mobile-footer-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.hamburger-button {
+		margin: 0;
+	}
+
+	.mobile-only-footer-stats {
+		display: block;
+		font-size: 0.9rem;
+		color: var(--pico-primary);
+		flex-grow: 1;
+	}
+
+	.nav-links,
+	.nav-actions {
+		display: none; /* Hide links on mobile, shown in expanded menu */
+	}
+
+	/* Expanded menu for mobile footer */
+	.main-nav.open {
+		height: auto;
+		max-height: 80vh;
+		bottom: 50px; /* Open upwards */
+		padding-bottom: 1rem;
+		border-top-left-radius: 12px;
+		border-top-right-radius: 12px;
+	}
+
+	.main-nav.open .nav-links,
+	.main-nav.open .nav-actions {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.main-nav.open li a,
+	.main-nav.open li button {
+		padding: 0.6rem 1rem;
+		border-bottom: 1px solid rgba(120, 120, 120, 0.1);
+	}
+}

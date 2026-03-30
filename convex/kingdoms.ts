@@ -10,12 +10,7 @@ import {
 	PLANET_TYPES,
 	RACE_TYPES,
 } from "../src/constants/game-params";
-import type {
-	MilitaryUnitConfig,
-	ResearchKey,
-	ResearchTechType,
-	ResearchTopicType,
-} from "../src/types/game";
+import type { MilitaryUnitConfig } from "../src/types/game";
 import {
 	calculateFreeLand,
 	calculateMilitaryQueue,
@@ -999,7 +994,6 @@ export const saveSpyReport = mutation({
 	},
 });
 
-
 export const saveResearchAutoAssign = kingdomMutation({
 	args: {
 		priority: v.array(v.string()),
@@ -1009,11 +1003,14 @@ export const saveResearchAutoAssign = kingdomMutation({
 			const standardKeys = ["pop", "power", "mil", "money", "fdc", "warp"];
 			const isStandard = standardKeys.includes(key);
 			if (isStandard) return true;
-			
+
 			const resData = kingdom.research[key as keyof typeof kingdom.research];
 			if (!resData) return false;
-			
-			const techInfo = GAME_PARAMS.militaryTechTree[key as keyof typeof GAME_PARAMS.militaryTechTree];
+
+			const techInfo =
+				GAME_PARAMS.militaryTechTree[
+					key as keyof typeof GAME_PARAMS.militaryTechTree
+				];
 			if (techInfo) return resData.pts < techInfo.requirePoints;
 			return true;
 		});

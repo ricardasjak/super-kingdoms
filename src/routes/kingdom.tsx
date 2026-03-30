@@ -5,6 +5,7 @@ import {
 	useNavigate,
 } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
+import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { PlayButton } from "../components/play-button";
 import {
@@ -28,6 +29,7 @@ function KingdomLayoutContent() {
 	const releaseKingdom = useMutation(api.kingdoms.releaseKingdom);
 	const gameStatus = useQuery(api.game.getGameStatus);
 	const { message, messageType } = useKingdomMessage();
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 	const handleQuickRelease = async () => {
 		try {
@@ -109,67 +111,105 @@ function KingdomLayoutContent() {
 	}
 
 	return (
-		<div>
+		<>
 			{myKingdom && (
-				<header className="container" style={{ margin: "2rem auto" }}>
-					<nav>
-						<ul>
+				<header className="kingdom-header">
+					<nav className="top-stats-nav">
+						<ul className="brand-container">
 							<li>
-								<strong>{myKingdom.kdName}</strong>
+								<strong className="kd-name-brand">{myKingdom.kdName}</strong>
 							</li>
 						</ul>
-						<ul>
+						<ul className="stats-list">
 							{gameStatus && (
-								<li
-									style={{
-										marginRight: "1rem",
-										color: "var(--pico-muted-color)",
-									}}
-								>
-									R{gameStatus.roundNumber}, Tick {gameStatus.currentTick}/
-									{gameStatus.endTick}
+								<li className="game-tick-info">
+									R{gameStatus.roundNumber}, T{gameStatus.currentTick}
 								</li>
 							)}
-							<li>
-								Land: {myKingdom.land.toLocaleString()} (
-								{myKingdom.nw.toLocaleString()} NW)
+							<li className="desktop-only-stat" title="Money">
+								$: {myKingdom.money.toLocaleString()}
+							</li>
+							<li title="Land and Networth">
+								L: {myKingdom.land.toLocaleString()} (
+								{Math.round(myKingdom.nw / 1000)}k)
 							</li>
 							<li
-								style={
+								className={
 									myKingdom.popChange < 0 &&
 									myKingdom.population + 3 * myKingdom.popChange <= 0
-										? { color: "var(--pico-del-color)", fontWeight: "bold" }
-										: {}
+										? "danger-text"
+										: ""
 								}
+								title="Population"
 							>
-								Pop: {myKingdom.population.toLocaleString()}
+								P: {myKingdom.population.toLocaleString()}
 							</li>
-							<li>Power: {myKingdom.power.toLocaleString()}</li>
-							<li>Money: ${myKingdom.money.toLocaleString()}</li>
+							<li title="Power">W: {myKingdom.power.toLocaleString()}</li>
 						</ul>
 					</nav>
-					<nav>
-						<ul>
+					<nav className={`main-nav ${isMenuOpen ? "open" : ""}`}>
+						<div className="mobile-only-footer-stats">
+							<strong>$: {myKingdom.money.toLocaleString()}</strong>
+						</div>
+						<ul className="mobile-toggle-wrap mobile-footer-toggle">
 							<li>
-								<Link to="/kingdom/status">Status</Link>
-							</li>
-							<li>
-								<Link to="/kingdom/growth">Growth</Link>
-							</li>
-							<li>
-								<Link to="/kingdom/military">Military</Link>
-							</li>
-							<li>
-								<Link to="/kingdom/research">Research</Link>
-							</li>
-							<li>
-								<Link to="/kingdom/targets">Targets</Link>
-							</li>
-							<li>
-								<Link to="/kingdom/reports">Reports</Link>
+								<button
+									type="button"
+									className="outline hamburger-button"
+									onClick={() => setIsMenuOpen(!isMenuOpen)}
+									aria-label="Toggle menu"
+								>
+									<span
+										className={`hamburger-icon ${isMenuOpen ? "open" : ""}`}
+									></span>
+								</button>
 							</li>
 						</ul>
-						<ul>
+						<ul className="nav-links">
+							<li>
+								<Link to="/kingdom/status" onClick={() => setIsMenuOpen(false)}>
+									Status
+								</Link>
+							</li>
+							<li>
+								<Link to="/kingdom/growth" onClick={() => setIsMenuOpen(false)}>
+									Growth
+								</Link>
+							</li>
+							<li>
+								<Link
+									to="/kingdom/military"
+									onClick={() => setIsMenuOpen(false)}
+								>
+									Military
+								</Link>
+							</li>
+							<li>
+								<Link
+									to="/kingdom/research"
+									onClick={() => setIsMenuOpen(false)}
+								>
+									Research
+								</Link>
+							</li>
+							<li>
+								<Link
+									to="/kingdom/targets"
+									onClick={() => setIsMenuOpen(false)}
+								>
+									Targets
+								</Link>
+							</li>
+							<li>
+								<Link
+									to="/kingdom/reports"
+									onClick={() => setIsMenuOpen(false)}
+								>
+									Reports
+								</Link>
+							</li>
+						</ul>
+						<ul className="nav-actions">
 							<li>
 								<PlayButton
 									showText={false}
@@ -182,11 +222,15 @@ function KingdomLayoutContent() {
 								/>
 							</li>
 							<li>
-								<Link to="/kingdom/profile">Profile</Link>
+								<Link
+									to="/kingdom/profile"
+									onClick={() => setIsMenuOpen(false)}
+								>
+									Profile
+								</Link>
 							</li>
 						</ul>
 					</nav>
-					<hr />
 					{message && (
 						<div
 							style={{
@@ -235,7 +279,7 @@ function KingdomLayoutContent() {
 				</header>
 			)}
 			<Outlet />
-		</div>
+		</>
 	);
 }
 
