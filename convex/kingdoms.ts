@@ -608,7 +608,9 @@ export const trainMilitary = kingdomMutation({
 		if (args.sci > 0) {
 			const incomeCap = kingdom.moneyIncome * 3;
 			if (args.sci > incomeCap) {
-				throw new Error(`Cannot hire more than ${incomeCap.toLocaleString()} scientists (3x your money income limit).`);
+				throw new Error(
+					`Cannot hire more than ${incomeCap.toLocaleString()} scientists (3x your money income limit).`,
+				);
 			}
 		}
 
@@ -1052,7 +1054,9 @@ export const buyScientists = kingdomMutation({
 
 		const incomeCap = kingdom.moneyIncome * 3;
 		if (amount > incomeCap) {
-			throw new Error(`Cannot hire more than ${incomeCap.toLocaleString()} scientists at once (3x your money income).`);
+			throw new Error(
+				`Cannot hire more than ${incomeCap.toLocaleString()} scientists at once (3x your money income).`,
+			);
 		}
 
 		const updatedQueue = calculateMilitaryQueue(

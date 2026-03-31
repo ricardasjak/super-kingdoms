@@ -139,7 +139,9 @@ function KingdomResearchPage() {
 							{(() => {
 								const cost = GAME_PARAMS.military.units.sci.cost;
 								const maxByMoney = Math.floor(myKingdom.money / cost);
-								const maxByIncome = Math.floor(myKingdom.moneyIncome * 3 / cost);
+								const maxByIncome = Math.floor(
+									(myKingdom.moneyIncome * 3) / cost,
+								);
 								const rawMax = Math.min(maxByMoney, maxByIncome);
 
 								const duration = GAME_PARAMS.military.duration;
@@ -170,10 +172,17 @@ function KingdomResearchPage() {
 
 				<div style={{ marginBottom: "1rem" }}>
 					<p style={{ margin: 0 }}>
-						<strong>Points Produced:</strong> {myKingdom.military.sci.toLocaleString()} / tick
+						<strong>Points Produced:</strong>{" "}
+						{myKingdom.military.sci.toLocaleString()} / tick
 					</p>
 					{myKingdom.researchPts > 0 && (
-						<p style={{ fontSize: "0.8rem", color: "var(--pico-muted-color)", margin: 0 }}>
+						<p
+							style={{
+								fontSize: "0.8rem",
+								color: "var(--pico-muted-color)",
+								margin: 0,
+							}}
+						>
 							Spare points collected: {myKingdom.researchPts.toLocaleString()}
 						</p>
 					)}

@@ -100,9 +100,16 @@ export function processKingdomTick(
 	);
 	const powerConsumption =
 		kingdom.population * GAME_PARAMS.power.consumption.population +
-		((Object.keys(GAME_PARAMS.military.units) as Array<keyof typeof GAME_PARAMS.military.units>).reduce((acc, key) => {
-			return acc + (military[key] || 0) * (GAME_PARAMS.military.units[key].power || 0);
-		}, 0));
+		(
+			Object.keys(GAME_PARAMS.military.units) as Array<
+				keyof typeof GAME_PARAMS.military.units
+			>
+		).reduce((acc, key) => {
+			return (
+				acc +
+				(military[key] || 0) * (GAME_PARAMS.military.units[key].power || 0)
+			);
+		}, 0);
 	const powerBonus = (kingdom.research.power?.perc ?? 0) / 100;
 	const fusionBonus =
 		(kingdom.research.r_fusion?.perc ?? 0) >= 100

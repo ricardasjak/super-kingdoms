@@ -470,7 +470,8 @@ function KingdomMilitaryPage() {
 										);
 									}
 
-									const incomeCap = key === "sci" ? myKingdom.moneyIncome * 3 : Infinity;
+									const incomeCap =
+										key === "sci" ? myKingdom.moneyIncome * 3 : Infinity;
 
 									const maxUnits = Math.min(
 										maxByMoney,

@@ -82,7 +82,7 @@ function KingdomProfilePage() {
 					</form>
 				</section>
 			</article>
- 
+
 			<article>
 				<header>
 					<strong>Appearance Settings</strong>
