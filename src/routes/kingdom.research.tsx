@@ -104,7 +104,7 @@ function KingdomResearchPage() {
 
 	return (
 		<section>
-			<article>
+			<article style={{ overflow: "visible" }}>
 				<header>
 					<hgroup>
 						<h2>{myKingdom.kdName} Research</h2>
