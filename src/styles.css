@@ -47,7 +47,9 @@ article {
 	border: 1px solid var(--pico-muted-border-color);
 	border-radius: var(--pico-border-radius);
 	max-width: 100%;
-	overflow-x: auto;
+	overflow: visible;
+	position: relative;
+	z-index: 1;
 }
 
 .tech-list-item {

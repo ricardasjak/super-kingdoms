@@ -17,7 +17,7 @@ export function Tooltip({
 }: TooltipProps) {
 	const commonProps = {
 		"data-tooltip": content,
-		"data-tooltip-position": position,
+		"data-placement": position,
 		tabIndex: 0,
 		style: {
 			cursor: "help",

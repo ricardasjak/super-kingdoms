@@ -122,19 +122,19 @@ export const RESEARCH_PARAMS = {
 >;
 
 const RESEARCH_TECH_TREE: Record<ResearchTechType, ResearchTechConfig> = {
-	r_dr: { requirePoints: 600, requires: "r_long" },
-	r_ft: { requirePoints: 1200, requires: "r_dr" },
-	r_tf: { requirePoints: 3000, requires: "r_f74" },
-	r_f74: { requirePoints: 2000, requires: "r_core" },
+	r_dr: { requirePoints: 30_000, requires: "r_long" },
+	r_ft: { requirePoints: 80_000, requires: "r_dr" },
+	r_tf: { requirePoints: 300_000, requires: "r_f74" },
+	r_f74: { requirePoints: 200_000, requires: "r_core" },
 
-	r_ld: { requirePoints: 720, requires: "r_long" },
-	r_lf: { requirePoints: 1500, requires: "r_ld" },
+	r_ld: { requirePoints: 40_000, requires: "r_long" },
+	r_lf: { requirePoints: 80_000, requires: "r_ld" },
 
-	r_fusion: { requirePoints: 300, bonus: 50 },
-	r_core: { requirePoints: 500, requires: "r_fusion", bonus: 20 },
-	r_armor: { requirePoints: 3000, requires: "r_core" },
-	r_long: { requirePoints: 400, bonus: 5 },
-	r_ht: { requirePoints: 2000 },
+	r_fusion: { requirePoints: 30_000, bonus: 50 },
+	r_core: { requirePoints: 30_000, requires: "r_fusion", bonus: 20 },
+	r_armor: { requirePoints: 92_000, requires: "r_core" },
+	r_long: { requirePoints: 30_000, bonus: 5 },
+	r_ht: { requirePoints: 200_000 },
 };
 
 export const BUILDINGS_LIST: Record<BuildingType, BuildingConfig> = {

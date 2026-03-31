@@ -76,7 +76,7 @@ export const RESEARCH_TOOLTIPS: Record<string, ReactNode> = {
 	r_long: (
 		<Tooltip
 			showIcon
-			content={`Increases residence capacity by ${GAME_PARAMS.militaryTechTree.r_long.bonus} population.`}
+			content={`Residences plus ${GAME_PARAMS.militaryTechTree.r_long.bonus} population.`}
 			position="right"
 		/>
 	),
