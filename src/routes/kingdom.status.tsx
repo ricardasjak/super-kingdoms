@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import {
@@ -17,17 +17,9 @@ export const Route = createFileRoute("/kingdom/status")({
 });
 
 function KingdomStatusPage() {
-	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 
-	if (myKingdom === undefined) {
-		return <p aria-busy="true">Loading kingdom data...</p>;
-	}
-
-	if (!myKingdom) {
-		navigate({ to: "/create" });
-		return null;
-	}
+	if (!myKingdom) return null;
 
 	const raxUsage =
 		myKingdom.military.sol +

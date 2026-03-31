@@ -4,6 +4,7 @@ import { ConvexReactClient } from "convex/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { routeTree } from "./routeTree.gen";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
@@ -23,7 +24,9 @@ if (!rootElement) {
 createRoot(rootElement).render(
 	<StrictMode>
 		<ConvexAuthProvider client={convex}>
-			<RouterProvider router={router} />
+			<ThemeProvider>
+				<RouterProvider router={router} />
+			</ThemeProvider>
 		</ConvexAuthProvider>
 	</StrictMode>,
 );

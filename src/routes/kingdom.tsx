@@ -41,7 +41,7 @@ function KingdomLayoutContent() {
 	};
 
 	if (myKingdom === undefined) {
-		return <p aria-busy="true">Loading kingdom data...</p>;
+		return null;
 	}
 
 	if (!myKingdom) {

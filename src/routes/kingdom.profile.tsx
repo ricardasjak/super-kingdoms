@@ -1,34 +1,24 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { useKingdomMessage } from "../contexts/KingdomMessageContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 export const Route = createFileRoute("/kingdom/profile")({
 	component: KingdomProfilePage,
 });
 
 function KingdomProfilePage() {
-	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const updateRulerName = useMutation(api.kingdoms.updateRulerName);
 	const { showMessage } = useKingdomMessage();
+	const { theme, toggleTheme } = useTheme();
 
 	const [newName, setNewName] = useState("");
 	const [isUpdating, setIsUpdating] = useState(false);
 
-	if (myKingdom === undefined) {
-		return (
-			<main className="container">
-				<article aria-busy="true">Loading profile...</article>
-			</main>
-		);
-	}
-
-	if (myKingdom === null) {
-		navigate({ to: "/create" });
-		return null;
-	}
+	if (!myKingdom) return null;
 
 	const handleUpdateName = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -91,6 +81,42 @@ function KingdomProfilePage() {
 						</button>
 					</form>
 				</section>
+			</article>
+ 
+			<article>
+				<header>
+					<strong>Appearance Settings</strong>
+				</header>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}
+				>
+					<div>
+						<strong>
+							Theme: {theme.charAt(0).toUpperCase() + theme.slice(1)} Mode
+						</strong>
+						<p
+							style={{
+								margin: 0,
+								fontSize: "0.9rem",
+								color: "var(--pico-muted-color)",
+							}}
+						>
+							Switch between light and dark modes.
+						</p>
+					</div>
+					<button
+						type="button"
+						className="outline contrast"
+						onClick={toggleTheme}
+						style={{ width: "auto", marginBottom: 0 }}
+					>
+						{theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
+					</button>
+				</div>
 			</article>
 
 			<article>

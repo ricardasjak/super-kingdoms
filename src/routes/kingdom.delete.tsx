@@ -11,14 +11,7 @@ function KingdomDeletePage() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const deleteKingdom = useMutation(api.kingdoms.deleteKingdom);
 
-	if (myKingdom === undefined) {
-		return <p aria-busy="true">Loading...</p>;
-	}
-
-	if (!myKingdom) {
-		navigate({ to: "/create" });
-		return null;
-	}
+	if (!myKingdom) return null;
 
 	const handleDelete = async () => {
 		try {

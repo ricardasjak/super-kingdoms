@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -57,7 +57,6 @@ function roundToDuration(value: number, duration: number) {
 }
 
 function KingdomMilitaryPage() {
-	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const military = myKingdom?.military;
 	const trainMilitary = useMutation(api.kingdoms.trainMilitary);
@@ -69,18 +68,7 @@ function KingdomMilitaryPage() {
 	const [isDisbandMode, setIsDisbandMode] = useState(false);
 	const { showMessage } = useKingdomMessage();
 
-	if (myKingdom === undefined) {
-		return <p aria-busy="true">Loading kingdom data...</p>;
-	}
-
-	if (!myKingdom) {
-		navigate({ to: "/create" });
-		return null;
-	}
-
-	if (!military) {
-		return <p>Military not initialized</p>;
-	}
+	if (!myKingdom || !military) return null;
 
 	const buildings = myKingdom.buildings;
 	const tcCount = buildings?.tc ?? 0;
@@ -202,7 +190,6 @@ function KingdomMilitaryPage() {
 					...trainArgs,
 					sol: 0,
 				});
-				showMessage("Units successfully queued for training!", "success");
 			}
 			setTrainQueue(INITIAL_TRAIN_QUEUE);
 		} catch (error) {

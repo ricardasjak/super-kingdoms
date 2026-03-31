@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -15,7 +15,6 @@ export const Route = createFileRoute("/kingdom/research")({
 });
 
 function KingdomResearchPage() {
-	const navigate = useNavigate();
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const saveAutoAssign = useMutation(api.kingdoms.saveResearchAutoAssign);
 	const hireScientists = useMutation(api.kingdoms.buyScientists);
@@ -24,31 +23,8 @@ function KingdomResearchPage() {
 	const [isHiring, setIsHiring] = useState(false);
 	const [showAllTech, setShowAllTech] = useState(false);
 
-	if (myKingdom === undefined) {
-		return (
-			<section>
-				<article aria-busy="true">Loading kingdom...</article>
-			</section>
-		);
-	}
-
-	if (myKingdom === null) {
-		navigate({ to: "/create" });
-		return null;
-	}
-
-	const { research } = myKingdom;
-
-	if (!research) {
-		return (
-			<section>
-				<article>
-					<header>Error</header>
-					<p>Could not locate research data for your kingdom.</p>
-				</article>
-			</section>
-		);
-	}
+	const research = myKingdom?.research;
+	if (!myKingdom || !research) return null;
 
 	const standardResearchTopics = [
 		{ key: "mil", label: "Military Strength", data: research.mil },
