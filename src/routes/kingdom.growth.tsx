@@ -791,7 +791,14 @@ function KingdomGrowthPage() {
 							>
 								{targetSum}%
 							</strong>{" "}
-							(Target percentages must sum to &le; 100%)
+							<span
+								style={{
+									fontSize: "0.85rem",
+									color: "var(--pico-muted-color)",
+								}}
+							>
+								(Target percentages must sum to &le; 100%)
+							</span>
 						</p>
 						<div style={{ display: "flex", gap: "1rem" }}>
 							<button

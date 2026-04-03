@@ -176,7 +176,10 @@ function KingdomProfilePage() {
 							className="outline"
 							onClick={handleResetKingdom}
 							disabled={isResetting}
-							style={{ borderColor: "var(--pico-del-color)", color: "var(--pico-del-color)" }}
+							style={{
+								borderColor: "var(--pico-del-color)",
+								color: "var(--pico-del-color)",
+							}}
 						>
 							{isResetting ? "Resetting..." : "Reset Kingdom"}
 						</button>

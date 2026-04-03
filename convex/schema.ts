@@ -49,6 +49,22 @@ const schema = defineSchema({
 				ht: v.array(v.number()),
 				sci: v.array(v.number()),
 			}),
+			target: v.optional(
+				v.object({
+					sol: v.number(),
+					tr: v.number(),
+					dr: v.number(),
+					ft: v.number(),
+					tf: v.number(),
+					lt: v.number(),
+					ld: v.number(),
+					lf: v.number(),
+					f74: v.number(),
+					t: v.number(),
+					ht: v.number(),
+					sci: v.number(),
+				}),
+			),
 		}),
 		buildings: v.object({
 			res: v.number(),

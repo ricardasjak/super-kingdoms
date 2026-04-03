@@ -65,6 +65,51 @@ export function handleMilitary(
 	}
 
 	// 2. Instant Upgrades
+	if (military.target) {
+		const target = { ...military.target };
+		let targetChanged = false;
+
+		const r_ld = (kingdom.research.r_ld?.perc ?? 0) >= 100;
+		const r_lf = (kingdom.research.r_lf?.perc ?? 0) >= 100;
+		const r_dr = (kingdom.research.r_dr?.perc ?? 0) >= 100;
+		const r_ft = (kingdom.research.r_ft?.perc ?? 0) >= 100;
+		const r_ht = (kingdom.research.r_ht?.perc ?? 0) >= 100;
+
+		// Promotion sequences
+		if (r_ld && (target.lt || 0) > 0) {
+			target.ld = (target.ld || 0) + target.lt;
+			target.lt = 0;
+			targetChanged = true;
+		}
+		if (r_lf && (target.ld || 0) > 0) {
+			target.lf = (target.lf || 0) + target.ld;
+			target.ld = 0;
+			targetChanged = true;
+		}
+
+		if (r_dr && (target.tr || 0) > 0) {
+			target.dr = (target.dr || 0) + target.tr;
+			target.tr = 0;
+			targetChanged = true;
+		}
+		if (r_ft && (target.dr || 0) > 0) {
+			target.ft = (target.ft || 0) + target.dr;
+			target.dr = 0;
+			targetChanged = true;
+		}
+
+		if (r_ht && (target.t || 0) > 0) {
+			target.ht = (target.ht || 0) + target.t;
+			target.t = 0;
+			targetChanged = true;
+		}
+
+		if (targetChanged) {
+			updatedMilitary.target = target;
+			militaryChanged = true;
+		}
+	}
+
 	// Promotion of defensive units
 	if ((kingdom.research.r_ld?.perc ?? 0) >= 100 && updatedMilitary.lt > 0) {
 		const pool = updatedMilitary.lt * 4;

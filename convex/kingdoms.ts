@@ -10,7 +10,9 @@ import {
 	PLANET_TYPES,
 	RACE_TYPES,
 } from "../src/constants/game-params";
-import type { MilitaryUnitConfig } from "../src/types/game";
+import { handleAutoGrowth } from "../src/tick/tick-builder/handleAutoGrowth";
+import type { BuildingState, KingdomSettings } from "../src/tick/types";
+import type { BuildingType, MilitaryUnitConfig } from "../src/types/game";
 import {
 	calculateFreeLand,
 	calculateMilitaryQueue,
@@ -22,9 +24,6 @@ import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 import { kingdomMutation } from "./functions";
-import { handleAutoGrowth } from "../src/tick/tick-builder/handleAutoGrowth";
-import type { BuildingState, KingdomSettings } from "../src/tick/types";
-import type { BuildingType } from "../src/types/game";
 
 const STARTING_VALUES = {
 	population: 2250,
@@ -65,6 +64,20 @@ const STARTING_VALUES = {
 			ht: [],
 			sci: [],
 		},
+		target: {
+			sol: 0,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			ht: 0,
+			sci: 0,
+		},
 	},
 	researchPts: 0,
 	research: {
@@ -98,6 +111,21 @@ const INITIAL_BUILDING_TARGETS = {
 	pf: 10,
 	asb: 0,
 	ach: 0,
+};
+
+const INITIAL_MILITARY_TARGETS = {
+	sol: 0,
+	tr: 0,
+	dr: 0,
+	ft: 0,
+	tf: 0,
+	lt: 0,
+	ld: 0,
+	lf: 0,
+	f74: 0,
+	t: 0,
+	ht: 0,
+	sci: 0,
 };
 
 export const getMyKingdom = query({
@@ -187,6 +215,7 @@ export const createKingdom = mutation({
 				ht: [],
 				sci: [],
 			},
+			target: INITIAL_MILITARY_TARGETS,
 		};
 
 		const moneyIncome = Math.round(
@@ -897,6 +926,37 @@ export const toggleAutoBuild = kingdomMutation({
 	},
 });
 
+export const saveMilitaryTargets = kingdomMutation({
+	args: {
+		target: v.object({
+			sol: v.number(),
+			tr: v.number(),
+			dr: v.number(),
+			ft: v.number(),
+			tf: v.number(),
+			lt: v.number(),
+			ld: v.number(),
+			lf: v.number(),
+			f74: v.number(),
+			t: v.number(),
+			ht: v.number(),
+			sci: v.number(),
+		}),
+	},
+	handler: async (ctx, { kingdom, target }) => {
+		const sum = (Object.values(target) as number[]).reduce(
+			(acc, v) => acc + v,
+			0,
+		);
+		if (sum > 100) throw new Error("Total targets cannot exceed 100%");
+
+		await ctx.db.patch(kingdom._id, {
+			military: { ...kingdom.military, target },
+		});
+		return { success: true };
+	},
+});
+
 export const migrateKingdomsBatch = internalMutation({
 	args: { cursor: v.union(v.string(), v.null()) },
 	handler: async (ctx, args) => {
@@ -924,6 +984,13 @@ export const migrateKingdomsBatch = internalMutation({
 						r_lf: { pts: 0, perc: 0 },
 						r_f74: { pts: 0, perc: 0 },
 						r_ht: { pts: 0, perc: 0 },
+					};
+				}
+
+				if (!kingdom.military.target) {
+					patch.military = {
+						...kingdom.military,
+						target: INITIAL_MILITARY_TARGETS,
 					};
 				}
 
@@ -1206,6 +1273,7 @@ export const resetKingdom = kingdomMutation({
 				ht: [],
 				sci: [],
 			},
+			target: INITIAL_MILITARY_TARGETS,
 		};
 
 		const moneyIncome = Math.round(

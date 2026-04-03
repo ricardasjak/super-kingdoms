@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { MaxButton } from "../components/max-button";
 import { Tooltip } from "../components/Tooltip";
@@ -62,11 +62,25 @@ function KingdomMilitaryPage() {
 	const trainMilitary = useMutation(api.kingdoms.trainMilitary);
 	const disbandMilitary = useMutation(api.kingdoms.disbandMilitary);
 	const toggleAutoBuild = useMutation(api.kingdoms.toggleAutoBuild);
+	const saveMilitaryTargets = useMutation(api.kingdoms.saveMilitaryTargets);
+	const runAutoBuild = useMutation(api.kingdoms.autoBuild);
 
 	const [trainQueue, setTrainQueue] = useState(INITIAL_TRAIN_QUEUE);
+	const [targetQueue, setTargetQueue] = useState(INITIAL_TRAIN_QUEUE);
+	const [isSavingTargets, setIsSavingTargets] = useState(false);
 	const [soldiersToTrain, setSoldiersToTrain] = useState("");
 	const [isTraining, setIsTraining] = useState(false);
 	const [isDisbandMode, setIsDisbandMode] = useState(false);
+
+	useEffect(() => {
+		if (military?.target) {
+			setTargetQueue(
+				Object.fromEntries(
+					UNIT_KEYS.map((k) => [k, military.target?.[k].toString() || "0"]),
+				) as Record<MilitaryUnitType, string>,
+			);
+		}
+	}, [military?.target]);
 	const { showMessage } = useKingdomMessage();
 
 	if (!myKingdom || !military) return null;
@@ -148,6 +162,11 @@ function KingdomMilitaryPage() {
 		return sum + (parseInt(trainQueue[key], 10) || 0) * unitSolCost;
 	}, 0);
 
+	const targetSum = UNIT_KEYS.reduce(
+		(acc, k) => acc + (parseInt(targetQueue[k], 10) || 0),
+		0,
+	);
+
 	const refundAmount =
 		UNIT_KEYS.reduce((sum, key) => {
 			const count = parseInt(trainQueue[key], 10) || 0;
@@ -201,6 +220,60 @@ function KingdomMilitaryPage() {
 			);
 		} finally {
 			setIsTraining(false);
+		}
+	};
+
+	const handleSaveTargets = async (e: React.FormEvent) => {
+		e.preventDefault();
+		const sum = UNIT_KEYS.reduce(
+			(acc, k) => acc + (parseInt(targetQueue[k], 10) || 0),
+			0,
+		);
+		if (sum > 100) {
+			showMessage("Total targets cannot exceed 100%", "error");
+			setIsSavingTargets(false);
+			return;
+		}
+
+		setIsSavingTargets(true);
+		try {
+			await saveMilitaryTargets({
+				target: Object.fromEntries(
+					UNIT_KEYS.map((k) => [k, parseInt(targetQueue[k], 10) || 0]),
+				) as Record<MilitaryUnitType, number>,
+			});
+			showMessage("Military targets saved successfully!", "success");
+		} catch (error) {
+			console.error(error);
+			showMessage(
+				error instanceof Error ? error.message : "Failed to save targets",
+				"error",
+			);
+		} finally {
+			setIsSavingTargets(false);
+		}
+	};
+
+	const handleAutoBuildClick = async () => {
+		try {
+			const result = await runAutoBuild();
+			if (result.success && result.changed) {
+				showMessage(
+					"Successfully queued Land and Buildings via Auto-Growth!",
+					"success",
+				);
+			} else if (result.success) {
+				showMessage(
+					"Nothing to grow. Check your targets, limits, land, and money.",
+					"warning",
+				);
+			}
+		} catch (error) {
+			console.error(error);
+			showMessage(
+				error instanceof Error ? error.message : "Auto-Growth failed",
+				"error",
+			);
 		}
 	};
 
@@ -330,6 +403,9 @@ function KingdomMilitaryPage() {
 								<col style={{ width: "15%" }} />
 								<col style={{ width: "15%" }} />
 								<col style={{ width: "15%" }} />
+								{!isDisbandMode && myKingdom.autoBuild && (
+									<col style={{ width: "110px" }} />
+								)}
 								<col style={{ width: "15%" }} />
 								<col style={{ width: "15%" }} />
 							</colgroup>
@@ -339,6 +415,9 @@ function KingdomMilitaryPage() {
 									<th scope="col">You own</th>
 									<th scope="col">In training</th>
 									<th scope="col">{isDisbandMode ? "Refund" : "Cost"}</th>
+									{!isDisbandMode && myKingdom.autoBuild && (
+										<th scope="col">Target *</th>
+									)}
 									<th scope="col">{isDisbandMode ? "All" : "Max"}</th>
 									<th scope="col">{isDisbandMode ? "Disband" : "Train"}</th>
 								</tr>
@@ -547,6 +626,27 @@ function KingdomMilitaryPage() {
 													</>
 												)}
 											</td>
+											{!isDisbandMode && myKingdom.autoBuild && (
+												<td>
+													<input
+														type="number"
+														min="0"
+														placeholder="0"
+														value={targetQueue[key]}
+														onChange={(e) =>
+															setTargetQueue({
+																...targetQueue,
+																[key]: e.target.value,
+															})
+														}
+														style={{
+															padding: "0.2rem 0.5rem",
+															margin: 0,
+															fontSize: "0.80rem",
+														}}
+													/>
+												</td>
+											)}
 											<td>
 												<MaxButton
 													onClick={handleMaxClick}
@@ -638,58 +738,107 @@ function KingdomMilitaryPage() {
 						</button>
 					</div>
 				</form>
+			</article>
 
+			<article>
+				<header>Auto Build</header>
+
+				<p style={{ fontSize: "0.9rem", color: "var(--pico-muted-color)" }}>
+					This setting enables automated growth for both your land/buildings and
+					military recruitment. Available money each tick is distributed based
+					on your defined target percentages.
+				</p>
+
+				<label htmlFor="autoBuild">
+					<input
+						type="checkbox"
+						id="autoBuild"
+						role="switch"
+						aria-checked={myKingdom.autoBuild ?? false}
+						checked={myKingdom.autoBuild ?? false}
+						onChange={async (e) => {
+							const isChecked = e.target.checked;
+							try {
+								await toggleAutoBuild({ autoBuild: isChecked });
+								showMessage(
+									isChecked ? "Auto-Build enabled!" : "Auto-Build disabled!",
+									isChecked ? "success" : "warning",
+								);
+							} catch (error) {
+								showMessage(
+									error instanceof Error ? error.message : "Toggle failed",
+									"error",
+								);
+							}
+						}}
+					/>
+					Enable Auto-Build
+				</label>
+
+				{myKingdom.autoBuild && (
+					<div style={{ marginTop: "1.5rem" }}>
+						<p style={{ marginBottom: "1rem" }}>
+							Military Target Sum:{" "}
+							<strong
+								style={{
+									color: targetSum > 100 ? "var(--pico-del-color)" : "inherit",
+								}}
+							>
+								{targetSum}%
+							</strong>{" "}
+							<span
+								style={{
+									fontSize: "0.85rem",
+									color: "var(--pico-muted-color)",
+								}}
+							>
+								(Target percentages must sum to &le; 100%)
+							</span>
+						</p>
+						<div style={{ display: "flex", gap: "1rem" }}>
+							<button
+								type="button"
+								onClick={handleSaveTargets}
+								disabled={isSavingTargets || targetSum > 100}
+								style={{ width: "auto", marginBottom: 0 }}
+							>
+								{isSavingTargets ? "Saving..." : "Save Target Percents"}
+							</button>
+							<button
+								type="button"
+								className="contrast"
+								onClick={handleAutoBuildClick}
+								style={{ width: "auto", marginBottom: 0 }}
+							>
+								▶ Run Auto-Growth
+							</button>
+						</div>
+					</div>
+				)}
+			</article>
+
+			<article>
 				<footer
 					style={{
-						marginTop: "4rem",
 						display: "flex",
 						justifyContent: "flex-end",
+						alignItems: "center",
 					}}
 				>
-					<div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
-						<label htmlFor="autoBuild" style={{ fontSize: "0.9rem" }}>
-							<input
-								type="checkbox"
-								id="autoBuild"
-								role="switch"
-								aria-checked={myKingdom.autoBuild ?? false}
-								checked={myKingdom.autoBuild ?? false}
-								onChange={async (e) => {
-									const isChecked = e.target.checked;
-									try {
-										await toggleAutoBuild({ autoBuild: isChecked });
-										showMessage(
-											isChecked
-												? "Auto-Build enabled!"
-												: "Auto-Build disabled!",
-											isChecked ? "success" : "warning",
-										);
-									} catch (error) {
-										showMessage(
-											error instanceof Error ? error.message : "Toggle failed",
-											"error",
-										);
-									}
-								}}
-							/>
-							Enable Auto-Build
-						</label>
-
-						<label htmlFor="disband-mode" style={{ fontSize: "0.9rem" }}>
-							<input
-								type="checkbox"
-								id="disband-mode"
-								role="switch"
-								aria-checked={isDisbandMode}
-								checked={isDisbandMode}
-								onChange={(e) => {
-									setIsDisbandMode(e.target.checked);
-									setTrainQueue(INITIAL_TRAIN_QUEUE);
-								}}
-							/>
-							Disband Units
-						</label>
-					</div>
+					<label htmlFor="disband-mode" style={{ fontSize: "0.9rem" }}>
+						<input
+							type="checkbox"
+							id="disband-mode"
+							role="switch"
+							aria-checked={isDisbandMode}
+							checked={isDisbandMode}
+							onChange={(e) => {
+								setIsDisbandMode(e.target.checked);
+								setTrainQueue(INITIAL_TRAIN_QUEUE);
+							}}
+						/>
+						Disband Units
+					</label>
 				</footer>
 			</article>
 		</section>

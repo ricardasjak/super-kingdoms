@@ -27,6 +27,20 @@ export type MilitaryUnits = {
 		ht: number[];
 		sci: number[];
 	};
+	target?: {
+		sol: number;
+		tr: number;
+		dr: number;
+		ft: number;
+		tf: number;
+		lt: number;
+		ld: number;
+		lf: number;
+		f74: number;
+		t: number;
+		ht: number;
+		sci: number;
+	};
 };
 
 export type KingdomSettings = {

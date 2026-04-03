@@ -77,9 +77,24 @@ test("handleGrowth does nothing new without input", () => {
 	};
 
 	const buildings: BuildingState = {
-		res: 10, plants: 5, rax: 5, sm: 5, pf: 0, tc: 0, asb: 0, ach: 0, rubble: 0,
+		res: 10,
+		plants: 5,
+		rax: 5,
+		sm: 5,
+		pf: 0,
+		tc: 0,
+		asb: 0,
+		ach: 0,
+		rubble: 0,
 		queue: {
-			res: [], plants: [], rax: [], sm: [], pf: [], tc: [], asb: [], ach: []
+			res: [],
+			plants: [],
+			rax: [],
+			sm: [],
+			pf: [],
+			tc: [],
+			asb: [],
+			ach: [],
 		},
 	};
 
