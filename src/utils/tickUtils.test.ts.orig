@@ -118,105 +118,55 @@ test("money research bonus applies in the same tick it is reached", () => {
 });
 
 test("full-cycle: scientists arrive and immediately contribute research", () => {
-	// 1. Setup kingdom with scientists about to complete training
-	const kingdom: KingdomSettings = {
-		population: 2250,
-		land: 250,
-		money: 1000000,
-		power: 1000,
-		probes: 0,
-		moneyIncome: 0,
-		powerIncome: 0,
-		landQueue: [],
-		researchPts: 0,
-		researchAutoAssign: ["money"],
-		research: {
-			pop: { pts: 0, perc: 0 },
-			money: { pts: 300, perc: 0 }, // 300/334 points
-			power: { pts: 0, perc: 0 },
-			mil: { pts: 0, perc: 0 },
-			fdc: { pts: 0, perc: 0 },
-			warp: { pts: 0, perc: 0 },
-		},
-	};
+    // 1. Setup kingdom with scientists about to complete training
+    const kingdom: KingdomSettings = {
+        population: 2250,
+        land: 250,
+        money: 10000,
+        power: 1000,
+        probes: 0,
+        moneyIncome: 0,
+        powerIncome: 0,
+        landQueue: [],
+        researchPts: 0,
+        researchAutoAssign: ["money"],
+        research: {
+            pop: { pts: 0, perc: 0 },
+            money: { pts: 300, perc: 0 }, // 300/334 points
+            power: { pts: 0, perc: 0 },
+            mil: { pts: 0, perc: 0 },
+            fdc: { pts: 0, perc: 0 },
+            warp: { pts: 0, perc: 0 },
+        },
+    };
 
-	const buildings: BuildingState = {
-		res: 100,
-		plants: 0,
-		rax: 0,
-		sm: 30,
-		pf: 0,
-		tc: 0,
-		asb: 0,
-		ach: 0,
-		rubble: 0,
-		queue: {
-			res: [],
-			plants: [],
-			rax: [],
-			sm: [],
-			pf: [],
-			tc: [],
-			asb: [],
-			ach: [],
-		},
-	};
+    const buildings: BuildingState = {
+        res: 40, plants: 0, rax: 0, sm: 30, pf: 0, tc: 0, asb: 0, ach: 0, rubble: 0,
+        queue: { res: [], plants: [], rax: [], sm: [], pf: [], tc: [], asb: [], ach: [] }
+    };
 
-	const military: MilitaryUnits = {
-		sol: 0,
-		tr: 0,
-		dr: 0,
-		ft: 0,
-		tf: 0,
-		lt: 0,
-		ld: 0,
-		lf: 0,
-		f74: 0,
-		t: 0,
-		ht: 0,
-		sci: 0,
-		queue: {
-			sol: [],
-			tr: [],
-			dr: [],
-			ft: [],
-			tf: [],
-			lt: [],
-			ld: [],
-			lf: [],
-			f74: [],
-			t: [],
-			ht: [],
-			sci: [100], // 100 scientists completing this tick
-		},
-	};
+    const military: MilitaryUnits = {
+        sol: 0, tr: 0, dr: 0, ft: 0, tf: 0, lt: 0, ld: 0, lf: 0, f74: 0, t: 0, ht: 0, sci: 0,
+        queue: {
+            sol: [], tr: [], dr: [], ft: [], tf: [], lt: [], ld: [], lf: [], f74: [], t: [], ht: [],
+            sci: [100] // 100 scientists completing this tick
+        }
+    };
 
-	// 2. Process first tick: scientists arrive
-	let result = processKingdomTick(kingdom, buildings, military);
-
-	// Scientists arrived, but were in queue, so no points produced this tick
-	expect(result.updatedMilitary?.sci).toBe(100);
-	expect(result.updatedKingdom.research.money?.pts).toBe(300); // Still 300
-
-	// 3. Process second tick: scientists produce points and trigger bonus
-	const updatedMilitary = result.updatedMilitary;
-	if (!updatedMilitary) {
-		throw new Error("updatedMilitary should be defined after Tick 1");
-	}
-
-	result = processKingdomTick(
-		result.updatedKingdom,
-		buildings,
-		updatedMilitary,
-	);
-
-	// Now scientists produced 100 pts. 300 + 100 = 400 (exceeds 334 required for max 25%)
-	expect(result.updatedKingdom.research.money?.pts).toBe(
-		GAME_PARAMS.research.required("money", 250),
-	);
-	expect(result.updatedKingdom.research.money?.perc).toBe(25);
-
-	// Income should be boosted in this same tick (8926 * 1.25 = 11158)
-	// (Population grew from 2250 to 2363 in the first tick)
-	expect(result.updatedKingdom.moneyIncome).toBe(11158);
+    // 2. Process first tick: scientists arrive
+    let result = processKingdomTick(kingdom, buildings, military);
+    
+    // Scientists arrived, but were in queue, so no points produced this tick
+    expect(result.updatedMilitary?.sci).toBe(100);
+    expect(result.updatedKingdom.research.money?.pts).toBe(300); // Still 300
+    
+    // 3. Process second tick: scientists produce points and trigger bonus
+    result = processKingdomTick(result.updatedKingdom, buildings, result.updatedMilitary!);
+    
+    // Now scientists produced 100 pts. 300 + 100 = 400 (exceeds 334 required for max 25%)
+    expect(result.updatedKingdom.research.money?.pts).toBe(GAME_PARAMS.research.required("money", 250));
+    expect(result.updatedKingdom.research.money?.perc).toBe(25);
+    
+    // Income should be boosted in this same tick (8700 * 1.25 = 10875)
+    expect(result.updatedKingdom.moneyIncome).toBe(10875);
 });

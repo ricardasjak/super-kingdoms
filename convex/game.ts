@@ -1,8 +1,8 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { GAME_PARAMS } from "../src/constants/game-params";
+import { processKingdomTick } from "../src/tick";
 import { calculateNw } from "../src/utils/nwUtils";
-import { processKingdomTick } from "../src/utils/tickUtils";
 import { internal } from "./_generated/api";
 import { action, internalMutation, query } from "./_generated/server";
 

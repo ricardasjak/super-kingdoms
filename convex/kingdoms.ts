@@ -624,7 +624,6 @@ export const trainMilitary = kingdomMutation({
 			throw new Error("Not enough soldiers");
 		}
 
-
 		if (args.sol > 0) {
 			const soldiersInQueue = (kingdom.military.queue.sol || []).reduce(
 				(a: number, b: number) => a + b,
@@ -1062,7 +1061,6 @@ export const buyScientists = kingdomMutation({
 		if (kingdom.military.sol < soldiersRequired) {
 			throw new Error("Not enough soldiers to convert to scientists.");
 		}
-
 
 		const updatedQueue = calculateMilitaryQueue(
 			kingdom.military.queue,
