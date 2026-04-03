@@ -47,6 +47,7 @@ function KingdomGrowthPage() {
 	const razeBuildings = useMutation(api.kingdoms.razeBuildings);
 	const saveAutoBuildSettings = useMutation(api.kingdoms.saveAutoBuildSettings);
 	const toggleAutoExplore = useMutation(api.kingdoms.toggleAutoExplore);
+	const runAutoBuild = useMutation(api.kingdoms.autoBuild);
 
 	const INITIAL_BUILD_QUEUE = Object.fromEntries(
 		BUILDING_KEYS.map((k) => [k, ""]),
@@ -311,6 +312,26 @@ function KingdomGrowthPage() {
 			);
 		} finally {
 			setIsBuilding(false);
+		}
+	};
+
+	const handleAutoBuildClick = async () => {
+		try {
+			const result = await runAutoBuild();
+			if (result.success && result.changed) {
+				showMessage("Successfully queued Land and Buildings via Auto-Growth!", "success");
+			} else if (result.success) {
+				showMessage(
+					"Nothing to grow. Check your targets, limits, land, and money.",
+					"warning",
+				);
+			}
+		} catch (error) {
+			console.error(error);
+			showMessage(
+				error instanceof Error ? error.message : "Auto-Growth failed",
+				"error",
+			);
 		}
 	};
 
@@ -779,35 +800,46 @@ function KingdomGrowthPage() {
 							</strong>{" "}
 							(Target percentages must sum to &le; 100%)
 						</p>
-						<button
-							type="button"
-							onClick={async () => {
-								try {
-									await saveAutoBuildSettings({
-										autoBuild: myKingdom.autoBuild ?? false,
-										target: {
-											res: parseInt(targetQueue.res, 10) || 0,
-											plants: parseInt(targetQueue.plants, 10) || 0,
-											rax: parseInt(targetQueue.rax, 10) || 0,
-											sm: parseInt(targetQueue.sm, 10) || 0,
-											pf: parseInt(targetQueue.pf, 10) || 0,
-											tc: parseInt(targetQueue.tc, 10) || 0,
-											asb: parseInt(targetQueue.asb, 10) || 0,
-											ach: 0,
-										},
-									});
-									showMessage("Target percentages saved!", "success");
-								} catch (err) {
-									showMessage(
-										err instanceof Error ? err.message : "Failed to save",
-										"error",
-									);
-								}
-							}}
-							disabled={targetSum > 100}
-						>
-							Save Target Percents
-						</button>
+						<div style={{ display: "flex", gap: "1rem" }}>
+							<button
+								type="button"
+								onClick={async () => {
+									try {
+										await saveAutoBuildSettings({
+											autoBuild: myKingdom.autoBuild ?? false,
+											target: {
+												res: parseInt(targetQueue.res, 10) || 0,
+												plants: parseInt(targetQueue.plants, 10) || 0,
+												rax: parseInt(targetQueue.rax, 10) || 0,
+												sm: parseInt(targetQueue.sm, 10) || 0,
+												pf: parseInt(targetQueue.pf, 10) || 0,
+												tc: parseInt(targetQueue.tc, 10) || 0,
+												asb: parseInt(targetQueue.asb, 10) || 0,
+												ach: 0,
+											},
+										});
+										showMessage("Target percentages saved!", "success");
+									} catch (err) {
+										showMessage(
+											err instanceof Error ? err.message : "Failed to save",
+											"error",
+										);
+									}
+								}}
+								disabled={targetSum > 100}
+								style={{ marginBottom: 0 }}
+							>
+								Save Target Percents
+							</button>
+							<button
+								type="button"
+								className="contrast"
+								onClick={handleAutoBuildClick}
+								style={{ marginBottom: 0 }}
+							>
+								▶ Run Auto-Growth
+							</button>
+						</div>
 					</div>
 				)}
 			</article>

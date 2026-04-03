@@ -22,6 +22,9 @@ import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 import { kingdomMutation } from "./functions";
+import { handleAutoGrowth } from "../src/tick/tick-builder/handleAutoGrowth";
+import type { BuildingState, KingdomSettings } from "../src/tick/types";
+import type { BuildingType } from "../src/types/game";
 
 const STARTING_VALUES = {
 	population: 2250,
@@ -1100,6 +1103,136 @@ export const buyScientists = kingdomMutation({
 			money: kingdom.money - totalCost,
 			military: updatedMilitary,
 			nw,
+		});
+
+		return { success: true };
+	},
+});
+
+export const autoBuild = kingdomMutation({
+	args: {},
+	handler: async (ctx, { kingdom }) => {
+		const buildKeys: BuildingType[] = ["res", "plants", "rax", "sm", "pf", "tc", "asb"];
+		
+		const result = handleAutoGrowth(
+			kingdom as unknown as KingdomSettings, 
+			kingdom.buildings as unknown as BuildingState, 
+			buildKeys
+		);
+
+		if (result.changed) {
+			await ctx.db.patch(kingdom._id, {
+				money: result.money,
+				landQueue: result.landQueue,
+				buildings: {
+					...kingdom.buildings,
+					queue: result.buildingQueue,
+				},
+			});
+		}
+		
+		return { success: true, changed: result.changed };
+	},
+});
+
+export const resetKingdom = kingdomMutation({
+	args: {},
+	handler: async (ctx, { kingdom }) => {
+		const buildings = {
+			res: 80,
+			plants: 40,
+			rax: 10,
+			sm: 30,
+			pf: 10,
+			tc: 0,
+			asb: 0,
+			ach: 0,
+			rubble: 0,
+			queue: {
+				res: [],
+				plants: [],
+				rax: [],
+				sm: [],
+				pf: [],
+				tc: [],
+				asb: [],
+				ach: [],
+			},
+			target: INITIAL_BUILDING_TARGETS,
+		};
+
+		const military = {
+			sol: 200,
+			tr: 0,
+			dr: 0,
+			ft: 0,
+			tf: 0,
+			lt: 0,
+			ld: 0,
+			lf: 0,
+			f74: 0,
+			t: 0,
+			ht: 0,
+			sci: 300,
+			queue: {
+				sol: [],
+				tr: [],
+				dr: [],
+				ft: [],
+				tf: [],
+				lt: [],
+				ld: [],
+				lf: [],
+				f74: [],
+				t: [],
+				ht: [],
+				sci: [],
+			},
+		};
+
+		const moneyIncome = Math.round(
+			buildings.sm * GAME_PARAMS.income.sm +
+				STARTING_VALUES.population * GAME_PARAMS.income.population,
+		);
+
+		const powerConsumption =
+			STARTING_VALUES.population * GAME_PARAMS.power.consumption.population +
+			military.sol * GAME_PARAMS.military.units.sol.power +
+			military.sci * GAME_PARAMS.military.units.sci.power;
+
+		const powerIncome = Math.round(
+			buildings.plants * GAME_PARAMS.buildings.plantProduction -
+				powerConsumption,
+		);
+
+		const nw = calculateNw({
+			military,
+			buildings,
+			land: STARTING_VALUES.land,
+			population: STARTING_VALUES.population,
+			money: STARTING_VALUES.money,
+			probes: STARTING_VALUES.probes,
+		});
+
+		await ctx.db.patch(kingdom._id, {
+			population: STARTING_VALUES.population,
+			popChange: STARTING_VALUES.popChange,
+			land: STARTING_VALUES.land,
+			money: STARTING_VALUES.money,
+			power: STARTING_VALUES.power,
+			probes: STARTING_VALUES.probes,
+			moneyIncome,
+			powerIncome,
+			nw,
+			autoExplore: STARTING_VALUES.autoExplore,
+			autoBuild: STARTING_VALUES.autoBuild,
+			landQueue: STARTING_VALUES.landQueue,
+			military,
+			buildings,
+			researchPts: STARTING_VALUES.researchPts,
+			research: STARTING_VALUES.research,
+			researchAutoAssign: STARTING_VALUES.researchAutoAssign,
+			state: undefined, // Reset dead state
 		});
 
 		return { success: true };

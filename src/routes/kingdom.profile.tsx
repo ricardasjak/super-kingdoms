@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -12,11 +12,14 @@ export const Route = createFileRoute("/kingdom/profile")({
 function KingdomProfilePage() {
 	const myKingdom = useQuery(api.kingdoms.getMyKingdom);
 	const updateRulerName = useMutation(api.kingdoms.updateRulerName);
+	const resetKingdom = useMutation(api.kingdoms.resetKingdom);
+	const navigate = useNavigate();
 	const { showMessage } = useKingdomMessage();
 	const { theme, toggleTheme } = useTheme();
 
 	const [newName, setNewName] = useState("");
 	const [isUpdating, setIsUpdating] = useState(false);
+	const [isResetting, setIsResetting] = useState(false);
 
 	if (!myKingdom) return null;
 
@@ -40,6 +43,31 @@ function KingdomProfilePage() {
 			);
 		} finally {
 			setIsUpdating(false);
+		}
+	};
+
+	const handleResetKingdom = async () => {
+		if (
+			!window.confirm(
+				"Are you sure you want to RESET your kingdom to the starting state? This action cannot be undone.",
+			)
+		) {
+			return;
+		}
+
+		setIsResetting(true);
+		try {
+			await resetKingdom();
+			showMessage("Kingdom reset successfully!", "success");
+			navigate({ to: "/kingdom/status" });
+		} catch (err) {
+			console.error(err);
+			showMessage(
+				err instanceof Error ? err.message : "Failed to reset kingdom",
+				"error",
+			);
+		} finally {
+			setIsResetting(false);
 		}
 	};
 
@@ -139,6 +167,24 @@ function KingdomProfilePage() {
 							className="text-muted"
 						>
 							Sign out of this device. Your kingdom will be safe.
+						</small>
+					</div>
+
+					<div>
+						<button
+							type="button"
+							className="outline"
+							onClick={handleResetKingdom}
+							disabled={isResetting}
+							style={{ borderColor: "var(--pico-del-color)", color: "var(--pico-del-color)" }}
+						>
+							{isResetting ? "Resetting..." : "Reset Kingdom"}
+						</button>
+						<small
+							style={{ display: "block", marginTop: "0.5rem" }}
+							className="text-muted"
+						>
+							Resets your kingdom to initial state. Keeps owned bots.
 						</small>
 					</div>
 
