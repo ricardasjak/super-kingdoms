@@ -11,7 +11,11 @@ import {
 	RACE_TYPES,
 } from "../src/constants/game-params";
 import { handleAutoGrowth } from "../src/tick/tick-builder/handleAutoGrowth";
-import type { BuildingState, KingdomSettings } from "../src/tick/types";
+import type {
+	BuildingState,
+	KingdomSettings,
+	MilitaryUnits,
+} from "../src/tick/types";
 import type { BuildingType, MilitaryUnitConfig } from "../src/types/game";
 import {
 	calculateFreeLand,
@@ -1203,17 +1207,40 @@ export const autoBuild = kingdomMutation({
 			kingdom as unknown as KingdomSettings,
 			kingdom.buildings as unknown as BuildingState,
 			buildKeys,
+			kingdom.military as unknown as MilitaryUnits,
 		);
 
 		if (result.changed) {
-			await ctx.db.patch(kingdom._id, {
+			const patch: Partial<Doc<"kingdoms">> & { nw?: number } = {
 				money: result.money,
 				landQueue: result.landQueue,
 				buildings: {
 					...kingdom.buildings,
 					queue: result.buildingQueue,
 				},
-			});
+			};
+			if (result.militaryQueue) {
+				patch.military = {
+					...kingdom.military,
+					sol: result.militarySol ?? kingdom.military.sol,
+					queue: result.militaryQueue,
+				};
+				patch.nw = calculateNw({
+					...kingdom,
+					money: result.money,
+					landQueue: result.landQueue,
+					buildings: {
+						...kingdom.buildings,
+						queue: result.buildingQueue,
+					},
+					military: {
+						...kingdom.military,
+						sol: result.militarySol ?? kingdom.military.sol,
+						queue: result.militaryQueue,
+					},
+				});
+			}
+			await ctx.db.patch(kingdom._id, patch);
 		}
 
 		return { success: true, changed: result.changed };

@@ -61,3 +61,8 @@ export const BOT_PROFILES = {
 		},
 	},
 } as const;
+
+export const BOT_PARAMS = {
+	soldiersLimitPerLand: 4,
+	soldiersMinimum: 4000,
+};
