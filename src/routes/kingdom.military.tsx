@@ -61,6 +61,7 @@ function KingdomMilitaryPage() {
 	const military = myKingdom?.military;
 	const trainMilitary = useMutation(api.kingdoms.trainMilitary);
 	const disbandMilitary = useMutation(api.kingdoms.disbandMilitary);
+	const toggleAutoBuild = useMutation(api.kingdoms.toggleAutoBuild);
 
 	const [trainQueue, setTrainQueue] = useState(INITIAL_TRAIN_QUEUE);
 	const [soldiersToTrain, setSoldiersToTrain] = useState("");
@@ -645,7 +646,35 @@ function KingdomMilitaryPage() {
 						justifyContent: "flex-end",
 					}}
 				>
-					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+					<div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+						<label htmlFor="autoBuild" style={{ fontSize: "0.9rem" }}>
+							<input
+								type="checkbox"
+								id="autoBuild"
+								role="switch"
+								aria-checked={myKingdom.autoBuild ?? false}
+								checked={myKingdom.autoBuild ?? false}
+								onChange={async (e) => {
+									const isChecked = e.target.checked;
+									try {
+										await toggleAutoBuild({ autoBuild: isChecked });
+										showMessage(
+											isChecked
+												? "Auto-Build enabled!"
+												: "Auto-Build disabled!",
+											isChecked ? "success" : "warning",
+										);
+									} catch (error) {
+										showMessage(
+											error instanceof Error ? error.message : "Toggle failed",
+											"error",
+										);
+									}
+								}}
+							/>
+							Enable Auto-Build
+						</label>
+
 						<label htmlFor="disband-mode" style={{ fontSize: "0.9rem" }}>
 							<input
 								type="checkbox"

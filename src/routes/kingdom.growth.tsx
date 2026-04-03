@@ -48,6 +48,7 @@ function KingdomGrowthPage() {
 	const saveAutoBuildSettings = useMutation(api.kingdoms.saveAutoBuildSettings);
 	const toggleAutoExplore = useMutation(api.kingdoms.toggleAutoExplore);
 	const runAutoBuild = useMutation(api.kingdoms.autoBuild);
+	const toggleAutoBuild = useMutation(api.kingdoms.toggleAutoBuild);
 
 	const INITIAL_BUILD_QUEUE = Object.fromEntries(
 		BUILDING_KEYS.map((k) => [k, ""]),
@@ -319,7 +320,10 @@ function KingdomGrowthPage() {
 		try {
 			const result = await runAutoBuild();
 			if (result.success && result.changed) {
-				showMessage("Successfully queued Land and Buildings via Auto-Growth!", "success");
+				showMessage(
+					"Successfully queued Land and Buildings via Auto-Growth!",
+					"success",
+				);
 			} else if (result.success) {
 				showMessage(
 					"Nothing to grow. Check your targets, limits, land, and money.",
@@ -760,18 +764,7 @@ function KingdomGrowthPage() {
 						onChange={async (e) => {
 							const isChecked = e.target.checked;
 							try {
-								await saveAutoBuildSettings({
-									autoBuild: isChecked,
-									target: {
-										...(Object.fromEntries(
-											BUILDING_KEYS.map((k) => [
-												k,
-												parseInt(targetQueue[k], 10) || 0,
-											]),
-										) as Record<BuildingType, number>),
-										ach: 0,
-									},
-								});
+								await toggleAutoBuild({ autoBuild: isChecked });
 								showMessage(
 									isChecked ? "Auto-Build enabled!" : "Auto-Build disabled!",
 									isChecked ? "success" : "warning",

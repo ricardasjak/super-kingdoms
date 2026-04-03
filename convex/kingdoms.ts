@@ -887,6 +887,16 @@ export const saveAutoBuildSettings = kingdomMutation({
 	},
 });
 
+export const toggleAutoBuild = kingdomMutation({
+	args: {
+		autoBuild: v.boolean(),
+	},
+	handler: async (ctx, { kingdom, autoBuild }) => {
+		await ctx.db.patch(kingdom._id, { autoBuild });
+		return { success: true };
+	},
+});
+
 export const migrateKingdomsBatch = internalMutation({
 	args: { cursor: v.union(v.string(), v.null()) },
 	handler: async (ctx, args) => {
@@ -1112,12 +1122,20 @@ export const buyScientists = kingdomMutation({
 export const autoBuild = kingdomMutation({
 	args: {},
 	handler: async (ctx, { kingdom }) => {
-		const buildKeys: BuildingType[] = ["res", "plants", "rax", "sm", "pf", "tc", "asb"];
-		
+		const buildKeys: BuildingType[] = [
+			"res",
+			"plants",
+			"rax",
+			"sm",
+			"pf",
+			"tc",
+			"asb",
+		];
+
 		const result = handleAutoGrowth(
-			kingdom as unknown as KingdomSettings, 
-			kingdom.buildings as unknown as BuildingState, 
-			buildKeys
+			kingdom as unknown as KingdomSettings,
+			kingdom.buildings as unknown as BuildingState,
+			buildKeys,
 		);
 
 		if (result.changed) {
@@ -1130,7 +1148,7 @@ export const autoBuild = kingdomMutation({
 				},
 			});
 		}
-		
+
 		return { success: true, changed: result.changed };
 	},
 });
