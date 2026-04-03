@@ -59,6 +59,7 @@ export type KingdomSettings = {
 	research: KingdomResearch;
 	state?: "dead" | "newbiemode";
 	popChange?: number;
+	botProfile?: string;
 };
 
 export type BuildingState = {

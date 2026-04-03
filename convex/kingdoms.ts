@@ -374,6 +374,17 @@ export const updateRulerName = kingdomMutation({
 	},
 });
 
+export const updateBotProfile = kingdomMutation({
+	args: {
+		botProfile: v.optional(v.string()),
+	},
+	handler: async (ctx, { botProfile, kingdom }) => {
+		await ctx.db.patch(kingdom._id, {
+			botProfile: botProfile || undefined,
+		});
+	},
+});
+
 export const populateKingdoms = mutation({
 	args: {},
 	handler: async (ctx) => {

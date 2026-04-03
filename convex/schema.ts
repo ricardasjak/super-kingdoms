@@ -122,6 +122,7 @@ const schema = defineSchema({
 		researchAutoAssign: v.array(v.string()),
 		state: v.optional(v.union(v.literal("dead"), v.literal("newbiemode"))),
 		botOwnerKd: v.optional(v.string()),
+		botProfile: v.optional(v.string()),
 	})
 		.index("by_userId", ["userId"])
 		.index("by_botOwnerKd", ["botOwnerKd"])
