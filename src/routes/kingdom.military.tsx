@@ -470,8 +470,7 @@ function KingdomMilitaryPage() {
 										);
 									}
 
-									const incomeCap =
-										key === "sci" ? myKingdom.moneyIncome * 3 : Infinity;
+									const incomeCap = Infinity;
 
 									const maxUnits = Math.min(
 										maxByMoney,
@@ -572,7 +571,8 @@ function KingdomMilitaryPage() {
 													>
 														{maxByMoney < GAME_PARAMS.military.duration
 															? "Low funds"
-															: maxBySoldiers < GAME_PARAMS.military.duration
+															: maxBySoldiers < GAME_PARAMS.military.duration &&
+																	key !== "sci"
 																? "Low soldiers"
 																: housingLimit < GAME_PARAMS.military.duration
 																	? "No ASB space"

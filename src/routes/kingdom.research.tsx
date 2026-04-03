@@ -139,8 +139,14 @@ function KingdomResearchPage() {
 							{(() => {
 								const cost = GAME_PARAMS.military.units.sci.cost;
 								const maxByMoney = Math.floor(myKingdom.money / cost);
-								const maxByIncome = Math.floor(
-									(myKingdom.moneyIncome * 3) / cost,
+								const currentSci = myKingdom.military.sci || 0;
+								const sciInQueue = (myKingdom.military.queue.sci || []).reduce(
+									(a, b) => a + b,
+									0,
+								);
+								const maxByIncome = Math.max(
+									0,
+									myKingdom.moneyIncome * 3 - (currentSci + sciInQueue),
 								);
 								const rawMax = Math.min(maxByMoney, maxByIncome);
 

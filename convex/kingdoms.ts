@@ -186,6 +186,21 @@ export const createKingdom = mutation({
 			},
 		};
 
+		const moneyIncome = Math.round(
+			buildings.sm * GAME_PARAMS.income.sm +
+				STARTING_VALUES.population * GAME_PARAMS.income.population,
+		);
+
+		const powerConsumption =
+			STARTING_VALUES.population * GAME_PARAMS.power.consumption.population +
+			military.sol * GAME_PARAMS.military.units.sol.power +
+			military.sci * GAME_PARAMS.military.units.sci.power;
+
+		const powerIncome = Math.round(
+			buildings.plants * GAME_PARAMS.buildings.plantProduction -
+				powerConsumption,
+		);
+
 		const nw = calculateNw({
 			military,
 			buildings,
@@ -202,6 +217,8 @@ export const createKingdom = mutation({
 			planetType: args.planetType,
 			raceType: args.raceType,
 			...STARTING_VALUES,
+			moneyIncome,
+			powerIncome,
 			nw,
 			military,
 			buildings,
@@ -242,6 +259,8 @@ export const createKingdom = mutation({
 				rulerName: botRulerName,
 				planetType: botPlanetType,
 				raceType: botRaceType,
+				moneyIncome,
+				powerIncome,
 				nw: botNw,
 				military,
 				buildings,
@@ -605,14 +624,6 @@ export const trainMilitary = kingdomMutation({
 			throw new Error("Not enough soldiers");
 		}
 
-		if (args.sci > 0) {
-			const incomeCap = kingdom.moneyIncome * 3;
-			if (args.sci > incomeCap) {
-				throw new Error(
-					`Cannot hire more than ${incomeCap.toLocaleString()} scientists (3x your money income limit).`,
-				);
-			}
-		}
 
 		if (args.sol > 0) {
 			const soldiersInQueue = (kingdom.military.queue.sol || []).reduce(
@@ -1052,12 +1063,6 @@ export const buyScientists = kingdomMutation({
 			throw new Error("Not enough soldiers to convert to scientists.");
 		}
 
-		const incomeCap = kingdom.moneyIncome * 3;
-		if (amount > incomeCap) {
-			throw new Error(
-				`Cannot hire more than ${incomeCap.toLocaleString()} scientists at once (3x your money income).`,
-			);
-		}
 
 		const updatedQueue = calculateMilitaryQueue(
 			kingdom.military.queue,

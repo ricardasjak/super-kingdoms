@@ -53,6 +53,7 @@ export type KingdomSettings = {
 	researchAutoAssign?: string[];
 	research: KingdomResearch;
 	state?: "dead" | "newbiemode";
+	popChange?: number;
 };
 
 export type BuildingState = {
@@ -92,14 +93,161 @@ export function processKingdomTick(
 	buildings: BuildingState,
 	military: MilitaryUnits,
 ) {
-	const moneyBonus = (kingdom.research.money?.perc ?? 0) / 100;
+	let kingdomChanged = false;
+	const newKingdom = {
+		...kingdom,
+		research: { ...kingdom.research },
+		landQueue: [...kingdom.landQueue],
+	};
+
+	// 1. Update Research Points from current scientists
+	newKingdom.researchPts += military.sci;
+
+	// 2. Auto Assign Research Points
+	const autoAssign = kingdom.researchAutoAssign || [];
+	if (autoAssign.length > 0 && newKingdom.researchPts > 0) {
+		for (const key of autoAssign) {
+			if (newKingdom.researchPts <= 0) break;
+
+			const researchKey = key as ResearchKey;
+			const currentPts = newKingdom.research[researchKey]?.pts ?? 0;
+
+			let required = 0;
+			const techInfo =
+				GAME_PARAMS.militaryTechTree[
+					researchKey as keyof typeof GAME_PARAMS.militaryTechTree
+				];
+			if (techInfo) {
+				if (techInfo.requires) {
+					const prerequisite = techInfo.requires
+						? newKingdom.research[techInfo.requires]
+						: undefined;
+					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue;
+				}
+				required = techInfo.requirePoints;
+			} else {
+				const prerequisiteKey = (
+					GAME_PARAMS.research.params as Record<string, { requires?: string }>
+				)[researchKey]?.requires;
+				if (prerequisiteKey) {
+					const prerequisite = (
+						newKingdom.research as Record<string, { pts: number; perc: number }>
+					)[prerequisiteKey];
+					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue;
+				}
+				required = GAME_PARAMS.research.required(
+					researchKey as keyof typeof GAME_PARAMS.research.params,
+					newKingdom.land,
+				);
+			}
+
+			const needed = Math.max(0, required - currentPts);
+
+			if (needed > 0) {
+				const toAssign = Math.min(newKingdom.researchPts, needed);
+				const existing = newKingdom.research[researchKey] || {
+					pts: 0,
+					perc: 0,
+				};
+				newKingdom.research[researchKey] = {
+					...existing,
+					pts: existing.pts + toAssign,
+				};
+				newKingdom.researchPts -= toAssign;
+			}
+		}
+	}
+
+	// 3. Recalculate Research Percentages and Bonuses IMMEDIATELY
+	const standardResearchKeys: ResearchTopicType[] = [
+		"pop",
+		"power",
+		"mil",
+		"money",
+		"fdc",
+		"warp",
+	];
+	
+	// Pre-seed research objects if missing so they get calculated
+	for (const key of standardResearchKeys) {
+		if (!newKingdom.research[key]) {
+			newKingdom.research[key] = { pts: 0, perc: 0 };
+		}
+	}
+
+	for (const key of standardResearchKeys) {
+		const resData = newKingdom.research[key];
+		if (!resData) continue;
+		const pts = resData.pts;
+		const required = GAME_PARAMS.research.required(key, newKingdom.land);
+		const maxBonus = GAME_PARAMS.research.params[key].bonus;
+		let perc = 0;
+		if (required > 0) {
+			// Using Math.min to cap at maxBonus, floor to keep it an integer
+			perc = Math.min(Math.floor((maxBonus * pts) / required), maxBonus);
+		}
+		newKingdom.research[key] = { pts, perc };
+	}
+
+	const techResearchKeys: ResearchTechType[] = [
+		"r_dr",
+		"r_ft",
+		"r_tf",
+		"r_ld",
+		"r_lf",
+		"r_f74",
+		"r_ht",
+		"r_fusion",
+		"r_core",
+		"r_armor",
+		"r_long",
+	];
+	for (const key of techResearchKeys) {
+		const researchData = newKingdom.research[key];
+		const pts = researchData?.pts ?? 0;
+		const techInfo =
+			GAME_PARAMS.militaryTechTree[
+				key as keyof typeof GAME_PARAMS.militaryTechTree
+			];
+		if (!techInfo) continue;
+
+		const required = techInfo.requirePoints;
+		let perc = 0;
+		if (required > 0) {
+			perc = Math.min(Math.floor((pts / required) * 100), 100);
+		}
+		(newKingdom.research as Record<string, { pts: number; perc: number }>)[
+			key
+		] = { pts, perc };
+	}
+
+	// 4. Calculate NEW Bonuses to be used in this tick
+	const moneyBonusRaw = (newKingdom.research.money?.perc ?? 0) / 100;
+	const powerBonusRaw = (newKingdom.research.power?.perc ?? 0) / 100;
+	const popBonusRaw = (newKingdom.research.pop?.perc ?? 0) / 100;
+	
+	const fusionBonusRaw =
+		(newKingdom.research.r_fusion?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_fusion?.bonus ?? 0) / 100
+			: 0;
+	const coreBonusRaw =
+		(newKingdom.research.r_core?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_core?.bonus ?? 0) / 100
+			: 0;
+	const longBonusRaw =
+		(newKingdom.research.r_long?.perc ?? 0) >= 100
+			? (GAME_PARAMS.militaryTechTree.r_long?.bonus ?? 0)
+			: 0;
+
+	// 5. Calculate Income and Power using NEW research bonuses
 	const moneyIncome = Math.round(
 		(buildings.sm * GAME_PARAMS.income.sm +
-			kingdom.population * GAME_PARAMS.income.population) *
-			(1 + moneyBonus),
+			newKingdom.population * GAME_PARAMS.income.population) *
+			(1 + moneyBonusRaw),
 	);
+
 	const powerConsumption =
-		kingdom.population * GAME_PARAMS.power.consumption.population +
+		newKingdom.population * GAME_PARAMS.power.consumption.population +
 		(
 			Object.keys(GAME_PARAMS.military.units) as Array<
 				keyof typeof GAME_PARAMS.military.units
@@ -110,22 +258,15 @@ export function processKingdomTick(
 				(military[key] || 0) * (GAME_PARAMS.military.units[key].power || 0)
 			);
 		}, 0);
-	const powerBonus = (kingdom.research.power?.perc ?? 0) / 100;
-	const fusionBonus =
-		(kingdom.research.r_fusion?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.r_fusion?.bonus ?? 0) / 100
-			: 0;
-	const coreBonus =
-		(kingdom.research.r_core?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.r_core?.bonus ?? 0) / 100
-			: 0;
 
-	const powerIncome =
+	const powerIncome = Math.round(
 		buildings.plants *
 			GAME_PARAMS.buildings.plantProduction *
-			(1 + powerBonus + fusionBonus + coreBonus) -
-		powerConsumption;
+			(1 + powerBonusRaw + fusionBonusRaw + coreBonusRaw) -
+		powerConsumption
+	);
 
+	// 6. Update population and rax
 	const raxUsage =
 		military.sol +
 		military.tr +
@@ -140,63 +281,50 @@ export function processKingdomTick(
 	const raxCapacity = buildings.rax * GAME_PARAMS.buildings.raxCapacity;
 	const raxSurplus = Math.max(0, raxUsage - raxCapacity);
 
-	const popBonus = (kingdom.research.pop?.perc ?? 0) / 100;
-	const longBonus =
-		(kingdom.research.r_long?.perc ?? 0) >= 100
-			? (GAME_PARAMS.militaryTechTree.r_long?.bonus ?? 0)
-			: 0;
 	const resCapacityBoosted =
-		(GAME_PARAMS.buildings.resCapacity + longBonus) * (1 + popBonus);
+		(GAME_PARAMS.buildings.resCapacity + longBonusRaw) * (1 + popBonusRaw);
 
 	const maxPopulation = Math.floor(
 		buildings.res * resCapacityBoosted - raxSurplus,
 	);
 	let populationChange = 0;
-	if (kingdom.population < maxPopulation) {
+	if (newKingdom.population < maxPopulation) {
 		populationChange = Math.ceil(
-			kingdom.population * GAME_PARAMS.population.growth,
+			newKingdom.population * GAME_PARAMS.population.growth,
 		);
 		populationChange = Math.min(
 			populationChange,
-			maxPopulation - kingdom.population,
+			maxPopulation - newKingdom.population,
 		);
-	} else if (kingdom.population > maxPopulation) {
+	} else if (newKingdom.population > maxPopulation) {
 		populationChange = -GAME_PARAMS.population.decline(
-			kingdom.population,
-			kingdom.land,
+			newKingdom.population,
+			newKingdom.land,
 		);
 	}
 
-	const newKingdom = {
-		...kingdom,
-		money: kingdom.money + moneyIncome,
-		population: Math.round(Math.max(0, kingdom.population + populationChange)),
-		popChange: populationChange,
-	};
+	// 7. Update Kingdom State with results of THIS tick
+	newKingdom.money += moneyIncome;
+	newKingdom.population = Math.round(
+		Math.max(0, newKingdom.population + populationChange),
+	);
+	newKingdom.popChange = populationChange;
+	newKingdom.power = Math.min(
+		GAME_PARAMS.buildings.plantStorage * buildings.plants,
+		Math.max(0, Math.round(newKingdom.power + powerIncome)),
+	);
+	newKingdom.probes += buildings.pf;
+	newKingdom.moneyIncome = moneyIncome;
+	newKingdom.powerIncome = Math.round(powerIncome);
 
 	if (newKingdom.population <= 0) {
 		newKingdom.state = "dead";
 	}
 
-	Object.assign(newKingdom, {
-		power: Math.min(
-			GAME_PARAMS.buildings.plantStorage * buildings.plants,
-			Math.max(0, Math.round(kingdom.power + powerIncome)),
-		),
-		probes: kingdom.probes + buildings.pf,
-		moneyIncome: moneyIncome,
-		powerIncome: Math.round(powerIncome),
-		researchPts: kingdom.researchPts + military.sci,
-		research: { ...kingdom.research },
-		land: kingdom.land,
-		landQueue: [...kingdom.landQueue],
-	});
-
-	let kingdomChanged = false;
-
+	// 8. Auto Explore
 	if ((Number(newKingdom.autoExplore) || 0) > 0) {
 		const level = Number(newKingdom.autoExplore);
-		const limitPct = level * 0.01; // 0.01 (1%), ..., 0.10 (10%)
+		const limitPct = level * 0.01;
 		const currentQueueSum = newKingdom.landQueue.reduce((a, b) => a + b, 0);
 		const maxPossibleExplore = Math.floor(newKingdom.land * limitPct);
 		const maxExplore = Math.max(0, maxPossibleExplore - currentQueueSum);
@@ -234,6 +362,7 @@ export function processKingdomTick(
 		}
 	}
 
+	// 9. Exploration Queue Completion
 	if (newKingdom.landQueue.length > 0) {
 		const completedLand = newKingdom.landQueue[0];
 		newKingdom.land += completedLand;
@@ -254,6 +383,7 @@ export function processKingdomTick(
 	];
 	let queueChanged = false;
 
+	// 10. Buildings Completion
 	for (const key of keys) {
 		if (newQueue[key] && newQueue[key].length > 0) {
 			const completedCount = newQueue[key][0];
@@ -267,6 +397,7 @@ export function processKingdomTick(
 		newBuildings.queue = newQueue;
 	}
 
+	// 11. Auto Build
 	if (newKingdom.autoBuild && buildings.target) {
 		const freeLand = calculateFreeLand(
 			newKingdom.land,
@@ -391,6 +522,7 @@ export function processKingdomTick(
 		"sci",
 	] as const;
 
+	// 12. Military Completion
 	if (newMilitary.queue.sol.length > 0) {
 		for (const key of MILITARY_KEYS) {
 			const completed = newMilitary.queue[key][0] || 0;
@@ -400,7 +532,7 @@ export function processKingdomTick(
 		militaryChanged = true;
 	}
 
-	// Instant conversion/promotion of defensive units if researched
+	// 13. Instant conversion/promotion
 	const isLdResearched = (newKingdom.research.r_ld?.perc ?? 0) >= 100;
 	const isLfResearched = (newKingdom.research.r_lf?.perc ?? 0) >= 100;
 
@@ -425,7 +557,6 @@ export function processKingdomTick(
 		militaryChanged = true;
 	}
 
-	// Instant conversion/promotion of offensive units if researched
 	const isDrResearched = (newKingdom.research.r_dr?.perc ?? 0) >= 100;
 	const isFtResearched = (newKingdom.research.r_ft?.perc ?? 0) >= 100;
 
@@ -450,7 +581,6 @@ export function processKingdomTick(
 		militaryChanged = true;
 	}
 
-	// Instant conversion/promotion of elite units if researched
 	const isHtResearched = (newKingdom.research.r_ht?.perc ?? 0) >= 100;
 
 	if (isHtResearched && newMilitary.t > 0) {
@@ -464,124 +594,14 @@ export function processKingdomTick(
 		militaryChanged = true;
 	}
 
-	// Auto Assign Research Points
-	const autoAssign = kingdom.researchAutoAssign || [];
-	if (autoAssign.length > 0 && newKingdom.researchPts > 0) {
-		for (const key of autoAssign) {
-			if (newKingdom.researchPts <= 0) break;
-
-			const researchKey = key as ResearchKey;
-			const currentPts = newKingdom.research[researchKey]?.pts ?? 0;
-
-			let required = 0;
-			const techInfo =
-				GAME_PARAMS.militaryTechTree[
-					researchKey as keyof typeof GAME_PARAMS.militaryTechTree
-				];
-			if (techInfo) {
-				// Prerequisite check for military research
-				if (techInfo.requires) {
-					const prerequisite = techInfo.requires
-						? newKingdom.research[techInfo.requires]
-						: undefined;
-					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue; // Skip if prerequisite not completed
-				}
-				required = techInfo.requirePoints;
-			} else {
-				// Standard bonus research
-				const prerequisiteKey = (
-					GAME_PARAMS.research.params as Record<string, { requires?: string }>
-				)[researchKey]?.requires;
-				if (prerequisiteKey) {
-					const prerequisite = (
-						newKingdom.research as Record<string, { pts: number; perc: number }>
-					)[prerequisiteKey];
-					if (!prerequisite || (prerequisite.perc ?? 0) < 100) continue; // Skip if prerequisite not completed
-				}
-				required = GAME_PARAMS.research.required(
-					researchKey as keyof typeof GAME_PARAMS.research.params,
-					newKingdom.land,
-				);
-			}
-
-			const needed = Math.max(0, required - currentPts);
-
-			if (needed > 0) {
-				const toAssign = Math.min(newKingdom.researchPts, needed);
-				const existing = newKingdom.research[researchKey] || {
-					pts: 0,
-					perc: 0,
-				};
-				newKingdom.research[researchKey] = {
-					...existing,
-					pts: existing.pts + toAssign,
-				};
-				newKingdom.researchPts -= toAssign;
-			}
-		}
-	}
-
-	// Recalculate Research Percentages
-	const standardResearchKeys: ResearchTopicType[] = [
-		"pop",
-		"power",
-		"mil",
-		"money",
-		"fdc",
-		"warp",
-	];
-	for (const key of standardResearchKeys) {
-		const resData = newKingdom.research[key];
-		if (!resData) continue;
-		const pts = resData.pts;
-		const required = GAME_PARAMS.research.required(key, newKingdom.land);
-		const maxBonus = GAME_PARAMS.research.params[key].bonus;
-		let perc = 0;
-		if (required > 0) {
-			perc = Math.min(Math.floor((maxBonus * pts) / required), maxBonus);
-		}
-		newKingdom.research[key] = { pts, perc };
-	}
-
-	const techResearchKeys: ResearchTechType[] = [
-		"r_dr",
-		"r_ft",
-		"r_tf",
-		"r_ld",
-		"r_lf",
-		"r_f74",
-		"r_ht",
-		"r_fusion",
-		"r_core",
-		"r_armor",
-		"r_long",
-	];
-	for (const key of techResearchKeys) {
-		const researchData = newKingdom.research[key];
-		const pts = researchData?.pts ?? 0;
-		const techInfo =
-			GAME_PARAMS.militaryTechTree[
-				key as keyof typeof GAME_PARAMS.militaryTechTree
-			];
-		if (!techInfo) continue;
-
-		const required = techInfo.requirePoints;
-		let perc = 0;
-		if (required > 0) {
-			perc = Math.min(Math.floor((pts / required) * 100), 100);
-		}
-		(newKingdom.research as Record<string, { pts: number; perc: number }>)[
-			key
-		] = { pts, perc };
-	}
-
-	const autoAssignQueue = newKingdom.researchAutoAssign || [];
-	if (autoAssignQueue.length > 0) {
-		const newQueue = autoAssignQueue.filter((key) => {
+	// Clean Auto Assign Queue
+	const autoAssignQueueAfter = newKingdom.researchAutoAssign || [];
+	if (autoAssignQueueAfter.length > 0) {
+		const newQueue = autoAssignQueueAfter.filter((key) => {
 			const isStandard = standardResearchKeys.includes(
 				key as ResearchTopicType,
 			);
-			if (isStandard) return true; // Never clean standard research
+			if (isStandard) return true;
 			const resData = newKingdom.research[key as ResearchKey];
 			if (!resData) return false;
 
@@ -594,17 +614,14 @@ export function processKingdomTick(
 			return true;
 		});
 
-		if (newQueue.length !== autoAssignQueue.length) {
+		if (newQueue.length !== autoAssignQueueAfter.length) {
 			newKingdom.researchAutoAssign = newQueue;
 			kingdomChanged = true;
 		}
 	}
 
 	return {
-		updatedKingdom:
-			kingdomChanged || moneyIncome !== 0 || powerIncome !== 0
-				? newKingdom
-				: newKingdom,
+		updatedKingdom: newKingdom,
 		updatedBuildings: queueChanged ? newBuildings : null,
 		updatedMilitary: militaryChanged ? newMilitary : null,
 		kingdomChanged: kingdomChanged,
